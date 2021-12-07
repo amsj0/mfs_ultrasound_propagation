@@ -1,4 +1,4 @@
-function [Tj,Ty,Th] = fn_compute_propagator_receiverinside2(varargin)
+function [Tj,Ty,Th] = fn_compute_propagator_receiverinside_2(varargin)
 
 % global T
 D = evalin('caller','b.Ri');
