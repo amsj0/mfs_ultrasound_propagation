@@ -17,19 +17,21 @@ g.golden_ratio = 1;
 
 g.grid_ratio = 0.0625;
 
-% g.prop.nfr = 2;
-g.prop.nfr = 1;
+% g.prop.nfr = 21;
+ g.prop.nfr = 1;
+
+g.model_scale = str2num(MODEL_SCL);
 
 % g.prop.fr = 0.5e6;           %frequency
 % g.prop.sfr = 0.5e6*linspace(1,1,g.prop.nfr);
 % g.prop.rj = 1e3;            %water density
 % g.prop.cj = 1481.44134805;   %speed of sound in water
 g.prop.att = str2num(ATTEN_RAT);
-g.prop.fr = 2.5e5;             %frequency
-% g.prop.fr = 1e6;             %frequency
-g.prop.sfr = 2.5e5*linspace(1,1,g.prop.nfr);  
-% g.prop.sfr = 1e6*linspace(1,1,g.prop.nfr);  
-% g.prop.sfr = 1e6*linspace(1,1.2,g.prop.nfr);  
+% g.prop.fr = 2.5e5;             %frequency
+g.prop.fr = g.model_scale*1e6;             %frequency
+% g.prop.sfr = 2.5e5*linspace(1,1,g.prop.nfr);  
+% g.prop.sfr = 1e6*linspace(1,1run,g.prop.nfr);  
+g.prop.sfr = g.prop.fr*linspace(1/3,1,g.prop.nfr);  
 g.prop.rj = 999.6150851557516; %water density
 g.prop.cj = 1490;              %speed of sound in water
 
@@ -71,9 +73,8 @@ g.run_analysis = @(func,mode,cf,x,y) cell2mat(cellfun(@(f) (forfun(func,mode,f,x
 g.run_analysis2 = @(func,mode,cf,x,y,z) cell2mat(cellfun(@(f) (forfun(func,mode,f,x,y,z)),cf,'uni',0));
 g.cn_filter = @(f) cellfun(@(x,y) and(~x,y),f,circshift(f,1,2),'uni',0);
 
-
-g.fac0 = [1 -1];
 g.hankel_kind = 2;
+g.fac0 = [1 -1];
 g.fac = [1 -1];
 g.amp = [1 1];
 % g.fac = [1 -1];
@@ -95,21 +96,21 @@ g.plot_flag = str2num(PLOT_FLAG);
 
 g.extension = STRNG_EXT;
 
-g.centre_vector_x = (CENTX_VEC).';
+g.centre_vector_x = str2num(MODEL_SCL)*(CENTX_VEC).';
 
-g.centre_vector_y = (CENTY_VEC).';
+g.centre_vector_y = str2num(MODEL_SCL)*(CENTY_VEC).';
 
-g.model_scale = str2num(MODEL_SCL);
 
-g.piston_radius = str2num(PISTO_RAD)/100;
 
-g.piston_vector = str2num(PISTO_VEC)/100;
+g.piston_radius = str2num(MODEL_SCL)*str2num(PISTO_RAD)/100;
 
-g.piston_distan = str2num(PISTO_DST)/100;
+g.piston_vector = str2num(MODEL_SCL)*str2num(PISTO_VEC)/100;
+
+g.piston_distan = str2num(MODEL_SCL)*str2num(PISTO_DST)/100;
 
 g.interface_centre = 0.05;
 
-g.piston_centre = str2num(PISTO_CEN)/100;
+g.piston_centre = str2num(MODEL_SCL)*str2num(PISTO_CEN)/100;
 
 g.scale = 4;
 

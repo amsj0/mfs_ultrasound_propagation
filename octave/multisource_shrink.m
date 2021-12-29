@@ -42,7 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,5*g.piston_distan,Neltoverlambda/100);
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+4)*g.piston_distan,Neltoverlambda/100);
 
 gap = 1/(Np);
 
@@ -145,27 +145,46 @@ grid_number_x = floor(GX/dl);
 % rmax = RD*g.pool_radius(1)*nRD*lambda0/cos(pi/GY);
 %%
 % CREATE REGION OF INTEREST BASED ON MODEL COMPARISON TAG
-vec.x = g.centre_vector_x+(-grid_number_x:grid_number_x)*dl;
-vec.z = g.centre_vector_y+(-grid_number_z:grid_number_z)*dl;
-col = grid_number_x*2 + 1;
-row = grid_number_z*2 + 1;
+if (strcmp(g.extension,'eswsnan'))
+    vec.x = g.centre_vector_x+(-grid_number_x:grid_number_x)*dl;
+    vec.z = g.centre_vector_y+(-grid_number_z:grid_number_z)*dl;
+    col = grid_number_x*2 + 1;
+    row = grid_number_z*2 + 1;
 
-M.x = vec.x(ones(row,1),:);
-M.x = M.x(:)';
-M.z = vec.z(ones(col,1),:)';
-M.z = M.z(:)';
-M.y = zeros(1,row*col);
+    M.x = vec.x(ones(row,1),:);
+    M.x = M.x(:)';
+    M.z = vec.z(ones(col,1),:)';
+    M.z = M.z(:)';
+    M.y = zeros(1,row*col);
 
-b.A.x = RD*M.x;
-b.A.z = RD*M.z;
-b.A.y = RD*M.y;
+    b.A.x = RD*M.x;
+    b.A.z = RD*M.z;
+    b.A.y = RD*M.y;
 
-b.A.x = reshape(b.A.x,[row,col]);
-b.A.y = reshape(b.A.y,[row,col]);
-b.A.z = reshape(b.A.z,[row,col]);
+    b.A.x = reshape(b.A.x,[row,col]);
+    b.A.y = reshape(b.A.y,[row,col]);
+    b.A.z = reshape(b.A.z,[row,col]);
+    
+    b.A.p0 = zeros(1,row*col);
+elseif (strcmp(g.extension,'eswsfem'))    
+    data = load('pressure-250kHz-y_interf0.035.txt');
 
-b.A.p0 = zeros(1,row*col);
-
+    b.A.x = data(1:(g.scale):end, 1:4*(g.scale):end)*nRD;
+    [row,col] = size(b.A.x);
+    
+    b.A.z = data(1:(g.scale):end, 2:4*(g.scale):end)*nRD;
+    
+    b.A.y = zeros(row,col);
+    
+    M.x = b.A.x(:)'/RD;
+    M.z = b.A.z(:)'/RD;
+    M.y = b.A.y(:)'/RD;
+    
+%     b.A.p = zeros(1,row*col);
+%     b.A.p0 = - data(1:(g.scale):end, 3:4*(g.scale):end) + 1j * data(1:(g.scale):end, 4:4*(g.scale):end);
+      b.A.p0 = 1j * data(1:(g.scale):end, 3:4*(g.scale):end) + data(1:(g.scale):end, 4:4*(g.scale):end);
+%     bAp0 = -1j*conj(b.A.p0);
+end
     
 b.A.p = zeros(row,col);
 
@@ -347,16 +366,16 @@ for ii = 1:k0_length;
         %    iTFa = fn_invert_propagator(TF);
         %    idTha_Th = iTFa*TIh;  % APPLIED MODEL
         
-            sc_propagate
-            sc_plot
-            
         % STORE FIELD PARAMETERS
-        %    PF(ii,jj,pp,:,:) = b.A.p;
+%              PF(ii,jj,pp,:,:) = b.A.p;
+        sc_propagate
+        sc_plot
+        resp_rang(ii) = response_range;
         end
     end
 end
 
 % save('PF.mat','PF')
-% save('RR.mat','resp_rang')
+% save('RR.mat','resp_rang','-v7.3')
 % sc_surf_def
 % sc_surf_run
