@@ -217,10 +217,10 @@ for tt = 1:response_size
             set(pid,'CData',f(b.A.p));
             drawnow
 
-            F_pid(tt) = getframe(pid.Parent);
-            F_prr(tt) = getframe(prr.Parent);
-            F_prl(tt) = getframe(prl.Parent);
-            F_ptt(tt) = getframe(ptt.Parent);
+            F_pid(tt) = getframe(get(pid,'Parent'));
+            F_prr(tt) = getframe(get(prr,'Parent'));
+            F_prl(tt) = getframe(get(prl,'Parent'));
+            F_ptt(tt) = getframe(get(ptt,'Parent'));
     end
 %     end
 end
