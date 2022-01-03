@@ -23,8 +23,8 @@ figure(14),clf,pid = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
 axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Incident')
 
 %   DEFINES PISTON INDEXES 
-ppt_per_surface = 1+floor(10000*g.piston_radius/(Neltoverlambda));
-% ppt_per_surface = 17;
+%ppt_per_surface = 1+floor(10000*g.piston_radius/(Neltoverlambda));
+ppt_per_surface = 1;
 
 ndxI_vec = [num2cell(1:length(b.Ti.x),1),cell(1,length(b.To.x))];
 ndxI_mat = cellfun(@(x) circshift(ndxI_vec,x,2),num2cell(0:(ppt_per_surface-1)),'UniformOutput',0);
@@ -56,8 +56,8 @@ response_ndx.RI = find(~b.Ri.ndx);
 response_ndx.TO = find(~b.To.ndx);
 response_ndx.TI = find(~b.Ti.ndx);
 
-draw_flag = 0;
-% draw_flag = 1;
+##draw_flag = 0;
+ draw_flag = 1;
 surf_flag = 0;
 % surf_flag = 1;
 
@@ -202,19 +202,19 @@ for tt = 1:response_size
     if(draw_flag)
             b.A.p(~b.D.ndx) = b.D.prr;
             b.A.p(isnan(f(b.A.p)))=0;
-            prr.CData = f(b.A.p);
+            set(prr,'CData',f(b.A.p));
 
             b.A.p(~b.D.ndx) = b.D.prl;
             b.A.p(isnan(f(b.A.p)))=0;
-            prl.CData = f(b.A.p);
+            set(prl,'CData',f(b.A.p));
 
             b.A.p(~b.D.ndx) = b.D.pid;
             b.A.p(isnan(f(b.A.p)))=0;
-            pid.CData = f(b.A.p);
+            set(pid,'CData',f(b.A.p));
 
             b.A.p(~b.D.ndx) = b.D.ptt;
             b.A.p(isnan(f(b.A.p)))=0;
-            ptt.CData = f(b.A.p);
+            set(pid,'CData',f(b.A.p));
             drawnow
 
             F_pid(tt) = getframe(pid.Parent);
