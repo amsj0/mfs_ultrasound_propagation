@@ -2,28 +2,11 @@
 f = @(x) 20*log10(abs(x));
 % f = @(x) (imag(x));
 
-b.A.zeros = zeros(size(b.A.z));
-
 cl = [-20 20];
 
-figure(10),clf,prr = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-% hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Refracted')
-
-figure(11),clf,prl = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-% hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Reflected')
-
-figure(13),clf,ptt = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-% hold on,scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r'),scatter(R.x(~b.Ro.ndx)/nRD,R.z(~b.Ro.ndx)/nRD,'*g'),scatter(R.x(~b.Ri.ndx)/nRD,R.z(~b.Ri.ndx)/nRD,'*r')
-axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('TotalFld')
-
-figure(14),clf,pid = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-% hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Incident')
 
 %   DEFINES PISTON INDEXES 
-ppt_per_surface = 1+floor(10000*g.piston_radius/(Neltoverlambda));
+ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
 %ppt_per_surface = 1;
 
 %ndxI_vec = [num2cell(1:length(b.Ti.x),1),cell(1,length(b.To.x))];
@@ -65,10 +48,30 @@ response.ndx.RI = find(~b.Ri.ndx);
 response.ndx.TO = find(~b.To.ndx);
 response.ndx.TI = find(~b.Ti.ndx);
 
-%draw_flag = 0;
-draw_flag = 1;
+draw_flag = 0;
+%draw_flag = 1;
 %surf_flag = 0;
 surf_flag = 1;
+
+if(draw_flag)
+  b.A.zeros = zeros(size(b.A.z));
+
+  figure(10),clf,prr = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
+  % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
+  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Refracted')
+
+  figure(11),clf,prl = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
+  % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
+  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Reflected')
+
+  figure(13),clf,ptt = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
+  % hold on,scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r'),scatter(R.x(~b.Ro.ndx)/nRD,R.z(~b.Ro.ndx)/nRD,'*g'),scatter(R.x(~b.Ri.ndx)/nRD,R.z(~b.Ri.ndx)/nRD,'*r')
+  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('TotalFld')
+
+  figure(14),clf,pid = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
+  % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
+  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Incident')
+end
 
 F_pid(response.pitch.size) = struct('cdata',[],'colormap',[]);
 F_prr(response.pitch.size) = struct('cdata',[],'colormap',[]);
@@ -164,13 +167,13 @@ for tt = 1:response.pitch.size
 %         b.R.prl(resRO) = sum(Mcmb{4,2}(ndx.RO,ndx.TO),2);  % APPLIED MODEL 
 %         b.R.pid(resRI) = sum(Mcmb{5,2}(ndx.RI,ndx.TI),2);  % APPLIED MODEL 
 %         b.R.pid(resRO) = sum(Mcmb{6,2}(ndx.RO,ndx.TO),2);  % APPLIED MODEL     
-        b.R.prr(resRI) = b.T.prr{1}(ndx.RI); % APPLIED MODEL
-        b.R.prr(resRO) = b.T.prr{2}(ndx.RO); % APPLIED MODEL
-        b.R.prl(resRI) = b.T.prl{1}(ndx.RI); % APPLIED MODEL
-        b.R.prl(resRO) = b.T.prl{2}(ndx.RO); % APPLIED MODEL
-        b.R.pid(resRI) = b.T.pid{1}(ndx.RI); % APPLIED MODEL
-        b.R.pid(resRO) = b.T.pid{2}(ndx.RO); % APPLIED MODEL        
-        b.R.ptt = (b.R.pid + b.R.prl + b.R.prr);
+%        b.R.prr(resRI) = b.T.prr{1}(ndx.RI); % APPLIED MODEL
+%        b.R.prr(resRO) = b.T.prr{2}(ndx.RO); % APPLIED MODEL
+%        b.R.prl(resRI) = b.T.prl{1}(ndx.RI); % APPLIED MODEL
+%        b.R.prl(resRO) = b.T.prl{2}(ndx.RO); % APPLIED MODEL
+%        b.R.pid(resRI) = b.T.pid{1}(ndx.RI); % APPLIED MODEL
+%        b.R.pid(resRO) = b.T.pid{2}(ndx.RO); % APPLIED MODEL        
+%        b.R.ptt = (b.R.pid + b.R.prl + b.R.prr);
 %         b.R.prr(:,resTI) = sum(Mcmb{2,2}(:,ndx.TI),2);  % APPLIED MODEL 
 %         b.R.prl(:,resTI) = sum(Mcmb{3,2}(:,ndx.TI),2);  % APPLIED MODEL 
 %         b.R.prl(:,resTO) = sum(Mcmb{4,2}(:,ndx.TO),2);  % APPLIED MODEL 
@@ -195,11 +198,15 @@ for tt = 1:response.pitch.size
 %         else
 %             fx = fx2;
 %         end
-        response.range.pid(tt,rr) = (sum(b.R.pid)); b.R.pid = [];
-        response.range.prr(tt,rr) = (sum(b.R.prr)); b.R.prr = [];
-        response.range.prl(tt,rr) = (sum(b.R.prl)); b.R.prl = [];
-        response.range.ptt(tt,rr) = (sum(b.R.ptt)); b.R.ptt = [];
-        response.range.prx(rr)    = ~(mod(rr,2*ppt_per_surface))*(sum(b.R.ptt)); 
+%        response.range.pid(tt,rr) = (sum(b.R.pid)); b.R.pid = [];
+%        response.range.prr(tt,rr) = (sum(b.R.prr)); b.R.prr = [];
+%        response.range.prl(tt,rr) = (sum(b.R.prl)); b.R.prl = [];
+%        response.range.ptt(tt,rr) = (sum(b.R.ptt)); b.R.ptt = [];
+        response.range.pid(tt,rr) = (sum(b.T.pid{1}(ndx.RI)) + sum(b.T.pid{2}(ndx.RO)));
+        response.range.prr(tt,rr) = (sum(b.T.prr{1}(ndx.RI)) + sum(b.T.prr{2}(ndx.RO)));
+        response.range.prl(tt,rr) = (sum(b.T.prl{1}(ndx.RI)) + sum(b.T.prl{2}(ndx.RO)));
+%        response.range.ptt(tt,rr) = (sum(b.T.ptt{1}(ndx.RI)) + sum(b.T.ptt{2}(ndx.RO)));
+%        response.range.prx(rr)    = ~(mod(rr,2*ppt_per_surface))*(sum(b.R.ptt)); 
 %         response_range.pid(tt,rr) = fx(sum(b.R.pid));
 %         response_range.prr(tt,rr) = fx(sum(b.R.prr));
 %         response_range.prl(tt,rr) = fx(sum(b.R.prl));
@@ -245,6 +252,8 @@ for tt = 1:response.pitch.size
     end
 %     end
 end
+
+response.range.ptt = response.range.prl+response.range.prr+response.range.pid;
 
 if(surf_flag)
     figure(5),surf(response.pitch.A,response.catch.A,f(response.range.pid/2))

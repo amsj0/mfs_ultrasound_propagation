@@ -98,7 +98,7 @@ S.ct = S.c*(1-ham);
 eye_T = eye(2*length(area_un));
 %%
 % CREATE TRANSDUCER SURFACE
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(-0*g.piston_vector,1*g.piston_vector,2*Neltoverlambda/(100));
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(-0*g.piston_vector,1*g.piston_vector,Neltoverlambda/(100));
 
 T.a = cellfun(@(x) RD*x,area,'uni',0);
 T.x = cellfun(@(x,y) x.*sin(y),r,Th,'uni',0);
