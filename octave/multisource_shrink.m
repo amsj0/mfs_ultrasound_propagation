@@ -369,13 +369,13 @@ for ii = 1:k0_length;
         % STORE FIELD PARAMETERS
 %              PF(ii,jj,pp,:,:) = b.A.p;
         sc_propagate
-        sc_plot
-        resp_rang(ii) = response_range;
+%        sc_plot
+%        resp_rang(ii) = response_range;
         end
     end
 end
 
 % save('PF.mat','PF')
-% save('RR.mat','resp_rang','-v7.3')
+save('RR.mat','Mcmb','T','R','S','Neltoverlambda','nRD','b','g')
 % sc_surf_def
 % sc_surf_run
