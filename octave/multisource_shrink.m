@@ -42,7 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+4)*g.piston_distan,Neltoverlambda/100);
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+2)*g.piston_distan,Neltoverlambda/100);
 
 gap = 1/(Np);
 
@@ -253,7 +253,7 @@ end
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %  
     d_cur = d0;
 
-for ii = 1:k0_length;
+for ii = g.prop.nfi:k0_length;
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
 
@@ -371,11 +371,13 @@ for ii = 1:k0_length;
         sc_propagate
 %        sc_plot
 %        resp_rang(ii) = response_range;
+%        Mcmb_l{ii} = Mcmb;
+        save(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb','-hdf5')
         end
     end
 end
 
 % save('PF.mat','PF')
-save('RR.mat','Mcmb','T','R','S','Neltoverlambda','nRD','b','g')
+save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
 % sc_surf_def
 % sc_surf_run

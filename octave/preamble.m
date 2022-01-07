@@ -17,7 +17,9 @@ g.golden_ratio = 1;
 
 g.grid_ratio = 0.0625;
 
- g.prop.nfr = 21;
+g.prop.nfr = str2num(PROPE_NFR);
+g.prop.iff = str2num(PROPE_IFF);
+g.prop.nfi = str2num(PROPE_NFI);
 % g.prop.nfr = 1;
 
 g.model_scale = str2num(MODEL_SCL);
@@ -31,7 +33,7 @@ g.prop.att = str2num(ATTEN_RAT);
 g.prop.fr = g.model_scale*1e6;             %frequency
 % g.prop.sfr = 2.5e5*linspace(1,1,g.prop.nfr);  
 % g.prop.sfr = 1e6*linspace(1,1run,g.prop.nfr);  
-g.prop.sfr = g.prop.fr*linspace(3/5,1,g.prop.nfr);  
+g.prop.sfr = g.prop.fr*linspace(g.prop.iff,1,g.prop.nfr);  
 g.prop.rj = 999.6150851557516; %water density
 g.prop.cj = 1490;              %speed of sound in water
 
