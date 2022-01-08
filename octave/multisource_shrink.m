@@ -378,6 +378,6 @@ for ii = g.prop.nfi:k0_length;
 end
 
 % save('PF.mat','PF')
-save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
+save(['PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g','-hdf5')
 % sc_surf_def
 % sc_surf_run
