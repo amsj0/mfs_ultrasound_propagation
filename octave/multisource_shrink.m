@@ -42,7 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+2)*g.piston_distan,Neltoverlambda/100);
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+4)*g.piston_distan,Neltoverlambda/100);
 
 gap = 1/(Np);
 
