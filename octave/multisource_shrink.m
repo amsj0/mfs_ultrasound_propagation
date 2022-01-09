@@ -372,12 +372,12 @@ for ii = g.prop.nfi:k0_length;
 %        sc_plot
 %        resp_rang(ii) = response_range;
 %        Mcmb_l{ii} = Mcmb;
-        save(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb','-hdf5')
+        save(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'Mcmb','-hdf5')
         end
     end
 end
 
 % save('PF.mat','PF')
-save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
+save(['PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'T','R','S','Neltoverlambda','nRD','b','g','-hdf5')
 % sc_surf_def
 % sc_surf_run
