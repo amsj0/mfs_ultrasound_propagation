@@ -15,7 +15,7 @@ g.pool_radius(4) = .015;
 
 g.golden_ratio = 1;
 
-g.grid_ratio = 0.0625;
+g.grid_ratio = 2*0.0625;
 
 g.prop.nfr = str2num(PROPE_NFR);
 g.prop.iff = str2num(PROPE_IFF);
