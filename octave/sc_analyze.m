@@ -2,6 +2,7 @@ resp = [];
 doma = [];
 sc_prepare
 
+<<<<<<< HEAD
 ii = g.prop.nfi;
 
 IS_FILE = true;
@@ -30,3 +31,15 @@ while IS_FILE
 end
 save(['doma_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
 save(['resp_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
+=======
+for ii = g.prop.nfi:g.prop.nfr;
+%for unit = Mcmb_l
+%  Mcmb = unit{1};
+  load(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'])
+  sc_integrate
+  rr = diag(response.range.pid/g.model_scale+(response.range.prr+response.range.prl));
+  resp = [resp,rr];
+%  pause
+end
+save('resp_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100)','.mat','resp','-hdf5')
+>>>>>>> 2fd4097502e197651aaa605221aa26e315fd3029
