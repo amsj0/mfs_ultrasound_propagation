@@ -1,6 +1,6 @@
 MODEL_SCL = '1.8';
 PROPE_NFR = '81';
-PROPE_NFI = '35';
+PROPE_NFI = '1';
 PROPE_IFF = '1/9';
 RATSP_INI = '930*(1+1j*0.000)/abs(1+1j*0.000)';  %929; %speed ratio
 RATSP_DEL = '1';

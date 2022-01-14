@@ -17,6 +17,12 @@ for tt = 1:response.pitch.size
     b.D.pid(b.D.ndx0,:)  = sum(Mcmb{5,1}(:,ndx.TI),2);  % APPLIED MODEL 
     b.D.pid(~b.D.ndx0,:) = sum(Mcmb{6,1}(:,ndx.TO),2);  % APPLIED MODEL 
     b.D.ptt = b.D.pid + b.D.prl + b.D.prr;
+
+    %field.range.prr(tt,:) = b.D.prr;
+    %field.range.prl(tt,:) = b.D.prl;
+    %field.range.pid(tt,:) = b.D.pid;
+    field.range.ptt(tt,:) = b.D.ptt;
+
     
 %    response.pitch.A(tt) = mean([response.pitch.I(ndx.TI),response.pitch.O(ndx.TO)]);
     
@@ -29,6 +35,7 @@ for tt = 1:response.pitch.size
     b.T.pid{2} = sum(Mcmb{6,2}(:,ndx.TO),2);  % APPLIED MODEL    
     b.T.ptt{1} = (b.T.pid{1} + b.T.prl{1} + b.T.prr{1});
     b.T.ptt{2} = (b.T.pid{2} + b.T.prl{2} + b.T.prr{2});
+
     %   EXTRACT RECEIVER PISTON INDEXES
     for rr = 1:response.catch.size
 %     for rr = tt
