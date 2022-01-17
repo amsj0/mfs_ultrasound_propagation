@@ -15,7 +15,7 @@ g.pool_radius(4) = .015;
 
 g.golden_ratio = 1;
 
-g.grid_ratio = 0.0625;
+g.grid_ratio = 2*0.0625;
 
 g.prop.nfr = str2num(PROPE_NFR);
 g.prop.iff = str2num(PROPE_IFF);
@@ -68,9 +68,9 @@ rmse = @(x,y) rms(minus(x,y));
 relstd1 = @(x) std(x(1:end/2,:));
 relstd2 = @(x) std(x((end/2+1):end,:));
 
-g.combinedstd = complex2(relstd1,relstd2);
+% g.combinedstd = complex2(relstd1,relstd2);
 
-g.combined = complex(correlat,rmse);
+% g.combined = complex(correlat,rmse);
 g.run_analysis = @(func,mode,cf,x,y) cell2mat(cellfun(@(f) (forfun(func,mode,f,x,y)),cf,'uni',0));
 g.run_analysis2 = @(func,mode,cf,x,y,z) cell2mat(cellfun(@(f) (forfun(func,mode,f,x,y,z)),cf,'uni',0));
 g.cn_filter = @(f) cellfun(@(x,y) and(~x,y),f,circshift(f,1,2),'uni',0);
