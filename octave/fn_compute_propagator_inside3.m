@@ -3,6 +3,9 @@ function [Tj,Ty,Th] = fn_compute_propagator_inside3(varargin)
 % global T
 D = evalin('caller','b.D');
 
+caller = evalin('caller','{g.m,g.hankel_kind}');
+[m,kind] = caller{:};
+
 R = varargin{1};
 nR = varargin{2};
 area_un = varargin{3};
@@ -31,9 +34,13 @@ z = k_cur*abs(Ma);
 % by0 = 1i*bessely(0+0,z);
 % by1 = 1i*1/2*(bessely(0-1,z)-bessely(0+1,z));
 
-bh0 = besselh(0+0,2,z);
-bh1 = 1/2*(besselh(0-1,2,z)-besselh(0+1,2,z));
-
+bh0 = besselh(m+0,2,z);
+if m == 0
+    bh1 = besselh(m-1,2,z);
+else
+    bh1 = 1/2*(besselh(m-1,2,z)-besselh(m+1,2,z));
+end % first derivate
+% bh1 = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z)); % first derivate
 % BUj = 1i/4*Ar.*bj0;
 % AUj = -1i/4*Ar.*bj1.*rcos*k_cur;
 % AUj = 1i/4*Ar.*bj1.*rcos*k_cur/k_r*dr;
@@ -42,12 +49,13 @@ bh1 = 1/2*(besselh(0-1,2,z)-besselh(0+1,2,z));
 % AUy = -1i/4*Ar.*by1.*rcos*k_cur;
 % AUy = 1i/4*Ar.*by1.*rcos*k_cur/k_r*dr;
 
-BUh = 1i/4*Ar.*bh0;
-% AUy = -1i/4*Ar.*by1.*rcos*k_cur;
-AUh = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
+% BUh = 1i/4*Ar.*bh0;
+% AUh = -1i/4*Ar.*by1.*rcos*k_cur;
+% AUh = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
 
 % Tj = cat(2,AUj,-BUj);
 % Ty = -cat(2,AUy,-BUy);
 Tj = [];
 Ty = [];
-Th = cat(2,AUh,-BUh);
+% Th = cat(2,AUh,-BUh);
+Th = 1i/4*Ar.*cat(2,bh1.*rcos*k_cur/k_r*dr,-bh0);

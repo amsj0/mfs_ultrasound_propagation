@@ -42,7 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+1)*g.piston_distan,Neltoverlambda/100);
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+2)*g.piston_distan,Neltoverlambda/100);
 
 gap = 1/(Np);
 
@@ -97,8 +97,8 @@ S.ct = S.c*(1-ham);
 
 eye_T = eye(2*length(area_un));
 %%
-% CREATE TRANSDUCER SURFACE
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(-0*g.piston_vector,1*g.piston_vector,Neltoverlambda/(100));
+% CREATE TRANSMITER TRANSDUCER SURFACE
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(0,g.piston_vector_pitch,Neltoverlambda/(100));
 
 T.a = cellfun(@(x) RD*x,area,'uni',0);
 T.x = cellfun(@(x,y) x.*sin(y),r,Th,'uni',0);
@@ -120,11 +120,36 @@ ndx1 = fn_enclosure_rectan(lambda0,T.x,T.z,[-1,1],[he_ini,we_ini],0,mode);
 T.x = RD*T.x;
 T.z = RD*T.z;
 
-R = T;
-R.x = R.x + RD*(g.piston_distan);
-
 b.Ti.ndx = ~ndx0;
 b.To.ndx = ~ndx1;
+
+% CREATE RECEPTOR TRANSDUCER SURFACE
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(0,g.piston_vector_catch,Neltoverlambda/(100));
+
+R.a = cellfun(@(x) RD*x,area,'uni',0);
+R.x = cellfun(@(x,y) x.*sin(y),r,Th,'uni',0);
+R.z = cellfun(@(x,y) x.*cos(y),r,Th,'uni',0);
+R.y = cellfun(@(x) zeros(size(x)),R.z,'uni',0);
+
+R.x = permute(cell2mat(R.x),[2 1]);
+R.y = permute(cell2mat(R.y),[2 1]);
+R.z = permute(cell2mat(R.z),[2 1]);
+
+R.x = R.x(:).';
+R.y = R.y(:).';
+R.z = R.z(:).'+he_piston_centre;
+
+% R = T;
+
+% SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE
+ndx0 = fn_enclosure_rectan(lambda0,R.x,R.z,[1,1],[he_ini,we_ini],0,mode);
+ndx1 = fn_enclosure_rectan(lambda0,R.x,R.z,[-1,1],[he_ini,we_ini],0,mode);
+
+R.x = RD*R.x;
+R.z = RD*R.z;
+
+R.x = R.x + RD*(g.piston_distan);
+
 b.Ri.ndx = ~ndx0;
 b.Ro.ndx = ~ndx1;
 
@@ -146,10 +171,10 @@ grid_number_x = floor(GX/dl);
 %%
 % CREATE REGION OF INTEREST BASED ON MODEL COMPARISON TAG
 if (strcmp(g.extension,'eswsnan'))
-    vec.x = g.centre_vector_x+(-grid_number_x:grid_number_x)*dl;
-    vec.z = g.centre_vector_y+(-grid_number_z:grid_number_z)*dl;
-    col = grid_number_x*2 + 1;
-    row = grid_number_z*2 + 1;
+    vec.x = g.centre_vector_x+(-(grid_number_x-.5):(grid_number_x-.5))*dl;
+    vec.z = g.centre_vector_y+(-(grid_number_z-.5):(grid_number_z-.5))*dl;
+    col = grid_number_x*2 + 1*0;
+    row = grid_number_z*2 + 1*0;
 
     M.x = vec.x(ones(row,1),:);
     M.x = M.x(:)';
@@ -251,8 +276,9 @@ end
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %     
 %     PF = zeros(len_C,length(tiers_v),kr_length,dr_length);
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %  
-    d_cur = d0;
-
+d_cur = d0;
+sc_prepare
+save(['D:\MATLAB\menisco\PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')       
 for ii = g.prop.nfi:k0_length;
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
@@ -265,7 +291,7 @@ for ii = g.prop.nfi:k0_length;
     TIh = 0;
     if size(b.Ti.c)
 %         [TIj,TIy] = fn_compute_field_boundary_0(S,b.Ti,nR,k_cur,k_cur);
-        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,k_cur,k_cur,g.golden_ratio);        
+        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,area_un,k_cur,k_cur,g.golden_ratio);        
     % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %         TIh = (TIj + TIy);
     end
@@ -276,10 +302,10 @@ for ii = g.prop.nfi:k0_length;
 %  [p2i,phI_vd] = fn_compute_field_inside_domain(S,k_cur);
 
 % COMPUTE REFERENCE FIELD INSIDE - INNER DOMAIN (0 ORDER TEST)
-    p0kI = fn_compute_reference_0_2(kci,k_cur);
+    p0kI = fn_compute_reference_0_2(kci,k_cur,area_un);
 
 % COMPUTE REFERENCE FIELD INSIDE - RECEIVER SURFACE (0 ORDER TEST)    
-    p0mI = fn_compute_reference_0_2(mci,k_cur);
+    p0mI = fn_compute_reference_0_2(mci,k_cur,area_un);
 
 % COMPUTE PROPAGATOR INSIDE - BOUNDARY 2 / INNER DOMAIN
     [~,~,Thi] = fn_compute_propagator_inside3(S,nR,area_un,k_cur,k_cur,len_I,1);         
@@ -321,7 +347,7 @@ for ii = g.prop.nfi:k0_length;
             TOh = 0;
             if size(b.To.c)
 %                 [TOj,TOy] = fn_compute_field_boundary_0(S,b.To,nR,k_cur,k_cur);
-                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,k_cur,k_cur,g.golden_ratio);        
+                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,area_un,k_cur,k_cur,g.golden_ratio);        
             % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %                 TOh = -(TOj + TOy);
                 TOh = -TOh;
@@ -340,9 +366,9 @@ for ii = g.prop.nfi:k0_length;
         % COMPUTE MONOPOLE FIELD OUTSIDE - VIRTUAL DOMAIN / DOMAIN
         %   [p2o,phO_vd] = fn_compute_field_outside_domain(S,k_cur);   
         % COMPUTE REFERENCE FIELD OUTSIDE - OUTER DOMAIN (0 ORDER TEST)
-             p0kO = fn_compute_reference_0_2(kco,k_cur);
+             p0kO = fn_compute_reference_0_2(kco,k_cur,area_un);
         % COMPUTE REFERENCE FIELD OUTSIDE - RECEIVER SURFACE (0 ORDER TEST)             
-             p0mO = fn_compute_reference_0_2(mco,k_cur);
+             p0mO = fn_compute_reference_0_2(mco,k_cur,area_un);
         % COMPUTE PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
              [~,~,Tho] = fn_compute_propagator_outside3(S,nR,area_un,k_cur,k_out,len_O,d_cur);                
         % PROPAGATOR PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
@@ -369,7 +395,8 @@ for ii = g.prop.nfi:k0_length;
         % STORE FIELD PARAMETERS
 %              PF(ii,jj,pp,:,:) = b.A.p;
         sc_propagate
-%        sc_plot
+%        sc_prepare
+%        sc_integrate
 %        resp_rang(ii) = response_range;
         save(['D:\MATLAB\menisco\RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb')
 %         Mcmb_l{ii} = Mcmb;
@@ -380,6 +407,6 @@ end
 
 % save('PF.mat','PF')
 % save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
-save(['D:\MATLAB\menisco\RR_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
+% save(['D:\MATLAB\menisco\RR_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
 % sc_surf_def
 % sc_surf_run

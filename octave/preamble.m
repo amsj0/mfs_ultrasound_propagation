@@ -15,7 +15,7 @@ g.pool_radius(4) = .015;
 
 g.golden_ratio = 1;
 
-g.grid_ratio = 2*0.0625;
+g.grid_ratio = 4/1*0.0625;
 
 g.prop.nfr = str2num(PROPE_NFR);
 g.prop.iff = str2num(PROPE_IFF);
@@ -106,7 +106,9 @@ g.centre_vector_y = str2num(MODEL_SCL)*(CENTY_VEC).';
 
 g.piston_radius = str2num(MODEL_SCL)*str2num(PISTO_RAD)/100;
 
-g.piston_vector = str2num(MODEL_SCL)*str2num(PISTO_VEC)/100;
+g.piston_vector_pitch = str2num(MODEL_SCL)*str2num(PISTO_VCT)/100;
+
+g.piston_vector_catch = str2num(MODEL_SCL)*str2num(PISTO_VCR)/100;
 
 g.piston_distan = str2num(MODEL_SCL)*str2num(PISTO_DST)/100;
 

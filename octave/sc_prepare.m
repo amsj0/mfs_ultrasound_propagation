@@ -2,7 +2,7 @@
 f = @(x) 20*log10(abs(x));
 % f = @(x) (imag(x));
 
-cl = [-20 20];
+cl = [-80 0];
 
 
 %   DEFINES PISTON INDEXES 
@@ -58,19 +58,23 @@ if(draw_flag)
 
   figure(10),clf,prr = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
   % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Refracted')
+%   axis equal,
+  axis tight,caxis(cl),shading interp, colormap('gray'),title('Refracted')
 
   figure(11),clf,prl = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-  % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Reflected')
+%   hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
+%   axis equal,
+  axis tight,caxis(cl),shading interp, colormap('gray'),title('Reflected')
 
   figure(13),clf,ptt = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-  % hold on,scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r'),scatter(R.x(~b.Ro.ndx)/nRD,R.z(~b.Ro.ndx)/nRD,'*g'),scatter(R.x(~b.Ri.ndx)/nRD,R.z(~b.Ri.ndx)/nRD,'*r')
-  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('TotalFld')
+%   hold on,scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r'),scatter(R.x(~b.Ro.ndx)/nRD,R.z(~b.Ro.ndx)/nRD,'*g'),scatter(R.x(~b.Ri.ndx)/nRD,R.z(~b.Ri.ndx)/nRD,'*r')
+%   axis equal,
+  axis tight,caxis(cl),shading interp, colormap('gray'),title('TotalFld')
 
   figure(14),clf,pid = pcolor(b.A.x/nRD,b.A.z/nRD,b.A.zeros);
-  % hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
-  axis equal, axis tight,caxis(cl),shading interp, colormap('gray'),title('Incident')
+%   hold on,scatter(S.x/nRD,S.z/nRD,'r'),scatter(real(S.co/nRD),imag(S.co/nRD),'g'),scatter(real(S.ci/nRD),imag(S.ci/nRD),'r'),scatter(T.x(~b.To.ndx)/nRD,T.z(~b.To.ndx)/nRD,'*g'),scatter(T.x(~b.Ti.ndx)/nRD,T.z(~b.Ti.ndx)/nRD,'*r')
+%   axis equal,
+  axis tight,caxis(cl),shading interp, colormap('gray'),title('Incident')
   
   F_pid(response.pitch.size) = struct('cdata',[],'colormap',[]);
   F_prr(response.pitch.size) = struct('cdata',[],'colormap',[]);

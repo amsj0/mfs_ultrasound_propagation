@@ -1,7 +1,7 @@
 eval(fileread('inputfile_0.txt'));
 
-GRIDX_VEC = linspace(str2num(GRIDX_INI),str2num(GRIDX_FIN),str2num(GRIDX_DEL));
-GRIDY_VEC = linspace(str2num(GRIDY_INI),str2num(GRIDY_FIN),str2num(GRIDY_DEL));
+GRIDX_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDX_INI),str2num(GRIDX_FIN),str2num(GRIDX_DEL));
+GRIDY_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDY_INI),str2num(GRIDY_FIN),str2num(GRIDY_DEL));
 
 CENTX_VEC = linspace(str2num(CENTX_INI),str2num(CENTX_FIN),str2num(CENTX_DEL));
 CENTY_VEC = linspace(str2num(CENTY_INI),str2num(CENTY_FIN),str2num(CENTY_DEL));

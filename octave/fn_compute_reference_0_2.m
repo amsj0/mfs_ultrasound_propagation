@@ -1,4 +1,4 @@
-function p0 = fn_compute_reference_0_2(kc,k_cur)
+function p0 = fn_compute_reference_0_2(kc,k_cur,area_un)
 
 % global fac m amp;
 
@@ -16,5 +16,5 @@ z = k_cur*abs(kc);
 %         bh0 = besselh(m+0,going,z);
 % p0 = cat(2,fac(1)*bj0,fac(2)*by0);
 % p0 = fac(1)*bj0 + fac(2)*by0;
-p0 = besselh(0,2,z);
+p0 = area_un(1)*besselh(0,2,z);
 %         K.p = K.p(K.c);
