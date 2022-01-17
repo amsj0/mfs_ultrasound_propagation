@@ -42,11 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-<<<<<<< HEAD
 [r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+.5)*g.piston_distan,Neltoverlambda/100);
-=======
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+1)*g.piston_distan,Neltoverlambda/100);
->>>>>>> origin/matlab
 
 gap = 1/(Np);
 
@@ -269,7 +265,7 @@ for ii = g.prop.nfi:k0_length;
     TIh = 0;
     if size(b.Ti.c)
 %         [TIj,TIy] = fn_compute_field_boundary_0(S,b.Ti,nR,k_cur,k_cur);
-        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,k_cur,k_cur,g.golden_ratio);        
+        [~,~,TIh,~] = fn_compute_field_boundary3(S,b.Ti,nR,k_cur,k_cur,g.golden_ratio);        
     % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %         TIh = (TIj + TIy);
     end
@@ -325,7 +321,7 @@ for ii = g.prop.nfi:k0_length;
             TOh = 0;
             if size(b.To.c)
 %                 [TOj,TOy] = fn_compute_field_boundary_0(S,b.To,nR,k_cur,k_cur);
-                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,k_cur,k_cur,g.golden_ratio);        
+                [~,~,TOh,~] = fn_compute_field_boundary3(S,b.To,nR,k_cur,k_cur,g.golden_ratio);        
             % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %                 TOh = -(TOj + TOy);
                 TOh = -TOh;
@@ -375,28 +371,17 @@ for ii = g.prop.nfi:k0_length;
         sc_propagate
 %        sc_plot
 %        resp_rang(ii) = response_range;
-<<<<<<< HEAD
 %        Mcmb_l{ii} = Mcmb;
         save(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'Mcmb','-hdf5')
-=======
-        save(['D:\MATLAB\menisco\RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb')
-%         Mcmb_l{ii} = Mcmb;
-%         h5write(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'/Mcmb',Mcmb)
->>>>>>> origin/matlab
         end
     end
 end
 
 % save('PF.mat','PF')
 <<<<<<< HEAD
-<<<<<<< HEAD
 save(['PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'T','R','S','Neltoverlambda','nRD','b','g','-hdf5')
 =======
 save(['PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g','-hdf5')
 >>>>>>> 2fd4097502e197651aaa605221aa26e315fd3029
-=======
-% save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
-save(['D:\MATLAB\menisco\RR_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
->>>>>>> origin/matlab
 % sc_surf_def
 % sc_surf_run
