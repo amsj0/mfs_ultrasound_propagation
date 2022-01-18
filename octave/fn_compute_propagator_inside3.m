@@ -16,6 +16,8 @@ dr =  varargin{7};
 
 Ma = bsxfun(@minus,D.ci,R.c.');
 
+Th = zeros(size(Ma,1),2*size(Ma,2));
+
 % Ar = area_un(ones(len_I,1),:);
 Ar = area_un(1);
 
@@ -34,13 +36,21 @@ z = k_cur*abs(Ma);
 % by0 = 1i*bessely(0+0,z);
 % by1 = 1i*1/2*(bessely(0-1,z)-bessely(0+1,z));
 
-bh0 = besselh(m+0,2,z);
-if m == 0
-    bh1 = besselh(m-1,2,z);
-else
-    bh1 = 1/2*(besselh(m-1,2,z)-besselh(m+1,2,z));
-end % first derivate
+% bh0 = besselh(m+0,2,z);
+% if m == 0
+%     bh1 = besselh(m-1,2,z);
+% else
+%     bh1 = 1/2*(besselh(m-1,2,z)-besselh(m+1,2,z));
+% end % first derivate
 % bh1 = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z)); % first derivate
+
+Th(:,1:end/2) = besselh(m+0,kind,z);
+
+if m == 0
+    Th(:,end/2+(1:end/2)) = besselh(m-1,kind,z);
+else
+    Th(:,end/2+(1:end/2)) = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z));
+end 
 % BUj = 1i/4*Ar.*bj0;
 % AUj = -1i/4*Ar.*bj1.*rcos*k_cur;
 % AUj = 1i/4*Ar.*bj1.*rcos*k_cur/k_r*dr;
@@ -49,13 +59,17 @@ end % first derivate
 % AUy = -1i/4*Ar.*by1.*rcos*k_cur;
 % AUy = 1i/4*Ar.*by1.*rcos*k_cur/k_r*dr;
 
-% BUh = 1i/4*Ar.*bh0;
-% AUh = -1i/4*Ar.*by1.*rcos*k_cur;
+% BUh = -1i/4*Ar.*bh0;
+% % AUh = -1i/4*Ar.*by1.*rcos*k_cur;
 % AUh = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
+
+Th(:,1:end/2) = -1i/4*Ar.*Th(:,1:end/2);
+% AUh = -1i/4*Ar.*by1.*rcos*k_cur;
+Th(:,end/2+(1:end/2)) = 1i/4*Ar.*Th(:,end/2+(1:end/2)).*rcos*k_cur/k_r*dr;
 
 % Tj = cat(2,AUj,-BUj);
 % Ty = -cat(2,AUy,-BUy);
 Tj = [];
 Ty = [];
-% Th = cat(2,AUh,-BUh);
-Th = 1i/4*Ar.*cat(2,bh1.*rcos*k_cur/k_r*dr,-bh0);
+% Th = cat(2,bh1,bh0);
+% Th = 1i/4*Ar*cat(2,bh1.*rcos*k_cur/k_r*dr,-bh0);

@@ -54,4 +54,4 @@ DVh = (1*bh1.*rcos*k_cur + 1*1i*bh0./abs(Ma).*rsin*m).*ex0;
 % Ty = fac(2)*cat(1,1*BVy,1*DVy);
 Tj = [];
 Ty = [];
-Th = cat(1,Ar.*BVh,Ar.*DVh);
+Th = Ar*cat(1,BVh,DVh);
