@@ -18,10 +18,10 @@ for tt = 1:response.pitch.size
     b.D.pid(~b.D.ndx0,:) = sum(Mcmb{6,1}(:,ndx.TO),2);  % APPLIED MODEL 
     b.D.ptt = b.D.pid + b.D.prl + b.D.prr;
 
-    %field.range.prr(tt,:) = b.D.prr;
-    %field.range.prl(tt,:) = b.D.prl;
-    %field.range.pid(tt,:) = b.D.pid;
-    field.range.ptt(tt,:) = b.D.ptt;
+    field.range.prr(tt,:) = b.D.prr;
+    field.range.prl(tt,:) = b.D.prl;
+    field.range.pid(tt,:) = b.D.pid;
+    %field.range.ptt(tt,:) = b.D.ptt;
 
     
 %    response.pitch.A(tt) = mean([response.pitch.I(ndx.TI),response.pitch.O(ndx.TO)]);
