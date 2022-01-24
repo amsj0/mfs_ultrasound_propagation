@@ -44,12 +44,12 @@ z = k_cur*abs(Ma);
 % end % first derivate
 % bh1 = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z)); % first derivate
 
-Th(:,1:end/2) = besselh(m+0,kind,z);
+Th(:,(end/2+1):end) = besselh(m+0,kind,z);
 
 if m == 0
-    Th(:,end/2+(1:end/2)) = besselh(m-1,kind,z);
+    Th(:,1:end/2) = besselh(m-1,kind,z);
 else
-    Th(:,end/2+(1:end/2)) = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z));
+    Th(:,1:end/2) = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z));
 end 
 % BUj = 1i/4*Ar.*bj0;
 % AUj = -1i/4*Ar.*bj1.*rcos*k_cur;
@@ -63,9 +63,9 @@ end
 % % AUh = -1i/4*Ar.*by1.*rcos*k_cur;
 % AUh = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
 
-Th(:,1:end/2) = -1i/4*Ar.*Th(:,1:end/2);
+Th(:,(end/2+1):end) = -1i/4*Ar.*Th(:,(end/2+1):end);
 % AUh = -1i/4*Ar.*by1.*rcos*k_cur;
-Th(:,end/2+(1:end/2)) = 1i/4*Ar.*Th(:,end/2+(1:end/2)).*rcos*k_cur/k_r*dr;
+Th(:,1:end/2) = 1i/4*Ar.*Th(:,1:end/2).*rcos*k_cur/k_r*dr;
 
 % Tj = cat(2,AUj,-BUj);
 % Ty = -cat(2,AUy,-BUy);

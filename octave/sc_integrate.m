@@ -143,6 +143,9 @@ for tt = 1:response.pitch.size
             b.A.p(isnan(f(b.A.p)))=0;
             set(ptt,'CData',f(b.A.p));
             drawnow
+            if tt == floor(response.pitch.size/2)
+                pause
+            end
 
             F_pid(tt) = getframe(get(pid,'Parent'));
             F_prr(tt) = getframe(get(prr,'Parent'));

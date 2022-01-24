@@ -2,7 +2,9 @@
 f = @(x) 20*log10(abs(x));
 % f = @(x) (imag(x));
 
-cl = [-80 0];
+cl = [-80 -20];
+% cl = [-40 60];
+% cl = [-20 20];
 
 
 %   DEFINES PISTON INDEXES 
@@ -49,7 +51,7 @@ response.ndx.TO = find(~b.To.ndx);
 response.ndx.TI = find(~b.Ti.ndx);
 
 draw_flag = 0;
-%draw_flag = 1;
+% draw_flag = 1;
 surf_flag = 0;
 %surf_flag = 1;
 

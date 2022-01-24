@@ -292,6 +292,7 @@ for ii = g.prop.nfi:k0_length;
     if size(b.Ti.c)
 %         [TIj,TIy] = fn_compute_field_boundary_0(S,b.Ti,nR,k_cur,k_cur);
         [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,area_un,k_cur,k_cur,g.golden_ratio);        
+%         [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,1,k_cur,k_cur,g.golden_ratio);        
     % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %         TIh = (TIj + TIy);
     end
@@ -303,6 +304,7 @@ for ii = g.prop.nfi:k0_length;
 
 % COMPUTE REFERENCE FIELD INSIDE - INNER DOMAIN (0 ORDER TEST)
     p0kI = fn_compute_reference_0_2(kci,k_cur,area_un);
+%     p0kI = fn_compute_reference_0_2(kci,k_cur,1);
 
 % COMPUTE REFERENCE FIELD INSIDE - RECEIVER SURFACE (0 ORDER TEST)    
     p0mI = fn_compute_reference_0_2(mci,k_cur,area_un);
@@ -348,6 +350,7 @@ for ii = g.prop.nfi:k0_length;
             if size(b.To.c)
 %                 [TOj,TOy] = fn_compute_field_boundary_0(S,b.To,nR,k_cur,k_cur);
                 [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,area_un,k_cur,k_cur,g.golden_ratio);        
+%                 [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,1,k_cur,k_cur,g.golden_ratio);        
             % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %                 TOh = -(TOj + TOy);
                 TOh = -TOh;
@@ -367,6 +370,7 @@ for ii = g.prop.nfi:k0_length;
         %   [p2o,phO_vd] = fn_compute_field_outside_domain(S,k_cur);   
         % COMPUTE REFERENCE FIELD OUTSIDE - OUTER DOMAIN (0 ORDER TEST)
              p0kO = fn_compute_reference_0_2(kco,k_cur,area_un);
+%             p0kO = fn_compute_reference_0_2(kco,k_cur,1);
         % COMPUTE REFERENCE FIELD OUTSIDE - RECEIVER SURFACE (0 ORDER TEST)             
              p0mO = fn_compute_reference_0_2(mco,k_cur,area_un);
         % COMPUTE PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
@@ -396,7 +400,7 @@ for ii = g.prop.nfi:k0_length;
 %              PF(ii,jj,pp,:,:) = b.A.p;
         sc_propagate
 %        sc_prepare
-%        sc_integrate
+%         sc_integrate
 %        resp_rang(ii) = response_range;
         save(['D:\MATLAB\menisco\RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb')
 %         Mcmb_l{ii} = Mcmb;
