@@ -51,7 +51,7 @@ end
 
 clear input Mcmb r0 r1 r2
 
-npc = nproc;
+npc = feature('numCores');
 
 proc_tota = g.prop.nfr-g.prop.nfi;
 
@@ -81,7 +81,7 @@ for rr = 1:length(runs)
      input{nsl} = ['R',num2str(converge),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
   end
 
-  out = parcellfun(this_run,@(x) fn_analyze(x),input(this_ser));
+  out = cellfun(this_run,@(x) fn_analyze(x),input(this_ser));
   for jj = this_ser
     ij = ii+jj-1;
     rr1 = out(jj).rr;

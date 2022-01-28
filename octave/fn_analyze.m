@@ -1,6 +1,6 @@
 function rd = fn_analyze(filename)
         load(filename)
-        load('PP_41_20_100.mat')
+        load('PP_50_2_100.mat')
 	%   DEFINES PISTON INDEXES
 	ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
 	%ppt_per_surface = 1;
@@ -84,28 +84,25 @@ function rd = fn_analyze(filename)
 	    field.range.pid(tt,:) = b.D.pid;
 	    %field.range.ptt(tt,:) = b.D.ptt;
 
-	    
 	%    response.pitch.A(tt) = mean([response.pitch.I(ndx.TI),response.pitch.O(ndx.TO)]);
-	    
-	    
+
 	    b.T.prr{1} = sum(Mcmb{1,2}(:,ndx.TO),2);  % APPLIED MODEL
-	    b.T.prr{2} = sum(Mcmb{2,2}(:,ndx.TI),2);  % APPLIED MODEL 
-	    b.T.prl{1} = sum(Mcmb{3,2}(:,ndx.TI),2);  % APPLIED MODEL 
-	    b.T.prl{2} = sum(Mcmb{4,2}(:,ndx.TO),2);  % APPLIED MODEL 
-	    b.T.pid{1} = sum(Mcmb{5,2}(:,ndx.TI),2);  % APPLIED MODEL 
-	    b.T.pid{2} = sum(Mcmb{6,2}(:,ndx.TO),2);  % APPLIED MODEL    
+	    b.T.prr{2} = sum(Mcmb{2,2}(:,ndx.TI),2);  % APPLIED MODEL
+	    b.T.prl{1} = sum(Mcmb{3,2}(:,ndx.TI),2);  % APPLIED MODEL
+	    b.T.prl{2} = sum(Mcmb{4,2}(:,ndx.TO),2);  % APPLIED MODEL
+	    b.T.pid{1} = sum(Mcmb{5,2}(:,ndx.TI),2);  % APPLIED MODEL
+	    b.T.pid{2} = sum(Mcmb{6,2}(:,ndx.TO),2);  % APPLIED MODEL
 	    b.T.ptt{1} = (b.T.pid{1} + b.T.prl{1} + b.T.prr{1});
 	    b.T.ptt{2} = (b.T.pid{2} + b.T.prl{2} + b.T.prr{2});
 
 	    %   EXTRACT RECEIVER PISTON INDEXES
 	    for rr = 1:response.catch.size
 	%     for rr = tt
-	        
 	%         ndx.RI = [ndxI_cat{:,ppt_per_surface-1+rr}];
 	%         ndx.RO = [ndxO_cat{:,ppt_per_surface-1+rr}];
 	        ndx.RI = ndx.R.i{rr};
 	        ndx.RO = ndx.R.o{rr};
-	        
+
 	%         resRO{jj} = response_ndx.RO(ndx.RO);
 	%         resRI{jj} = response_ndx.RI(ndx.RI);
 	        resRO = response.ndx.RO(ndx.RO);
