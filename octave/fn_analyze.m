@@ -1,6 +1,7 @@
-function rd = fn_analyze(filename)
-        load(filename)
-        load('PP_50_2_100.mat')
+function rd = fn_analyze(path,datafile,configfile)
+    
+    load([path,datafile])
+    load([path,configfile])
 	%   DEFINES PISTON INDEXES
 	ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
 	%ppt_per_surface = 1;
@@ -128,4 +129,4 @@ function rd = fn_analyze(filename)
 	rr2 = diag(response.range.prr);
 	rd.rr = cat(2,rr0,rr1,rr2);
 	rd.dd = cat(3,field.range.prr,field.range.prl,field.range.pid);
-endfunction
+end

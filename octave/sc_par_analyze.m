@@ -1,12 +1,20 @@
 pkg load parallel
 
-resp = [];
-doma = [];
+numbr_frequencies = 100
+initi_frequencies = 1
+final_frequencies = 100
+converge = 'R';
+
+path = 'D:\MATLAB\menisco\';
+configfile = ['PP_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
+
+load([path,configfile])
+
 sc_prepare
 
-ii = g.prop.nfi;
+datafile = [path,'R',num2str(converge),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
 
-input = load(['R',num2str(converge),'_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat']);
+input = load(datafile);
 
 Mcmb = input.Mcmb;
 sc_integrate
@@ -17,6 +25,7 @@ r2 = diag(response.range.prr);
 
 resp0 = zeros(1,g.prop.nfr);
 doma0 = zeros(size(field.range.pid,2),g.prop.nfr);
+
 
 resp = cell(3,size(r0,1));
 doma = cell(3,size(field.range.pid,1));
@@ -66,11 +75,11 @@ if (proc_init!=0)
    runs{1} =  proc_init;
 end
 
-input = cell(1,npc);
-
 %while IS_FILE
 
 ii = g.prop.nfi+1;
+
+datafiles = cell(1,npc);
 
 for rr = 1:length(runs)
 #(g.prop.nfi+1):npc:(g.prop.nfi+1);
@@ -78,10 +87,10 @@ for rr = 1:length(runs)
   this_ser = 1:this_run;
 
   for nsl = this_ser
-     input{nsl} = ['R',num2str(converge),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
+     datafiles{nsl} = ['R',num2str(converge),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
   end
 
-  out = parcellfun(this_run,@(x) fn_analyze(x),input(this_ser));
+  out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile),datafiles(this_ser));
   for jj = this_ser
     ij = ii+jj-1;
     rr1 = out(jj).rr;
@@ -122,5 +131,5 @@ for ii = (g.prop.nfi+2):4:(g.prop.nfr-3);
   end
 end
 %}
-save(['doma_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
-save(['resp_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
+save([path,'doma_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
+save([path,'resp_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
