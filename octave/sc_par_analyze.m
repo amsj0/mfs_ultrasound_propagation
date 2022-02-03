@@ -3,10 +3,10 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-converge = 'R';
+converge = 'Ap';
 
 path = 'D:\MATLAB\menisco\';
-configfile = ['PP_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
+configfile = ['PPp_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
 
 load([path,configfile])
 

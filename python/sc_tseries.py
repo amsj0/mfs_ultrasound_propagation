@@ -28,9 +28,10 @@ numbr_freq = 100
 initi_freq = 1
 final_freq = 100
 parti_freq = 100
-converge ='R'
+converge ='A'
+modifier = 'p'
 
-display_time_step_ratio = 1
+display_time_step_ratio = 16
 dtsr = display_time_step_ratio
 
 filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '.h5'
@@ -75,9 +76,9 @@ def synth_fseries_from_centr_freq(cent_freq):
 # In[ ]:
 
 
-def load_para():
+def load_para(modifier):
     
-    f = h5py.File(pathname + 'PP' + filename,'r')
+    f = h5py.File(pathname + 'PP' + modifier + filename,'r')
 
     gridx = f['b']['value']['A']['value']['x']['value']
 
@@ -359,17 +360,17 @@ def plt_mat_tseries_1(converge):
 # In[ ]:
 
 
-doma_dataset,doma_dims = load_('doma',converge)
+doma_dataset,doma_dims = load_('doma',converge + modifier)
 
 doma_list_keys = list(doma_dataset.keys())
 doma_data = np.array(doma_dataset[doma_list_keys[0]]['value']).view(complex)
 
-resp_dataset,resp_dims = load_('resp',converge)
+resp_dataset,resp_dims = load_('resp',converge + modifier)
 
 resp_list_keys = list(resp_dataset.keys())
 resp_data = np.array(resp_dataset[resp_list_keys[0]]['value']).view(complex)
 
-grid = load_para()
+grid = load_para(modifier)
 
 
 # In[ ]:
