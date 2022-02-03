@@ -278,7 +278,7 @@ end
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %  
 d_cur = d0;
 sc_prepare
-save(['D:\MATLAB\menisco\PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')       
+save(['D:\MATLAB\menisco\PPp_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')       
 for ii = g.prop.nfi:k0_length;
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
@@ -402,7 +402,7 @@ for ii = g.prop.nfi:k0_length;
 %        sc_prepare
 %         sc_integrate
 %        resp_rang(ii) = response_range;
-        save(['D:\MATLAB\menisco\RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb')
+        save(['D:\MATLAB\menisco\RAp_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'Mcmb')
 %         Mcmb_l{ii} = Mcmb;
 %         h5write(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'/Mcmb',Mcmb)
         end
