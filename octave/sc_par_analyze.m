@@ -3,16 +3,17 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-converge = 'Ap';
+modifier = 's';
+converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
-configfile = ['PPp_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
+configfile = ['PP',num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
 
 load([path,configfile])
 
 sc_prepare
 
-datafile = [path,'R',num2str(converge),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
+datafile = [path,'R',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
 
 input = load(datafile);
 
@@ -60,7 +61,9 @@ end
 
 clear input Mcmb r0 r1 r2
 
-npc = nproc;
+memory_factor = 4;
+
+npc = nproc/memory_factor;
 
 proc_tota = g.prop.nfr-g.prop.nfi;
 

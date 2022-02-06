@@ -29,7 +29,7 @@ initi_freq = 1
 final_freq = 100
 parti_freq = 100
 converge ='A'
-modifier = 'p'
+modifier = 'r'
 
 display_time_step_ratio = 16
 dtsr = display_time_step_ratio
@@ -410,12 +410,14 @@ axs[3].set_title('Total')
 fg.canvas.draw()
 fg.canvas.flush_events()
 
+print(int(doma_dims[0]))
+
 mat_tseries = np.empty((int(factor*spec_size),doma_data.shape[1],4),dtype='complex')
 #factor = 1.25
 for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
     osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
     spec0 = spec[0:hspc_size]
-    for jj in range(0,int(doma_dims[0]/1),23):
+    for jj in range(0,int(doma_dims[0]),int((doma_dims[0]-1)/5)):
         index = np.ravel_multi_index((jj,0),doma_dims)
         doma_data = np.array(doma_dataset[doma_list_keys[index]]['value']).view(complex)
         index = np.ravel_multi_index((jj,1),doma_dims)
@@ -441,7 +443,7 @@ for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
             new_doma = expand_resp(domatt)
             new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)            
             mat_tseries[:,kk,3] = tseries.transpose()             
-        vlim = np.amax(np.abs(mat_tseries))
+        vlim = np.amax(np.abs(mat_tseries))/4
         for ll in range(int(factor*int(spec_size/dtsr))):
             this_series = mat_tseries[(ll+1)*dtsr-1,:,0].real/vlim
             #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,0]))
