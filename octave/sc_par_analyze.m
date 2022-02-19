@@ -3,7 +3,7 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-modifier = 's';
+modifier = 'r';
 converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
@@ -87,12 +87,13 @@ datafiles = cell(1,npc);
 for rr = 1:length(runs)
 #(g.prop.nfi+1):npc:(g.prop.nfi+1);
   this_run = runs{rr};
+  
   this_ser = 1:this_run;
 
   for nsl = this_ser
-     datafiles{nsl} = ['R',num2str(converge),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
+     datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
   end
-
+  
   out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile),datafiles(this_ser));
   for jj = this_ser
     ij = ii+jj-1;
@@ -134,5 +135,5 @@ for ii = (g.prop.nfi+2):4:(g.prop.nfr-3);
   end
 end
 %}
-save([path,'doma_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
-save([path,'resp_enh_',num2str(converge),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
+save([path,'doma_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
+save([path,'resp_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
