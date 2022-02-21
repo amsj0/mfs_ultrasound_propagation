@@ -28,7 +28,12 @@ numbr_freq = 100
 initi_freq = 1
 final_freq = 100
 parti_freq = 100
+<<<<<<< Updated upstream
 converge ='R'
+=======
+converge = sys.argv[2]
+modifier = sys.argv[3]
+>>>>>>> Stashed changes
 
 display_time_step_ratio = 16
 dtsr = display_time_step_ratio
@@ -77,7 +82,11 @@ def synth_fseries_from_centr_freq(cent_freq):
 
 def load_para():
     
+<<<<<<< Updated upstream
     f = h5py.File(pathname + 'PP' + filename,'r')
+=======
+    f = h5py.File(pathname + 'P' + modifier + filename,'r')
+>>>>>>> Stashed changes
 
     gridx = f['b']['value']['A']['value']['x']['value']
 
@@ -358,6 +367,25 @@ def plt_mat_tseries_1(converge):
 
 # In[ ]:
 
+<<<<<<< Updated upstream
+=======
+if __name__ == '__main__':
+
+    print(converge + modifier)
+    doma_dataset,doma_dims = load_('doma',converge + modifier)
+
+    doma_list_keys = list(doma_dataset.keys())
+    doma_data = np.array(doma_dataset[doma_list_keys[0]]['value']).view(complex)
+
+    resp_dataset,resp_dims = load_('resp',converge + modifier)
+
+    resp_list_keys = list(resp_dataset.keys())
+    resp_data = np.array(resp_dataset[resp_list_keys[0]]['value']).view(complex)
+
+    grid = load_para(converge + modifier)
+
+    # In[ ]:
+>>>>>>> Stashed changes
 
 doma_dataset,doma_dims = load_('doma',converge)
 
