@@ -277,8 +277,8 @@ end
 %     PF = zeros(len_C,length(tiers_v),kr_length,dr_length);
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %  
 d_cur = d0;
-sc_prepare
-save(['D:\MATLAB\menisco\P',g.convergemod,num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')       
+% sc_prepare
+save(['D:\MATLAB\menisco\P',g.convergemod,'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')       
 for ii = g.prop.nfi:k0_length;
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
