@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
+#from scipy.signal import hilbert
 import h5py
 import time
 import sys
@@ -16,7 +17,7 @@ import sys
 # In[ ]:
 
 
-spec_size = int(1/2*512)
+spec_size = int(2/2*512)
 hspc_size = int(spec_size/2)
 #central_freq = 19/(.6*2) #15.833
 #central_freq = 15.707963268 #5pi
@@ -28,8 +29,8 @@ numbr_freq = 100
 initi_freq = 1
 final_freq = 100
 parti_freq = 100
-converge ='R'
-modifier = ''
+converge = sys.argv[2]
+modifier = sys.argv[3]
 
 display_time_step_ratio = 256
 dtsr = display_time_step_ratio
@@ -75,7 +76,7 @@ def synth_fseries_from_centr_freq(cent_freq):
 
 def load_para(modifier):
     
-    f = h5py.File(pathname + 'PP' + modifier + filename,'r')
+    f = h5py.File(pathname + 'P' + modifier + filename,'r')
 
     gridx = f['b']['value']['A']['value']['x']['value']
 
@@ -369,7 +370,7 @@ if __name__ == '__main__':
     resp_list_keys = list(resp_dataset.keys())
     resp_data = np.array(resp_dataset[resp_list_keys[0]]['value']).view(complex)
 
-    grid = load_para(modifier)
+    grid = load_para(converge + modifier)
 
     # In[ ]:
 
@@ -413,23 +414,38 @@ if __name__ == '__main__':
     mat_tseries = np.empty((int(factor*spec_size),doma_data.shape[1],4),dtype='complex')
     vec_tseries = np.empty((int(factor*spec_size),4),dtype='complex')
     
-    vlim = np.empty((int(resp_dims[0]),resp_data.shape[1]),dtype='complex')
+    vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
+    #vlim = np.empty((int(resp_dims[0]),resp_data.shape[1]),dtype='complex')
+    #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
     
     #factor = 1.25
-    for ii in range(0+1*int(1*x_size*8/8),1+1*int(1*x_size*8/8),1):
+    for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
         spec0 = spec[0:hspc_size]
-        for jj in range(0,int(doma_dims[0])**2,1):
+        
+        for jj in range(0,int(resp_dims[0])):
         
 
             index = np.ravel_multi_index((jj,0),resp_dims)
-            resp_data = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)            
+            
+            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
+                resp_data = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            else:
+                resp_data = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
 
             index = np.ravel_multi_index((jj,1),resp_dims)          
-            resp_data0 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)            
+            
+            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
+                resp_data0 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            else:
+                resp_data0 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
 
-            index = np.ravel_multi_index((jj,1),resp_dims)           
-            resp_data1 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)            
+            index = np.ravel_multi_index((jj,2),resp_dims)           
+            
+            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
+                resp_data1 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            else:
+                resp_data1 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
             
             resp_data2 = resp_data0 + resp_data1 + resp_data            
             
@@ -455,11 +471,15 @@ if __name__ == '__main__':
             new_full,tseries = synth_tseries_from_spec_full(new_resp,spec0,factor)            
             vec_tseries[:,3] = tseries.transpose()
             
-            vlim[jj,:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
-            
+            #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
+            #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
+            vlim[jj,:] = vec_tseries[:,3]
+
             #domat = doma[:,:,jj*8]
-            
-            if not (jj%int(doma_dims[0]**2/1)):
+            #print(int(jj/(1+doma_dims[0])))
+            #if not (jj%int(resp_dims[0]/1)):
+            if 0:
+                
                 index = np.ravel_multi_index((jj,0),doma_dims)
                 doma_data = np.array(doma_dataset[doma_list_keys[index]]['value']).view(complex)
                 
@@ -524,8 +544,23 @@ if __name__ == '__main__':
                     #plt.grid(True
                     fg.canvas.flush_events()
         
-    plt.ioff()    
+    
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
-    ax.plot(np.abs(vlim))
+    rng = range(3,doma_dims[0],40)
+    xx, yy = np.meshgrid(rng,rng)
+    rngstacked = np.vstack((xx.ravel(),yy.ravel()))
+    multi_index = np.ravel_multi_index(rngstacked,(doma_dims[0],doma_dims[0]))
+    
+    #ax.plot(np.abs(vlim[:doma_dims[0]:]))
+    vlimmax = np.max(np.abs(vlim),axis=-1)
+    vlimmax.shape = (doma_dims[0],doma_dims[0])
+    ax.pcolormesh(vlimmax)
+    plt.show()
+    fg,ax = plt.subplots(1,1,figsize=(10,7))
+    
+    plt.ioff()
+    spec_grid,ndx_grid = np.meshgrid(x_spec_full,range(256))
+    #ax.pcolormesh(spec_grid,ndx_grid,np.max(np.abs(vlim,axis=0),shading='nearest',vmin=-1, vmax=1)
+    ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim[multi_index,:]),shading='nearest',vmin=-1, vmax=1)
     plt.show()

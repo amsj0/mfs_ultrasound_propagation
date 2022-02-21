@@ -3,7 +3,7 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-modifier = 'p';
+modifier = 'o';
 converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
@@ -65,7 +65,7 @@ end
 
 clear input Mcmb r0 r1 r2
 
-memory_factor = 4;
+memory_factor = 1;
 
 npc = nproc/memory_factor;
 
