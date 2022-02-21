@@ -3,11 +3,11 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-modifier = 'r';
+modifier = 'p';
 converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
-configfile = ['PP',num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
+configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
 
 load([path,configfile])
 
@@ -20,9 +20,13 @@ input = load(datafile);
 Mcmb = input.Mcmb;
 sc_integrate
 
-r0 = diag(response.range.pid);
-r1 = diag(response.range.prl);
-r2 = diag(response.range.prr);
+%r0 = diag(response.range.pid);
+%r1 = diag(response.range.prl);
+%r2 = diag(response.range.prr);
+
+r0 = response.range.pid(:);
+r1 = response.range.prl(:);
+r2 = response.range.prr(:);
 
 resp0 = zeros(1,g.prop.nfr);
 doma0 = zeros(size(field.range.pid,2),g.prop.nfr);
@@ -99,13 +103,16 @@ for rr = 1:length(runs)
     ij = ii+jj-1;
     rr1 = out(jj).rr;
     dd1 = out(jj).dd;
-    for kk = 1:size(doma,2)
+    for kk = 1:size(resp,2)
       resp{1,kk}(ij) = rr1(kk,1);
       resp{2,kk}(ij) = rr1(kk,2);
       resp{3,kk}(ij) = rr1(kk,3);
-      doma{1,kk}(:,ij) = dd1(kk,:,1);
-      doma{2,kk}(:,ij) = dd1(kk,:,2);
-      doma{3,kk}(:,ij) = dd1(kk,:,3);
+      if (~rem(kk,size(doma,2)))
+        this_kk = ceil(kk/size(doma,2));
+        doma{1,this_kk}(:,ij) = dd1(this_kk,:,1);
+        doma{2,this_kk}(:,ij) = dd1(this_kk,:,2);
+        doma{3,this_kk}(:,ij) = dd1(this_kk,:,3);
+      end
     end
   end
   ii = ii + this_run;

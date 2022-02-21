@@ -419,7 +419,7 @@ if __name__ == '__main__':
     for ii in range(0+1*int(1*x_size*8/8),1+1*int(1*x_size*8/8),1):
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
         spec0 = spec[0:hspc_size]
-        for jj in range(0,int(doma_dims[0]),1):
+        for jj in range(0,int(doma_dims[0])**2,1):
         
 
             index = np.ravel_multi_index((jj,0),resp_dims)
@@ -459,7 +459,7 @@ if __name__ == '__main__':
             
             #domat = doma[:,:,jj*8]
             
-            if not (jj%int(doma_dims[0]/1)):
+            if not (jj%int(doma_dims[0]**2/1)):
                 index = np.ravel_multi_index((jj,0),doma_dims)
                 doma_data = np.array(doma_dataset[doma_list_keys[index]]['value']).view(complex)
                 

@@ -124,9 +124,14 @@ function rd = fn_analyze(path,datafile,configfile)
 
 	response.range.ptt = response.range.prl+response.range.prr+response.range.pid;
 
-	rr0 = diag(response.range.pid);
-	rr1 = diag(response.range.prl);
-	rr2 = diag(response.range.prr);
+    %rr0 = diag(response.range.pid);
+	%rr1 = diag(response.range.prl);
+	%rr2 = diag(response.range.prr);
+
+	rr0 = response.range.pid(:);
+	rr1 = response.range.prl(:);
+	rr2 = response.range.prr(:);	
+
 	rd.rr = cat(2,rr0,rr1,rr2);
 	rd.dd = cat(3,field.range.prr,field.range.prl,field.range.pid);
 end
