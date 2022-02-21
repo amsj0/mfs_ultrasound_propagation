@@ -97,6 +97,7 @@ g.recreate = @(p,q) and(matchx(p,q),matchz(p,q));
 g.plot_flag = str2num(PLOT_FLAG);
 
 g.extension = STRNG_EXT;
+g.convergemod = CONVE_MOD;
 
 g.centre_vector_x = str2num(MODEL_SCL)*(CENTX_VEC).';
 
