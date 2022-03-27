@@ -92,7 +92,7 @@ g.BlLIM = -60;
 matchx = @(p,q) bsxfun(@(x,y) abs(x-y)<eps,p.x(:),q.x.');
 matchz = @(p,q) bsxfun(@(x,y) abs(x-y)<eps,p.z(:),q.z.');
 
-g.recreate = @(p,q) and(matchx(p,q),matchz(p,q));
+% g.recreate = @(p,q) and(matchx(p,q),matchz(p,q));
 
 g.plot_flag = str2num(PLOT_FLAG);
 
