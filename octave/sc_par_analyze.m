@@ -3,17 +3,18 @@ pkg load parallel
 numbr_frequencies = 100
 initi_frequencies = 1
 final_frequencies = 100
-modifier = 'o';
+skr = 930
+modifier = '1';
 converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
-configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'.mat'];
+configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'_',num2str(skr),'.mat'];
 
 load([path,configfile])
 
 sc_prepare
 
-datafile = [path,'R',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
+datafile = [path,'R',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.mat'];
 
 input = load(datafile);
 
@@ -95,7 +96,7 @@ for rr = 1:length(runs)
   this_ser = 1:this_run;
 
   for nsl = this_ser
-     datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'];
+     datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.mat'];
   end
   
   out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile),datafiles(this_ser));
@@ -142,5 +143,5 @@ for ii = (g.prop.nfi+2):4:(g.prop.nfr-3);
   end
 end
 %}
-save([path,'doma_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'doma','-hdf5')
-save([path,'resp_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'resp','-hdf5')
+save([path,'doma_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.h5'],'doma','-hdf5')
+save([path,'resp_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.h5'],'resp','-hdf5')

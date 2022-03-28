@@ -473,8 +473,8 @@ if __name__ == '__main__':
             
             #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
             #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
-            vlim[jj,:] = vec_tseries[:,3]
-
+            vlim[jj,:] = vec_tseries[:,3]           
+            print(jj)
             #domat = doma[:,:,jj*8]
             #print(int(jj/(1+doma_dims[0])))
             #if not (jj%int(resp_dims[0]/1)):
@@ -493,8 +493,9 @@ if __name__ == '__main__':
                 
                             
                 for kk in range(int(doma_data.shape[1])):
+                    
                     domatt = doma_data[:,kk].transpose()
-                    #print(domatt.shape)
+                    
                     new_doma = expand_resp(domatt)
                     new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)
                     mat_tseries[:,kk,0] = tseries.transpose()
@@ -512,6 +513,7 @@ if __name__ == '__main__':
                     mat_tseries[:,kk,3] = tseries.transpose()             
                 mlim = np.amax(np.abs(mat_tseries))/4
                 for ll in range(int(factor*int(spec_size/dtsr))):
+                    
                     this_series = mat_tseries[(ll+1)*dtsr-1,:,0].real/mlim
                     #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,0]))
                     this_series.shape = this_grid.shape
