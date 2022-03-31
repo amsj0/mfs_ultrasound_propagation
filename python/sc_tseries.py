@@ -4,6 +4,7 @@
 # In[ ]:
 
 
+#from nbformat import read
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -31,11 +32,12 @@ final_freq = 100
 parti_freq = 100
 converge = sys.argv[2]
 modifier = sys.argv[3]
+skr = sys.argv[4]
 
 display_time_step_ratio = 256
 dtsr = display_time_step_ratio
 
-filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '.h5'
+filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '_' + str(skr) + '.h5'
 # pathname = '../octave/'
 pathname = sys.argv[1]
 
@@ -131,6 +133,17 @@ def load_(para,converge):
 
 # In[ ]:
 
+def expand_resp_new(resp):
+    leading_size = int(initi_freq/(final_freq-initi_freq)*(numbr_freq-1))
+    #leading_zero = np.zeros((leading_size,1))
+    trailing_size = int(hspc_size-parti_freq-leading_size)
+    #trailing_zero = np.zeros((trailing_size,1))
+    new_resp = np.zeros((hspc_size,1),dtype='complex')
+    new_resp[leading_size:-trailing_size] = resp[:,np.newaxis]
+    
+    return new_resp
+
+# In[ ]:
 
 def expand_resp(resp):
     leading_size = int(initi_freq/(final_freq-initi_freq)*(numbr_freq-1))
@@ -149,7 +162,6 @@ def expand_resp(resp):
 
 
 # In[ ]:
-
 
 def expand_resp_0(resp):
     leading_size = int(initi_freq/(final_freq-initi_freq)*(numbr_freq-1))
@@ -273,6 +285,13 @@ def synth_tseries_from_spec_full(new_resp,spec,factor):
     new_full = new_resp*spec
     tseries = np.fft.ifft(new_full,n=int(factor*spec_size),axis=0)
     return new_full,tseries
+
+
+# In[ ]:
+
+def synth_tseries_from_spec_full_new(spec,factor):
+    tseries = np.fft.ifft(spec,n=int(factor*spec_size),axis=0)
+    return tseries
 
 
 # In[ ]:
@@ -409,12 +428,15 @@ if __name__ == '__main__':
     fg.canvas.draw()
     fg.canvas.flush_events()
 
-    print(int(doma_dims[0]))
+    #print(int(doma_dims[0]))
+    #print(int(np.sqrt(resp_dims[0])))
 
     mat_tseries = np.empty((int(factor*spec_size),doma_data.shape[1],4),dtype='complex')
     vec_tseries = np.empty((int(factor*spec_size),4),dtype='complex')
     
-    vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
+    #vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
+    vlim = np.empty((int(np.sqrt(resp_dims[0])),int(factor*spec_size)),dtype='complex')
+
     #vlim = np.empty((int(resp_dims[0]),resp_data.shape[1]),dtype='complex')
     #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
     
@@ -423,35 +445,39 @@ if __name__ == '__main__':
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
         spec0 = spec[0:hspc_size]
         
-        for jj in range(0,int(resp_dims[0])):
-        
+        #for jj in range(0,int(resp_dims[0])):
+        for jj in range(0,int(resp_dims[0]),1+int(np.sqrt(resp_dims[0]))):
 
             index = np.ravel_multi_index((jj,0),resp_dims)
             
-            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
-                resp_data = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            resp_index = resp_dataset[resp_list_keys[index]]['value']
+
+            if np.issubdtype(np.float64,resp_index.dtype):
+                resp_data = np.array(resp_index).view(float)
             else:
-                resp_data = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
+                resp_data = np.array(resp_index).view(complex)
 
             index = np.ravel_multi_index((jj,1),resp_dims)          
-            
-            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
-                resp_data0 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            resp_index = resp_dataset[resp_list_keys[index]]['value']
+
+            if np.issubdtype(np.float64, resp_index.dtype):
+                resp_data0 = np.array(resp_index).view(float)
             else:
-                resp_data0 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
+                resp_data0 = np.array(resp_index).view(complex)
 
             index = np.ravel_multi_index((jj,2),resp_dims)           
+            resp_index = resp_dataset[resp_list_keys[index]]['value']
             
-            if np.issubdtype(np.float64, resp_dataset[resp_list_keys[index]]['value'].dtype):
-                resp_data1 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(float)
+            if np.issubdtype(np.float64, resp_index.dtype):
+                resp_data1 = np.array(resp_index).view(float)
             else:
-                resp_data1 = np.array(resp_dataset[resp_list_keys[index]]['value']).view(complex)
+                resp_data1 = np.array(resp_index).view(complex)
             
-            resp_data2 = resp_data0 + resp_data1 + resp_data            
+            resp_data2 = resp_data1 + resp_data0 + resp_data            
             
-            
+            """
             resptt = resp_data[:,0]
-                        
+                                 
             new_resp = expand_resp(resptt)
             new_full,tseries = synth_tseries_from_spec_full(new_resp,spec0,factor)            
             vec_tseries[:,0] = tseries.transpose()
@@ -465,16 +491,23 @@ if __name__ == '__main__':
             new_resp = expand_resp(resptt)
             new_full,tseries = synth_tseries_from_spec_full(new_resp,spec0,factor)            
             vec_tseries[:,2] = tseries.transpose()
-            
+            """
             resptt = resp_data2[:,0]
-            new_resp = expand_resp(resptt)
-            new_full,tseries = synth_tseries_from_spec_full(new_resp,spec0,factor)            
+            new_resp = expand_resp_new(resptt)
+            tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
             vec_tseries[:,3] = tseries.transpose()
             
             #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
             #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
-            vlim[jj,:] = vec_tseries[:,3]           
-            print(jj)
+            
+            vlim[int(jj/(1+int(np.sqrt(resp_dims[0])))),:] = vec_tseries[:,3]           
+            
+            
+            '''
+            vlim[jj,:] = vec_tseries[:,3]
+            '''
+            
+        #+print(int(jj/(1+int(np.sqrt(resp_dims[0])))))
             #domat = doma[:,:,jj*8]
             #print(int(jj/(1+doma_dims[0])))
             #if not (jj%int(resp_dims[0]/1)):
@@ -496,20 +529,20 @@ if __name__ == '__main__':
                     
                     domatt = doma_data[:,kk].transpose()
                     
-                    new_doma = expand_resp(domatt)
-                    new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)
+                    new_doma = expand_resp(domatt)*spec0
+                    tseries = synth_tseries_from_spec_full_new(new_doma,factor)
                     mat_tseries[:,kk,0] = tseries.transpose()
                     domatt = doma_data0[:,kk].transpose()
-                    new_doma = expand_resp(domatt)
-                    new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)            
+                    new_doma = expand_resp(domatt)*spec0
+                    tseries = synth_tseries_from_spec_full_new(new_doma,factor)            
                     mat_tseries[:,kk,1] = tseries.transpose()
                     domatt = doma_data1[:,kk].transpose()
-                    new_doma = expand_resp(domatt)
-                    new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)            
+                    new_doma = expand_resp(domatt)*spec0
+                    tseries = synth_tseries_from_spec_full_new(new_doma,factor)            
                     mat_tseries[:,kk,2] = tseries.transpose()
                     domatt = doma_data2[:,kk].transpose()
-                    new_doma = expand_resp(domatt)
-                    new_full,tseries = synth_tseries_from_spec_full(new_doma,spec0,factor)            
+                    new_doma = expand_resp(domatt)*spec0
+                    tseries = synth_tseries_from_spec_full_new(new_doma,factor)            
                     mat_tseries[:,kk,3] = tseries.transpose()             
                 mlim = np.amax(np.abs(mat_tseries))/4
                 for ll in range(int(factor*int(spec_size/dtsr))):
@@ -556,13 +589,29 @@ if __name__ == '__main__':
     
     #ax.plot(np.abs(vlim[:doma_dims[0]:]))
     vlimmax = np.max(np.abs(vlim),axis=-1)
+
+    
+    
+    '''
     vlimmax.shape = (doma_dims[0],doma_dims[0])
     ax.pcolormesh(vlimmax)
+    '''
+
+    plt.ioff()
+    ax.plot(vlimmax/np.max(vlimmax))
+    x_table = np.arange(0.0,0.745*int(np.sqrt(resp_dims[0])),0.745)[:]-0.745*303
+    y_table = vlimmax[:]/np.max(vlimmax)
+    d_table = np.array([x_table,y_table]).transpose()
+    print(x_table.shape)
+    print(y_table.shape)
+    np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
     plt.show()
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
-    plt.ioff()
+    #plt.ioff()
     spec_grid,ndx_grid = np.meshgrid(x_spec_full,range(256))
     #ax.pcolormesh(spec_grid,ndx_grid,np.max(np.abs(vlim,axis=0),shading='nearest',vmin=-1, vmax=1)
+    '''
     ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim[multi_index,:]),shading='nearest',vmin=-1, vmax=1)
     plt.show()
+    '''

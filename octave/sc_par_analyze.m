@@ -1,13 +1,11 @@
 pkg load parallel
 
-numbr_frequencies = 100
-initi_frequencies = 1
-final_frequencies = 100
-skr = 930
-modifier = '1';
-converge = 'A';
 
 path = 'D:\MATLAB\menisco\';
+analysisfile = ['P.mat'];
+
+load([path,analysisfile])
+
 configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'_',num2str(skr),'.mat'];
 
 load([path,configfile])
@@ -99,7 +97,7 @@ for rr = 1:length(runs)
      datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.mat'];
   end
   
-  out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile),datafiles(this_ser));
+  out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile,analysisfile),datafiles(this_ser));
   for jj = this_ser
     ij = ii+jj-1;
     rr1 = out(jj).rr;

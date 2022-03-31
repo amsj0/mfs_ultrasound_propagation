@@ -1,7 +1,8 @@
-function rd = fn_analyze(path,datafile,configfile)
+function rd = fn_analyze(path,datafile,configfile,analysisfile)
     
     load([path,datafile])
     load([path,configfile])
+	load([path,analysisfile])
 	%   DEFINES PISTON INDEXES
 	ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
 	%ppt_per_surface = 1;
@@ -72,12 +73,12 @@ function rd = fn_analyze(path,datafile,configfile)
 	    resTI = response.ndx.TI(ndx.TI);
 
 	    %   FILTER FIELD PARAMETERS
-	    b.D.prr(b.D.ndx0,:)  = sum(Mcmb{1,1}(:,ndx.TO),2);  % APPLIED MODEL
+	    b.D.prr(b.D.ndx0,:)  = energy_ratio*sum(Mcmb{1,1}(:,ndx.TO),2);  % APPLIED MODEL
 	    b.D.prr(~b.D.ndx0,:) = sum(Mcmb{2,1}(:,ndx.TI),2);  % APPLIED MODEL 
 	    b.D.prl(b.D.ndx0,:)  = sum(Mcmb{3,1}(:,ndx.TI),2);  % APPLIED MODEL 
-	    b.D.prl(~b.D.ndx0,:) = sum(Mcmb{4,1}(:,ndx.TO),2);  % APPLIED MODEL 
+	    b.D.prl(~b.D.ndx0,:) = energy_ratio*sum(Mcmb{4,1}(:,ndx.TO),2);  % APPLIED MODEL 
 	    b.D.pid(b.D.ndx0,:)  = sum(Mcmb{5,1}(:,ndx.TI),2);  % APPLIED MODEL 
-	    b.D.pid(~b.D.ndx0,:) = sum(Mcmb{6,1}(:,ndx.TO),2);  % APPLIED MODEL 
+	    b.D.pid(~b.D.ndx0,:) = energy_ratio*sum(Mcmb{6,1}(:,ndx.TO),2);  % APPLIED MODEL 
 	    b.D.ptt = b.D.pid + b.D.prl + b.D.prr;
 
 	    field.range.prr(tt,:) = b.D.prr;
@@ -87,12 +88,12 @@ function rd = fn_analyze(path,datafile,configfile)
 
 	%    response.pitch.A(tt) = mean([response.pitch.I(ndx.TI),response.pitch.O(ndx.TO)]);
 
-	    b.T.prr{1} = sum(Mcmb{1,2}(:,ndx.TO),2);  % APPLIED MODEL
+	    b.T.prr{1} = energy_ratio*sum(Mcmb{1,2}(:,ndx.TO),2);  % APPLIED MODEL
 	    b.T.prr{2} = sum(Mcmb{2,2}(:,ndx.TI),2);  % APPLIED MODEL
 	    b.T.prl{1} = sum(Mcmb{3,2}(:,ndx.TI),2);  % APPLIED MODEL
-	    b.T.prl{2} = sum(Mcmb{4,2}(:,ndx.TO),2);  % APPLIED MODEL
+	    b.T.prl{2} = energy_ratio*sum(Mcmb{4,2}(:,ndx.TO),2);  % APPLIED MODEL
 	    b.T.pid{1} = sum(Mcmb{5,2}(:,ndx.TI),2);  % APPLIED MODEL
-	    b.T.pid{2} = sum(Mcmb{6,2}(:,ndx.TO),2);  % APPLIED MODEL
+	    b.T.pid{2} = energy_ratio*sum(Mcmb{6,2}(:,ndx.TO),2);  % APPLIED MODEL
 	    b.T.ptt{1} = (b.T.pid{1} + b.T.prl{1} + b.T.prr{1});
 	    b.T.ptt{2} = (b.T.pid{2} + b.T.prl{2} + b.T.prr{2});
 
