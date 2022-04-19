@@ -1,4 +1,4 @@
-eval(fileread('inputfile_0.txt'));
+eval(fileread('inputfile.txt'));
 
 GRIDX_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDX_INI),str2num(GRIDX_FIN),str2num(GRIDX_DEL));
 GRIDY_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDY_INI),str2num(GRIDY_FIN),str2num(GRIDY_DEL));
