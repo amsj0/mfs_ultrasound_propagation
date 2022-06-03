@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
 #from scipy.signal import hilbert
+import yaml
 import h5py
 import time
 import sys
@@ -22,24 +23,37 @@ spec_size = int(2/2*512)
 hspc_size = int(spec_size/2)
 #central_freq = 19/(.6*2) #15.833
 #central_freq = 15.707963268 #5pi
-central_freq = .5e6
-range_freq = .24e6
+
+yaml_path = 'config.yaml'
+
+if len(sys.argv) != 1:
+    yaml_path = sys.argv[1]
+
+with open(yaml_path, 'r') as f:
+    cfg = yaml.safe_load(f)
+    numbr_freq = cfg['numbr_freq']
+    initi_freq = cfg['initi_freq']
+    final_freq = cfg['final_freq']
+    parti_freq = cfg['parti_freq']
+    converge = cfg['converge']
+    modifier = cfg['modifier']
+    skr = cfg['skr']
+    piston_radius = cfg['piston_radius']
+    pathname = cfg['pathname']
+
+
+
 ref_freq = 1e6
 
-numbr_freq = 100
-initi_freq = 1
-final_freq = 100
-parti_freq = 100
-converge = sys.argv[2]
-modifier = sys.argv[3]
-skr = sys.argv[4]
+central_freq = ref_freq/100*final_freq/2
+range_freq = ref_freq*.48
 
 display_time_step_ratio = 256
 dtsr = display_time_step_ratio
 
-filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '_' + str(skr) + '.h5'
+filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '_' + str(skr) + '_' + str(piston_radius) + '.h5'
 # pathname = '../octave/'
-pathname = sys.argv[1]
+# pathname = sys.argv[1]
 
 print(pathname)
 
@@ -435,18 +449,20 @@ if __name__ == '__main__':
     vec_tseries = np.empty((int(factor*spec_size),4),dtype='complex')
     
     #vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
-    vlim = np.empty((int(np.sqrt(resp_dims[0])),int(factor*spec_size)),dtype='complex')
+    vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
 
     #vlim = np.empty((int(resp_dims[0]),resp_data.shape[1]),dtype='complex')
     #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
     
     #factor = 1.25
+    fg,ax = plt.subplots(1,1,figsize=(10,7))
+
     for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
         spec0 = spec[0:hspc_size]
         
-        #for jj in range(0,int(resp_dims[0])):
-        for jj in range(0,int(resp_dims[0]),1+int(np.sqrt(resp_dims[0]))):
+        for jj in range(0,int(resp_dims[0])):
+        #for jj in range(0,int(resp_dims[0]),1+int(np.sqrt(resp_dims[0]))):
 
             index = np.ravel_multi_index((jj,0),resp_dims)
             
@@ -492,16 +508,21 @@ if __name__ == '__main__':
             new_full,tseries = synth_tseries_from_spec_full(new_resp,spec0,factor)            
             vec_tseries[:,2] = tseries.transpose()
             """
-            resptt = resp_data2[:,0]
-            new_resp = expand_resp_new(resptt)
-            tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
-            vec_tseries[:,3] = tseries.transpose()
-            
-            #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
-            #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
-            
-            vlim[int(jj/(1+int(np.sqrt(resp_dims[0])))),:] = vec_tseries[:,3]           
-            
+
+            for kk in [jj]:
+                    
+
+                resptt = resp_data2[:,kk].transpose()
+                new_resp = expand_resp_new(resptt)
+                tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
+                vec_tseries[:,3] = tseries.transpose()
+                
+                #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
+                #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
+                
+            vlim[jj,:] = vec_tseries[:,3] 
+            if(((jj+1)==resp_dims[0])):
+                print(jj)
             
             '''
             vlim[jj,:] = vec_tseries[:,3]
@@ -579,7 +600,9 @@ if __name__ == '__main__':
                     #plt.grid(True
                     fg.canvas.flush_events()
         
-    
+    spec_grid,ndx_grid = np.meshgrid(x_spec_full,range(resp_dims[0]))
+    ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest',vmin=-1, vmax=1)
+
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
     rng = range(3,doma_dims[0],40)
@@ -594,12 +617,14 @@ if __name__ == '__main__':
     
     '''
     vlimmax.shape = (doma_dims[0],doma_dims[0])
-    ax.pcolormesh(vlimmax)
     '''
+    
+    
 
     plt.ioff()
+    #ax.pcolormesh(np.abs(vlim.transpose()))
     ax.plot(vlimmax/np.max(vlimmax))
-    x_table = np.arange(0.0,0.745*int(np.sqrt(resp_dims[0])),0.745)[:]-0.745*303
+    x_table = np.arange(-int(resp_dims[0])/2,int(resp_dims[0])/2)[:]*0.745
     y_table = vlimmax[:]/np.max(vlimmax)
     d_table = np.array([x_table,y_table]).transpose()
     print(x_table.shape)

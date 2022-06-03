@@ -6,15 +6,17 @@ analysisfile = ['P.mat'];
 
 load([path,analysisfile])
 
-configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies),'_',num2str(skr),'.mat'];
+configfile = ['P',num2str(converge),num2str(modifier),'_',num2str(numbr_frequencies),'_',num2str(initi_frequencies),'_',num2str(final_frequencies)];
 
-load([path,configfile])
+load([path,configfile,'.mat'])
+save([path,configfile,'.h5'],'T','R','S','Neltoverlambda','nRD','nR','area_un','b','g','-hdf5')
 
 sc_prepare
 
-datafile = [path,'R',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.mat'];
+datafile = [path,'R',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfi),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(sdr),'_',num2str(skr),'.mat'];
 
 input = load(datafile);
+
 
 Mcmb = input.Mcmb;
 sc_integrate
@@ -23,15 +25,15 @@ sc_integrate
 %r1 = diag(response.range.prl);
 %r2 = diag(response.range.prr);
 
-r0 = response.range.pid(:);
-r1 = response.range.prl(:);
-r2 = response.range.prr(:);
+%r0 = response.range.pid(:);
+%r1 = response.range.prl(:);
+%r2 = response.range.prr(:);
 
-resp0 = zeros(1,g.prop.nfr);
+resp0 = zeros(size(response.range.pid,2),g.prop.nfr);
 doma0 = zeros(size(field.range.pid,2),g.prop.nfr);
 
 
-resp = cell(3,size(r0,1));
+resp = cell(3,size(response.range.pid,1));
 doma = cell(3,size(field.range.pid,1));
 
 %resp = cell(1,g.prop.nfr);
@@ -53,9 +55,9 @@ doma(:) = {doma0};
 %doma = mat2cell(doma,ones(1,3),ones(1,size(field.range.pid,1)),size(field.range.pid,2),g.prop.nfr);
 
 for ii = 1:size(doma,2)
-   resp{1,ii}(1) = r0(ii);
-   resp{2,ii}(1) = r1(ii);
-   resp{3,ii}(1) = r2(ii);
+   resp{1,ii}(:,1) = response.range.pid(ii,:);
+   resp{2,ii}(:,1) = response.range.prl(ii,:);
+   resp{3,ii}(:,1) = response.range.prr(ii,:);
    doma{1,ii}(:,1) = field.range.prr(ii,:);
    doma{2,ii}(:,1) = field.range.prl(ii,:);
    doma{3,ii}(:,1) = field.range.pid(ii,:);
@@ -94,7 +96,7 @@ for rr = 1:length(runs)
   this_ser = 1:this_run;
 
   for nsl = this_ser
-     datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.mat'];
+     datafiles{nsl} = ['R',num2str(converge),num2str(modifier),'_',num2str(ii+nsl-1),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(sdr),'_',num2str(skr),'.mat'];
   end
   
   out = parcellfun(this_run,@(x) fn_analyze(path,x,configfile,analysisfile),datafiles(this_ser));
@@ -103,15 +105,14 @@ for rr = 1:length(runs)
     rr1 = out(jj).rr;
     dd1 = out(jj).dd;
     for kk = 1:size(resp,2)
-      resp{1,kk}(ij) = rr1(kk,1);
-      resp{2,kk}(ij) = rr1(kk,2);
-      resp{3,kk}(ij) = rr1(kk,3);
-      if (~rem(kk,size(doma,2)))
-        this_kk = ceil(kk/size(doma,2));
-        doma{1,this_kk}(:,ij) = dd1(this_kk,:,1);
-        doma{2,this_kk}(:,ij) = dd1(this_kk,:,2);
-        doma{3,this_kk}(:,ij) = dd1(this_kk,:,3);
-      end
+      %this_kk = ceil(kk/size(doma,2));
+      %that_kk = rem(kk,size(doma,2));
+      resp{1,kk}(:,ij) = rr1(kk,:,1);
+      resp{2,kk}(:,ij) = rr1(kk,:,2);
+      resp{3,kk}(:,ij) = rr1(kk,:,3);     
+      doma{2,kk}(:,ij) = dd1(kk,:,2);
+      doma{3,kk}(:,ij) = dd1(kk,:,3);
+      doma{1,kk}(:,ij) = dd1(kk,:,1);
     end
   end
   ii = ii + this_run;
@@ -141,5 +142,5 @@ for ii = (g.prop.nfi+2):4:(g.prop.nfr-3);
   end
 end
 %}
-save([path,'doma_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.h5'],'doma','-hdf5')
-save([path,'resp_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(skr),'.h5'],'resp','-hdf5')
+save([path,'doma_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(sdr),'_',num2str(skr),'_',num2str(piston_radius),'.h5'],'doma','-hdf5')
+save([path,'resp_enh_',num2str(converge),num2str(modifier),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(sdr),'_',num2str(skr),'_',num2str(piston_radius),'.h5'],'resp','-hdf5')

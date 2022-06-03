@@ -1,7 +1,7 @@
 function rd = fn_analyze(path,datafile,configfile,analysisfile)
     
     load([path,datafile])
-    load([path,configfile])
+    load([path,configfile,'.h5'])
 	load([path,analysisfile])
 	%   DEFINES PISTON INDEXES
 	ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
@@ -129,10 +129,15 @@ function rd = fn_analyze(path,datafile,configfile,analysisfile)
 	%rr1 = diag(response.range.prl);
 	%rr2 = diag(response.range.prr);
 
-	rr0 = response.range.pid(:);
-	rr1 = response.range.prl(:);
-	rr2 = response.range.prr(:);	
+	%rr0 = response.range.pid(:);
+	%rr1 = response.range.prl(:);
+	%rr2 = response.range.prr(:);	
+	
+	%rr0 = response.range.pid;
+	%rr1 = response.range.prl;
+	%rr2 = response.range.prr;	
 
-	rd.rr = cat(2,rr0,rr1,rr2);
+	%rd.rr = cat(2,rr0,rr1,rr2);
+	rd.rr = cat(3,response.range.pid,response.range.prl,response.range.prr);
 	rd.dd = cat(3,field.range.prr,field.range.prl,field.range.pid);
 end

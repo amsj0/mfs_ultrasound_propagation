@@ -1,0 +1,10 @@
+
+numbr_freq: 100
+initi_freq: 2
+final_freq: 200
+parti_freq: 100
+converge: 'O'
+modifier: '2'
+skr: 98600
+piston_radius: '10'
+pathname: 'D:\MATLAB\menisco\'
