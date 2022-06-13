@@ -13,9 +13,7 @@ len_R = length(R.c);
 
 Ma = bsxfun(@minus,R.c,R.ci.');
 
-nx = nR;
 ny = nR.';
-
 Mr1 = ny(:,ones(1,len_R));
 % Mr2 = nx(ones(len_R,1),:);
 

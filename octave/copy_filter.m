@@ -10,5 +10,6 @@ for ii = 1:(nargin-1)
     varargout{ii}.x = B.x(~C.ndx);
     varargout{ii}.y = B.y(~C.ndx);
     varargout{ii}.z = B.z(~C.ndx);
+    varargout{ii}.a = B.a(~C.ndx);
     varargout{ii}.ndx = C.ndx;
 end

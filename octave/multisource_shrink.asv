@@ -395,7 +395,7 @@ for ii = g.prop.nfi:k0_length
              [TFI] = fn_propagator_inc_ref(p1h,v1h,-p2h,-v2h);
 %              [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
 %              [TFI] = fn_propagator_inc_ref(p1h,v1h,p2h,v2h);
-             
+             [TFO] = fn_propagator_inc_ref(p2h,v2h,p1h,v1h);
         %    TFO = (eye_T - TFI);
         %    TF = fn_propagator_src_beh(p1h,v1h,-p2h,-v2h);
         %    TF = fn_propagator_src_beh(p1h,v1h,p2h,v2h);
@@ -406,10 +406,7 @@ for ii = g.prop.nfi:k0_length
         
         % STORE FIELD PARAMETERS
 %              PF(ii,jj,pp,:,:) = b.A.p;
-%         sc_propagate
-
-        [TFO] = fn_propagator_inc_ref(p2h,-v2h,-p1h,+v1h);
-        sc_propagate2
+        sc_propagate
 %        sc_prepare
 %         sc_integrate
 %        resp_rang(ii) = response_range;
