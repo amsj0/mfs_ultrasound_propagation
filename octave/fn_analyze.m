@@ -10,8 +10,8 @@ function rd = fn_analyze(path,datafile,configfile,analysisfile)
 	ndx.T = fn_integrate_indexing(ppt_per_surface,length(b.Ti.x),length(b.To.x));
 	ndx.R = fn_integrate_indexing(ppt_per_surface,length(b.Ri.x),length(b.Ro.x));
 
-	response.pitch.size = (length(T.a{:})-ppt_per_surface+1);
-	response.catch.size = (length(R.a{:})-ppt_per_surface+1);
+	response.pitch.size = (length(T.a)-ppt_per_surface+1);
+	response.catch.size = (length(R.a)-ppt_per_surface+1);
 
 	field.range.ptt = zeros(response.pitch.size,length(b.D.c));
 
