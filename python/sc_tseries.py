@@ -38,6 +38,7 @@ with open(yaml_path, 'r') as f:
     converge = cfg['converge']
     modifier = cfg['modifier']
     skr = cfg['skr']
+    sdr = cfg['sdr']
     piston_radius = cfg['piston_radius']
     pathname = cfg['pathname']
 
@@ -51,7 +52,9 @@ range_freq = ref_freq*.48
 display_time_step_ratio = 256
 dtsr = display_time_step_ratio
 
-filename = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) + '_' + str(skr) + '_' + str(piston_radius) + '.h5'
+gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
+
+filename = gridname + '_' + str(sdr) + '_' + str(skr) + '_' + str(piston_radius) + '.h5'
 # pathname = '../octave/'
 # pathname = sys.argv[1]
 
@@ -92,7 +95,7 @@ def synth_fseries_from_centr_freq(cent_freq):
 
 def load_para(modifier):
     
-    f = h5py.File(pathname + 'P' + modifier + filename,'r')
+    f = h5py.File(pathname + 'P' + modifier + gridname + '.h5','r')
 
     gridx = f['b']['value']['A']['value']['x']['value']
 
@@ -450,6 +453,7 @@ if __name__ == '__main__':
     
     #vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
     vlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
+    rlim = np.empty((int(resp_dims[0]),int(factor*spec_size)),dtype='complex')
 
     #vlim = np.empty((int(resp_dims[0]),resp_data.shape[1]),dtype='complex')
     #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
@@ -511,6 +515,10 @@ if __name__ == '__main__':
 
             for kk in [jj]:
                     
+                resptt = resp_data0[:,kk].transpose()
+                new_resp = expand_resp_new(resptt)
+                tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
+                vec_tseries[:,2] = tseries.transpose()
 
                 resptt = resp_data2[:,kk].transpose()
                 new_resp = expand_resp_new(resptt)
@@ -520,7 +528,8 @@ if __name__ == '__main__':
                 #vlim[int(jj/(1+doma_dims[0])),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
                 #vlim[int(jj),:] = np.max(np.abs(vec_tseries[:,3]),axis=0)
                 
-            vlim[jj,:] = vec_tseries[:,3] 
+            vlim[jj,:] = vec_tseries[:,3]
+            rlim[jj,:] = vec_tseries[:,2]
             if(((jj+1)==resp_dims[0])):
                 print(jj)
             
@@ -597,11 +606,13 @@ if __name__ == '__main__':
                     #clear_output(wait=False)
                     #plt.show()#draw();
                     fg.canvas.draw()
-                    #plt.grid(True
+                    #plt.grid(True)
                     fg.canvas.flush_events()
         
     spec_grid,ndx_grid = np.meshgrid(x_spec_full,range(resp_dims[0]))
-    ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest',vmin=-1, vmax=1)
+    #ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest',vmin=-1, vmax=1)
+    ax.pcolormesh(spec_grid,ndx_grid,rlim.real,shading='nearest')
+    #ax.imshow(vlim.real)
 
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
@@ -624,6 +635,7 @@ if __name__ == '__main__':
     plt.ioff()
     #ax.pcolormesh(np.abs(vlim.transpose()))
     ax.plot(vlimmax/np.max(vlimmax))
+    fg.suptitle(filename[:-3])
     x_table = np.arange(-int(resp_dims[0])/2,int(resp_dims[0])/2)[:]*0.745
     y_table = vlimmax[:]/np.max(vlimmax)
     d_table = np.array([x_table,y_table]).transpose()

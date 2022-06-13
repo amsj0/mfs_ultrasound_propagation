@@ -20,8 +20,8 @@ ndx.R = fn_integrate_indexing(ppt_per_surface,length(b.Ri.x),length(b.Ro.x));
 %ndxO_mat = cellfun(@(x) circshift(ndxO_vec,x,2),num2cell(0:(ppt_per_surface-1)),'UniformOutput',0);
 %ndxO_cat = cat(1,ndxO_mat{:});
 
-response.pitch.size = (length(T.a{:})-ppt_per_surface+1);
-response.catch.size = (length(R.a{:})-ppt_per_surface+1);
+response.pitch.size = (length(T.a)-ppt_per_surface+1);
+response.catch.size = (length(R.a)-ppt_per_surface+1);
 
 field.range.ptt = zeros(response.pitch.size,length(b.D.c));
 
