@@ -3,7 +3,7 @@ numbr_freq: 100
 initi_freq: 2
 final_freq: 200
 parti_freq: 100
-converge: 'Pr'
+converge: 'Pt'
 modifier: '2'
 sdr: 1000
 skr: 1000

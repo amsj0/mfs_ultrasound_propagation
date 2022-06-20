@@ -473,27 +473,28 @@ if __name__ == '__main__':
             resp_index = resp_dataset[resp_list_keys[index]]['value']
 
             if np.issubdtype(np.float64,resp_index.dtype):
-                resp_data = np.array(resp_index).view(float)
+                resp_data0 = np.array(resp_index).view(float)
             else:
-                resp_data = np.array(resp_index).view(complex)
+                resp_data0 = np.array(resp_index).view(complex)
 
             index = np.ravel_multi_index((jj,1),resp_dims)          
             resp_index = resp_dataset[resp_list_keys[index]]['value']
 
             if np.issubdtype(np.float64, resp_index.dtype):
-                resp_data0 = np.array(resp_index).view(float)
+                resp_data1 = np.array(resp_index).view(float)
             else:
-                resp_data0 = np.array(resp_index).view(complex)
+                resp_data1 = np.array(resp_index).view(complex)
 
             index = np.ravel_multi_index((jj,2),resp_dims)           
             resp_index = resp_dataset[resp_list_keys[index]]['value']
             
             if np.issubdtype(np.float64, resp_index.dtype):
-                resp_data1 = np.array(resp_index).view(float)
+                resp_data2 = np.array(resp_index).view(float)
             else:
-                resp_data1 = np.array(resp_index).view(complex)
+                resp_data2 = np.array(resp_index).view(complex)
             
-            resp_data2 = resp_data1 + resp_data0 + resp_data            
+            resp_dataR = resp_data2 + resp_data1
+            resp_data3 = resp_dataR + resp_data0
             
             """
             resptt = resp_data[:,0]
@@ -515,12 +516,12 @@ if __name__ == '__main__':
 
             for kk in [jj]:
                     
-                resptt = resp_data0[:,kk].transpose()
+                resptt = resp_dataR[:,kk].transpose()
                 new_resp = expand_resp_new(resptt)
                 tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
                 vec_tseries[:,2] = tseries.transpose()
 
-                resptt = resp_data2[:,kk].transpose()
+                resptt = resp_data3[:,kk].transpose()
                 new_resp = expand_resp_new(resptt)
                 tseries = synth_tseries_from_spec_full_new(new_resp*spec0,factor)            
                 vec_tseries[:,3] = tseries.transpose()
@@ -613,7 +614,8 @@ if __name__ == '__main__':
     #ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest',vmin=-1, vmax=1)
     ax.pcolormesh(spec_grid,ndx_grid,rlim.real,shading='nearest')
     #ax.imshow(vlim.real)
-
+    fg,ax = plt.subplots(1,1,figsize=(10,7))
+    ax.pcolormesh(spec_grid,ndx_grid,vlim.real,shading='nearest')
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
     rng = range(3,doma_dims[0],40)
