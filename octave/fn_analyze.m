@@ -13,7 +13,9 @@ function rd = fn_analyze(path,datafile,configfile,analysisfile)
 	response.pitch.size = (length(T.a)-ppt_per_surface+1);
 	response.catch.size = (length(R.a)-ppt_per_surface+1);
 
-	field.range.ptt = zeros(response.pitch.size,length(b.D.c));
+	field.range.pid = zeros(response.pitch.size,length(b.D.c));
+	field.range.prr = zeros(response.pitch.size,length(b.D.c));
+	field.range.prl = zeros(response.pitch.size,length(b.D.c));
 
 	strength.range.ptt = cell(response.pitch.size,response.catch.size);
 
@@ -41,9 +43,9 @@ function rd = fn_analyze(path,datafile,configfile,analysisfile)
 	response.ndx.TI = find(~b.Ti.ndx);
 
 	%%% TODO FIX ME
-	ndx.tst = reshape(1:(response.pitch.size*response.catch.size),response.pitch.size,response.catch.size);
-	[n1,n2] = ndgrid(1:response.pitch.size,1:response.catch.size);n0 = (mod(n2+n1+1,response.pitch.size)+1)';
-	ndx.mat = reshape(ndx.tst((n0(:)-0)+(n1(:)-1)*response.catch.size),response.pitch.size,response.catch.size)';
+	%ndx.tst = reshape(1:(response.pitch.size*response.catch.size),response.pitch.size,response.catch.size);
+	%[n1,n2] = ndgrid(1:response.pitch.size,1:response.catch.size);n0 = (mod(n2+n1+1,response.pitch.size)+1)';
+	%ndx.mat = reshape(ndx.tst((n0(:)-0)+(n1(:)-1)*response.catch.size),response.pitch.size,response.catch.size)';
 
 	% pause
 	for tt = 1:response.pitch.size
