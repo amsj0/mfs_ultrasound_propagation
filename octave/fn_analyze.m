@@ -1,7 +1,7 @@
 function rd = fn_analyze(path,datafile,configfile,analysisfile)
     
     load([path,datafile])
-    load([path,configfile,'.h5'])
+    load([path,configfile])
 	load([path,analysisfile])
 	%   DEFINES PISTON INDEXES
 	ppt_per_surface = 1+floor(g.piston_radius*(Neltoverlambda/100));
