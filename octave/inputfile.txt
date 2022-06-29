@@ -1,5 +1,6 @@
 MODEL_SCL = '2';
 PROPE_NFR = '100';
+PROPE_NFF = '50';
 PROPE_NFI = '50';
 PROPE_IFF = '1/100';
 PROPE_FFF = '1';

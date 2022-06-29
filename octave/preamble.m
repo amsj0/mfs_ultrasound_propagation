@@ -20,6 +20,7 @@ g.grid_ratio = 4/1*0.0625;
 g.prop.nfr = str2num(PROPE_NFR);
 g.prop.iff = str2num(PROPE_IFF);
 g.prop.nfi = str2num(PROPE_NFI);
+g.prop.nff = str2num(PROPE_NFF);
 g.prop.fff = str2num(PROPE_FFF);
 % g.prop.nfr = 1;
 

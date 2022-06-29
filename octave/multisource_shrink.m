@@ -286,7 +286,7 @@ end
 d_cur = d0;
 % sc_prepare
 save([g.path_to_input,'P',g.convergemod,'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','nR','area_un','b','g')
-for ii = g.prop.nfi:k0_length
+for ii = g.prop.nfi:g.prop.nff
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
 
