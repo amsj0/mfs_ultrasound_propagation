@@ -1,4 +1,6 @@
-eval(fileread('inputfile.txt'));
+function run_from_inputfile(path_to_input)
+
+eval(fileread([path_to_input,'inputfile.txt']));
 
 GRIDX_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDX_INI),str2num(GRIDX_FIN),str2num(GRIDX_DEL));
 GRIDY_VEC = str2num(MODEL_SCL)*linspace(str2num(GRIDY_INI),str2num(GRIDY_FIN),str2num(GRIDY_DEL));
@@ -12,6 +14,7 @@ RATPS = [str2num(RATPS_INI),str2num(RATPS_DEL),str2num(RATPS_FIN)];
     
 preamble
 
+g.path_to_input = path_to_input;
 % parpool
 
 % parfor ii=1:length(GRIDX_VEC)
@@ -37,3 +40,5 @@ end
 %delete(loopobj)
 
 %exit;
+
+end

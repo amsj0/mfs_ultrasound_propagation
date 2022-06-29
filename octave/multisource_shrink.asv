@@ -42,7 +42,7 @@ we_ini = -(g.centre_vector_x+10*GX);
 %%
 % CREATE SURROUNDING SURFACE
 % [r,Th,area,norm,Np] = fn_discretize_geometry_3(GY,GX,nRD,Neltoverlambda);
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+1)*g.piston_distan,Neltoverlambda/100);
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(g.piston_distan/2,(1+.5)*g.piston_distan,Neltoverlambda/100);
 
 gap = 1/(Np);
 
@@ -95,22 +95,20 @@ S.ci = S.c-RD*(f0-f(1))*1.0*exp(1i*nI.');
 
 S.ct = S.c*(1-ham);
 
-% eye_T = eye(2*length(area_un));
+eye_T = eye(2*length(area_un));
 %%
-% CREATE TRANSMITER TRANSDUCER SURFACE
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(0,g.piston_vector_pitch,Neltoverlambda/(100));
+% CREATE TRANSDUCER SURFACE
+[r,Th,area,norm,Np] = fn_discretize_geometry_plane(-0*g.piston_vector,1*g.piston_vector,Neltoverlambda/(100));
 
 T.a = cellfun(@(x) RD*x,area,'uni',0);
 T.x = cellfun(@(x,y) x.*sin(y),r,Th,'uni',0);
 T.z = cellfun(@(x,y) x.*cos(y),r,Th,'uni',0);
 T.y = cellfun(@(x) zeros(size(x)),T.z,'uni',0);
 
-T.a = permute(cell2mat(T.a),[2 1]);
 T.x = permute(cell2mat(T.x),[2 1]);
 T.y = permute(cell2mat(T.y),[2 1]);
 T.z = permute(cell2mat(T.z),[2 1]);
 
-T.a = T.a(:).';
 T.x = T.x(:).';
 T.y = T.y(:).';
 T.z = T.z(:).'+he_piston_centre;
@@ -122,38 +120,11 @@ ndx1 = fn_enclosure_rectan(lambda0,T.x,T.z,[-1,1],[he_ini,we_ini],0,mode);
 T.x = RD*T.x;
 T.z = RD*T.z;
 
-b.Ti.ndx = ~ndx0;
-b.To.ndx = ~ndx1;
-
-% CREATE RECEPTOR TRANSDUCER SURFACE
-[r,Th,area,norm,Np] = fn_discretize_geometry_plane(0,g.piston_vector_catch,Neltoverlambda/(100));
-
-R.a = cellfun(@(x) RD*x,area,'uni',0);
-R.x = cellfun(@(x,y) x.*sin(y),r,Th,'uni',0);
-R.z = cellfun(@(x,y) x.*cos(y),r,Th,'uni',0);
-R.y = cellfun(@(x) zeros(size(x)),R.z,'uni',0);
-
-R.a = permute(cell2mat(R.a),[2 1]);
-R.x = permute(cell2mat(R.x),[2 1]);
-R.y = permute(cell2mat(R.y),[2 1]);
-R.z = permute(cell2mat(R.z),[2 1]);
-
-R.a = R.a(:).';
-R.x = R.x(:).';
-R.y = R.y(:).';
-R.z = R.z(:).'+he_piston_centre;
-
-% R = T;
-
-% SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE
-ndx0 = fn_enclosure_rectan(lambda0,R.x,R.z,[1,1],[he_ini,we_ini],0,mode);
-ndx1 = fn_enclosure_rectan(lambda0,R.x,R.z,[-1,1],[he_ini,we_ini],0,mode);
-
-R.x = RD*R.x;
-R.z = RD*R.z;
-
+R = T;
 R.x = R.x + RD*(g.piston_distan);
 
+b.Ti.ndx = ~ndx0;
+b.To.ndx = ~ndx1;
 b.Ri.ndx = ~ndx0;
 b.Ro.ndx = ~ndx1;
 
@@ -175,18 +146,17 @@ grid_number_x = floor(GX/dl);
 %%
 % CREATE REGION OF INTEREST BASED ON MODEL COMPARISON TAG
 if (strcmp(g.extension,'eswsnan'))
-    vec.x = g.centre_vector_x+(-(grid_number_x-.5):(grid_number_x-.5))*dl;
-    vec.z = g.centre_vector_y+(-(grid_number_z-.5):(grid_number_z-.5))*dl;
-    col = grid_number_x*2 + 1*0;
-    row = grid_number_z*2 + 1*0;
+    vec.x = g.centre_vector_x+(-grid_number_x:grid_number_x)*dl;
+    vec.z = g.centre_vector_y+(-grid_number_z:grid_number_z)*dl;
+    col = grid_number_x*2 + 1;
+    row = grid_number_z*2 + 1;
 
     M.x = vec.x(ones(row,1),:);
     M.x = M.x(:)';
     M.z = vec.z(ones(col,1),:)';
     M.z = M.z(:)';
     M.y = zeros(1,row*col);
-    M.a = zeros(1,row*col);
-    
+
     b.A.x = RD*M.x;
     b.A.z = RD*M.z;
     b.A.y = RD*M.y;
@@ -196,8 +166,6 @@ if (strcmp(g.extension,'eswsnan'))
     b.A.z = reshape(b.A.z,[row,col]);
     
     b.A.p0 = zeros(1,row*col);
-    b.A.a = zeros(1,row*col);
-    
 elseif (strcmp(g.extension,'eswsfem'))    
     data = load('pressure-250kHz-y_interf0.035.txt');
 
@@ -281,12 +249,11 @@ if size(b.Ro.c)
     mco = bsxfun(@minus,b.Ro.c,b.To.c);
 end
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %     
-%     PF = zero s(len_C,length(tiers_v),kr_length,dr_length);
+%     PF = zeros(len_C,length(tiers_v),kr_length,dr_length);
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %  
-d_cur = d0;
-% sc_prepare
-save([g.path_to_input,'P',g.convergemod,'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','nR','area_un','b','g')
-for ii = g.prop.nfi:k0_length
+    d_cur = d0;
+
+for ii = g.prop.nfi:k0_length;
     k_cur = k0(ii)*lambda0/(RD);
 %     k_cur = k0(ii)*lambda0/(g.prop.wav);
 
@@ -298,8 +265,7 @@ for ii = g.prop.nfi:k0_length
     TIh = 0;
     if size(b.Ti.c)
 %         [TIj,TIy] = fn_compute_field_boundary_0(S,b.Ti,nR,k_cur,k_cur);
-        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,area_un,k_cur,k_cur,g.golden_ratio);        
-%         [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,1,k_cur,k_cur,g.golden_ratio);        
+        [~,~,TIh,~] = fn_compute_field_boundary3(S,b.Ti,nR,k_cur,k_cur,g.golden_ratio);        
     % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %         TIh = (TIj + TIy);
     end
@@ -310,11 +276,10 @@ for ii = g.prop.nfi:k0_length
 %  [p2i,phI_vd] = fn_compute_field_inside_domain(S,k_cur);
 
 % COMPUTE REFERENCE FIELD INSIDE - INNER DOMAIN (0 ORDER TEST)
-    p0kI = fn_compute_reference_0_2(kci,k_cur,area_un);
-%     p0kI = fn_compute_reference_0_2(kci,k_cur,1);
+    p0kI = fn_compute_reference_0_2(kci,k_cur);
 
 % COMPUTE REFERENCE FIELD INSIDE - RECEIVER SURFACE (0 ORDER TEST)    
-    p0mI = fn_compute_reference_0_2(mci,k_cur,area_un);
+    p0mI = fn_compute_reference_0_2(mci,k_cur);
 
 % COMPUTE PROPAGATOR INSIDE - BOUNDARY 2 / INNER DOMAIN
     [~,~,Thi] = fn_compute_propagator_inside3(S,nR,area_un,k_cur,k_cur,len_I,1);         
@@ -349,15 +314,14 @@ for ii = g.prop.nfi:k0_length
 %             disp(kr(jj)*(1-1i*g.prop.att))
             disp('Density Ratio');
             disp(dr(pp))
-            sk_cur = skr(jj);
-        %    sk_cur = skr(ceil(end/2));
+%                 sk_cur = skr(jj);
+            sk_cur = skr(ceil(end/2));
         % COMPUTE FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY (1 ORDER TEST)
         %       [TIj,TIy] = fn_compute_field_boundary(S,b.C,nO,k_cur,k_cur);
             TOh = 0;
             if size(b.To.c)
 %                 [TOj,TOy] = fn_compute_field_boundary_0(S,b.To,nR,k_cur,k_cur);
-                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,area_un,k_cur,k_cur,g.golden_ratio);        
-%                 [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,1,k_cur,k_cur,g.golden_ratio);        
+                [~,~,TOh,~] = fn_compute_field_boundary3(S,b.To,nR,k_cur,k_cur,g.golden_ratio);        
             % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %                 TOh = -(TOj + TOy);
                 TOh = -TOh;
@@ -372,15 +336,13 @@ for ii = g.prop.nfi:k0_length
             end
             
         % COMPUTE MONOPOLE FIELD OUTSIDE - VIRTUAL DOMAIN / BOUNDARY            
-%             [p1h,v1h,~] = fn_compute_field_outside_m2(S,nR,k_curi,k_out,d_cur);
             [p1h,v1h,~] = fn_compute_field_outside_m2(S,nR,k_curi,k_out,d_cur);
         % COMPUTE MONOPOLE FIELD OUTSIDE - VIRTUAL DOMAIN / DOMAIN
         %   [p2o,phO_vd] = fn_compute_field_outside_domain(S,k_cur);   
         % COMPUTE REFERENCE FIELD OUTSIDE - OUTER DOMAIN (0 ORDER TEST)
-             p0kO = fn_compute_reference_0_2(kco,k_cur,area_un);
-%             p0kO = fn_compute_reference_0_2(kco,k_cur,1);
+             p0kO = fn_compute_reference_0_2(kco,k_cur);
         % COMPUTE REFERENCE FIELD OUTSIDE - RECEIVER SURFACE (0 ORDER TEST)             
-             p0mO = fn_compute_reference_0_2(mco,k_cur,area_un);
+             p0mO = fn_compute_reference_0_2(mco,k_cur);
         % COMPUTE PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
              [~,~,Tho] = fn_compute_propagator_outside3(S,nR,area_un,k_cur,k_out,len_O,d_cur);                
         % PROPAGATOR PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
@@ -393,9 +355,9 @@ for ii = g.prop.nfi:k0_length
         
         % COMPUTE PROPAGATOR INCIDENT TO REFRACTED - BOUNDARY / BOUNDARY
              [TFI] = fn_propagator_inc_ref(p1h,v1h,-p2h,-v2h);
-%              [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
+             [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
 %              [TFI] = fn_propagator_inc_ref(p1h,v1h,p2h,v2h);
-             
+%              [TFO] = fn_propagator_inc_ref(p2h,v2h,p1h,v1h);
         %    TFO = (eye_T - TFI);
         %    TF = fn_propagator_src_beh(p1h,v1h,-p2h,-v2h);
         %    TF = fn_propagator_src_beh(p1h,v1h,p2h,v2h);
@@ -406,24 +368,16 @@ for ii = g.prop.nfi:k0_length
         
         % STORE FIELD PARAMETERS
 %              PF(ii,jj,pp,:,:) = b.A.p;
-%         sc_propagate
-
-        [TFO] = fn_propagator_inc_ref(p2h,-v2h,-p1h,+v1h);
-        sc_propagate2
-%        sc_prepare
-%         sc_integrate
+        sc_propagate
+%        sc_plot
 %        resp_rang(ii) = response_range;
-     %     Mcmb_l{ii} = Mcmb;
-%         h5write(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'/Mcmb',Mcmb)
-         save([g.path_to_input,'R',g.convergemod,'_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'_',num2str(sd_cur),'_',num2str(sk_cur),'.mat'],'Mcmb')
-
+%        Mcmb_l{ii} = Mcmb;
+        save(['RR_',num2str(ii),'_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.h5'],'Mcmb','-hdf5')
         end
-          %    
     end
 end
 
 % save('PF.mat','PF')
-% save(['PP_',g.prop.nfr,'_',g.model_scale,'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
-% save(['D:\MATLAB\menisco\RR_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g')
+save(['PP_',num2str(g.prop.nfr),'_',num2str(g.prop.iff*g.model_scale*100),'_',num2str(g.model_scale*100),'.mat'],'T','R','S','Neltoverlambda','nRD','b','g','-hdf5')
 % sc_surf_def
 % sc_surf_run
