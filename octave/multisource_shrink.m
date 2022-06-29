@@ -393,7 +393,7 @@ for ii = g.prop.nfi:g.prop.nff
         
         % COMPUTE PROPAGATOR INCIDENT TO REFRACTED - BOUNDARY / BOUNDARY
              [TFI] = fn_propagator_inc_ref(p1h,v1h,-p2h,-v2h);
-%              [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
+              [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
 %              [TFI] = fn_propagator_inc_ref(p1h,v1h,p2h,v2h);
              
         %    TFO = (eye_T - TFI);
@@ -406,10 +406,10 @@ for ii = g.prop.nfi:g.prop.nff
         
         % STORE FIELD PARAMETERS
 %              PF(ii,jj,pp,:,:) = b.A.p;
-%         sc_propagate
+        sc_propagate
 
-        [TFO] = fn_propagator_inc_ref(p2h,-v2h,-p1h,+v1h);
-        sc_propagate2
+%         [TFO] = fn_propagator_inc_ref(p2h,-v2h,-p1h,+v1h);
+%         sc_propagate2
 %        sc_prepare
 %         sc_integrate
 %        resp_rang(ii) = response_range;
