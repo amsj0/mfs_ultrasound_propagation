@@ -107,17 +107,17 @@ g.centre_vector_y = str2num(MODEL_SCL)*(CENTY_VEC).';
 
 
 
-g.piston_radius = str2num(MODEL_SCL)*str2num(PISTO_RAD)/100;
+g.piston_radius = str2num(MODEL_SCL)*str2num(PISTO_RAD);
 
-g.piston_vector_pitch = str2num(MODEL_SCL)*str2num(PISTO_VCT)/100;
+g.piston_vector_pitch = str2num(MODEL_SCL)*str2num(PISTO_VCT);
 
-g.piston_vector_catch = str2num(MODEL_SCL)*str2num(PISTO_VCR)/100;
+g.piston_vector_catch = str2num(MODEL_SCL)*str2num(PISTO_VCR);
 
-g.piston_distan = str2num(MODEL_SCL)*str2num(PISTO_DST)/100;
+g.piston_distan = str2num(MODEL_SCL)*str2num(PISTO_DST);
 
 g.interface_centre = 0.05;
 
-g.piston_centre = str2num(MODEL_SCL)*str2num(PISTO_CEN)/100;
+g.piston_centre = str2num(MODEL_SCL)*str2num(PISTO_CEN);
 
 g.scale = 4;
 

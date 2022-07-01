@@ -6,9 +6,13 @@ N = 1;
 % r = sqrt(x^2+y^2);
 % th = atan2(y,x);
 vec = 0;
-number = RN*Nelt;
-if number > 1
-    vec = linspace(-RN/2,RN/2,number);
+% number = RN*Nelt;
+
+pts_number = floor(RN / 2 * Nelt) * 2;
+RN = (pts_number - 1) / Nelt;
+
+if pts_number > 1
+    vec = linspace(-RN/2,RN/2,pts_number);
 end
 r = centre + vec;
 % r = centre + (-RN/2:1/Nelt:RN/2);
