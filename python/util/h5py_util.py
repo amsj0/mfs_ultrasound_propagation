@@ -1,0 +1,54 @@
+import numpy as np
+import h5py
+
+def load_para(pathname,modifier,gridname):
+    
+    f = h5py.File(pathname + 'P' + modifier + gridname + '.h5','r')
+
+    gridx = f['D']['X']
+
+    gridy = f['D']['Z']
+
+    ndx0 = f['D']['ndx0']
+
+    shape = f['D']['s']
+
+    scale = f['nRD']
+    
+    grid = np.empty(gridx.shape,dtype='complex')
+    
+    grid.real = gridx;grid.imag = gridy;grid.shape = shape
+
+    return grid/scale,ndx0
+
+
+def load_(pathname,para,filename):
+    
+    f =  h5py.File(pathname + para + '_' +  filename,'r')
+        
+    return f[para]
+    
+    '''
+    f = h5py.File(pathname + para + '_' +  filename,'r')
+
+    dataset = f[para]
+        
+    dims = dataset.shape
+
+    return dataset,dims
+    '''
+
+def save_dict_to_hdf5(M, datafile):
+    with h5py.File(datafile + '.h5','w') as f:
+        for item, dict in M.items():
+            try:
+                f_dict = dict.__dict__
+                f_item = f.create_group(item)
+                for k, v in f_dict.items():
+                    f_item[k] = v   
+            except Exception:
+                f[item] = dict
+
+def save_keyvalue_to_hdf5(key, value, path, dataset):
+    with h5py.File(path + dataset + '.h5', 'w') as f:
+        f[key] = value
