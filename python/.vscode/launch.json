@@ -11,6 +11,15 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Python: Current File with Input File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["inputfile.yaml"],
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }
