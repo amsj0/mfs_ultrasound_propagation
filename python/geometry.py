@@ -43,8 +43,8 @@ def fn_discretize_geometry_domain(G,centre_vector,grid_ratio):
         siz.append(grid_number * 2 + 1 * 0)
         vec.append(centre + (np.arange(-grid_centre,grid_centre+1)) * grid_ratio)
         
-    M.x = np.repeat(vec[0][:,np.newaxis],siz[0],axis=1).reshape(-1)
-    M.z = np.repeat(vec[1][np.newaxis,:],siz[1],axis=0).reshape(-1)
+    M.x = np.repeat(vec[0][:,np.newaxis],siz[1],axis=1).reshape(-1)
+    M.z = np.repeat(vec[1][np.newaxis,:],siz[0],axis=0).reshape(-1)
     
     M.X = M.x
     M.Z = M.z
