@@ -1,11 +1,15 @@
 import numpy as np
 
-vcos = np.frompyfunc(np.cos,1,1)
-vsin = np.frompyfunc(np.sin,1,1)
-
 
 class structtype():
     pass
+
+def fn_rotation():
+    vcos = np.frompyfunc(np.cos,1,1)
+    vsin = np.frompyfunc(np.sin,1,1)
+    
+    Rotation = [vsin,vcos]
+    return Rotation
 
 def fn_copy_filter(seed, *copies): 
 
@@ -56,7 +60,7 @@ def fn_discretize_geometry_domain(G,centre_vector,grid_ratio):
 
     return M
 
-def fn_discretize_geometry_plane(RN = None,Centre = None, Orientation = None,Nelt = None,mode = None):
+def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt ,mode, Rotation = fn_rotation() ):
 
     P = structtype() 
     
@@ -94,8 +98,8 @@ def fn_discretize_geometry_plane(RN = None,Centre = None, Orientation = None,Nel
     norm = np.array(normC , dtype=object)
     
     P.a = area
-    P.x = (radi * vsin(thet) + Centre[0] )
-    P.z = (radi * vcos(thet) + Centre[1] )
+    P.x = (radi * Rotation[0](thet) + Centre[0] )
+    P.z = (radi * Rotation[1](thet) + Centre[1] )
     P.y = P.z * 0
     P.n = norm
 

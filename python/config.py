@@ -128,7 +128,7 @@ def create_configfile(fn,filename):
     # CREATE SURROUNDING SURFACE
     ##
     
-    S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100)
+    S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
            
     S.c = S.x + 1j * S.z
 
@@ -152,7 +152,7 @@ def create_configfile(fn,filename):
     # CREATE TRANSMITER TRANSDUCER SURFACE
     ##
     
-    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100))
+    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), 0 )
 
     ##    
     # SLICE TRANSMITER SURFACE WITH SURROUNDING SURFACE
@@ -177,7 +177,7 @@ def create_configfile(fn,filename):
     # CREATE RECEPTOR TRANSDUCER (SURFACE PROBE)
     ##
     
-    R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100))
+    R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 )
     
     ##
     # SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE
