@@ -49,6 +49,14 @@ def save_dict_to_hdf5(M, datafile):
             except Exception:
                 f[item] = dict
 
+def create_keysized_to_hdf5(key, size, path, dataset):
+    with h5py.File(path + dataset + '.h5', 'w') as f:
+        f.create_dataset(key, size, dtype='complex')
+
 def save_keyvalue_to_hdf5(key, value, path, dataset):
     with h5py.File(path + dataset + '.h5', 'w') as f:
         f[key] = value
+
+def append_keyvalue_to_hdf5(key, value, ndx, path, dataset):
+    with h5py.File(path + dataset + '.h5', 'a') as f:
+        f[key][ndx,...] = value

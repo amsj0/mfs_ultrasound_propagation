@@ -84,14 +84,13 @@ def analyse(fn_analyse, config_file, output_path):
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 
-    resp = []
-    doma = []
-
     dataroot = g.convergemod + '_' + str(g.nfr) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
 
     for jj in range(kr_length):
                
         for pp in range(dr_length):
+            
+            dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
             
             for ii in range(g.nfi-1,g.nff):
                 
@@ -101,19 +100,16 @@ def analyse(fn_analyse, config_file, output_path):
                 start_time = stop_time
 
                 r,d = fn_analyse(config_tuple,datafile)
-                resp.append(r)
-                doma.append(d)
 
                 stop_time = time.time()
                 print(stop_time - start_time)
-                
-            dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
-
-            save_keyvalue_to_hdf5('doma', doma, output_path + 'doma_', dataset)
-            save_keyvalue_to_hdf5('resp', resp, output_path + 'reps_', dataset)
-
-            resp = []
-            doma = []
+                if ii==0:
+                    domaset_size = (sfr.size,) + d.shape
+                    respset_size = (sfr.size,) + r.shape
+                    create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
+                    create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)           
+                append_keyvalue_to_hdf5('doma', d, ii, output_path + 'doma_', dataset)
+                append_keyvalue_to_hdf5('resp', r, ii, output_path + 'resp_', dataset)
 
 
 if __name__ == "__main__":
