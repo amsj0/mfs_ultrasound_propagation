@@ -277,6 +277,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
 
-    yaml_path = sys.argv[1]
+    config_file = sys.argv[1]
 
-    create_configfile(parse_config, yaml_path)
+    create_configfile(parse_config, config_file)

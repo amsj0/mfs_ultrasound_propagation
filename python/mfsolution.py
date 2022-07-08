@@ -51,9 +51,9 @@ def reconfigure(config_tuple):
     return T,P,S,nRD,g
 
 
-def mfsolution(reconfigure, yaml_path):
+def mfsolution(reconfigure, config_file):
 
-    T,P,S,nRD,g = reconfigure(create_configfile(parse_config,yaml_path))  
+    T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file))  
          
     CP = Compute(P,T,S)
 
@@ -95,8 +95,8 @@ def mfsolution(reconfigure, yaml_path):
                 CP.compute_upper_side(k_cur,k_out,d_cur)
                 CP.propagate_transfer()
 
-                #save_dict_to_hdf5(CP.M, datafile)
-                save_keyvalue_to_hdf5('doma',CP.M['domain'], '', datafile)
+                save_dict_to_hdf5(CP.M, datafile)
+                #save_keyvalue_to_hdf5('doma',CP.M['domain'], '', datafile)
                 
                 print('Datafile {} created'.format(datafile))
 
@@ -106,6 +106,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
     
-    yaml_path = sys.argv[1]
+    config_file = sys.argv[1]
 
-    mfsolution(reconfigure, yaml_path)
+    mfsolution(reconfigure, config_file)

@@ -11,13 +11,6 @@ import time
 def fn_analyse(config_tuple,datafile):
     
     T,_,D,R,Neltoverlambda,nRD,g = config_tuple
-    #loadmat([path,datafile])
-    #loadmat([path,configfile + '.h5'])
-    #loadmat([path,analysisfile])
-
-    #   DEFINES PISTON INDEXES
-    #Tz = T.z
-    #Rz = R.z
     
     response = structtype()
     field = structtype()
@@ -84,8 +77,8 @@ def fn_analyse(config_tuple,datafile):
     return  resp,doma
 
 
-def analyse(fn_analyse, yaml_path):
-    config_tuple = create_configfile(parse_config,yaml_path)
+def analyse(fn_analyse, config_file, output_path):
+    config_tuple = create_configfile(parse_config,config_file)
 
     T,S,D,R,_,nRD,g = config_tuple
 
@@ -93,9 +86,6 @@ def analyse(fn_analyse, yaml_path):
 
     resp = []
     doma = []
-    path = "D:/MATLAB/menisco/"
-
-    analysisfile = "P.mat"
 
     dataroot = g.convergemod + '_' + str(g.nfr) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
 
@@ -119,8 +109,8 @@ def analyse(fn_analyse, yaml_path):
                 
             dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
-            save_keyvalue_to_hdf5('doma', doma, path + 'doma_', dataset)
-            save_keyvalue_to_hdf5('resp', resp, path + 'reps_', dataset)
+            save_keyvalue_to_hdf5('doma', doma, output_path + 'doma_', dataset)
+            save_keyvalue_to_hdf5('resp', resp, output_path + 'reps_', dataset)
 
             resp = []
             doma = []
@@ -128,9 +118,10 @@ def analyse(fn_analyse, yaml_path):
 
 if __name__ == "__main__":
     
-    if len(sys.argv) != 2:
-        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
+    if len(sys.argv) != 3:
+        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml output_path.yaml'.format(sys.argv[0]))
 
-    yaml_path = sys.argv[1]
+    config_file = sys.argv[1]
+    output_path = sys.argv[2]
 
-    analyse(fn_analyse, yaml_path)
+    analyse(fn_analyse, config_file, output_path)

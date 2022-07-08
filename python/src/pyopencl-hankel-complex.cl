@@ -34,7 +34,7 @@ THE SOFTWARE.
 */
 
 
-// #pragma OPENCL EXTENSION cl_khr_fp64: enable
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
 #define PYOPENCL_DEFINE_CDOUBLE
 #include <pyopencl-complex.h>
 

@@ -24,12 +24,12 @@ hspc_size = int(spec_size/2)
 #central_freq = 19/(.6*2) #15.833
 #central_freq = 15.707963268 #5pi
 
-yaml_path = 'config.yaml'
+config_file = 'config.yaml'
 
 if len(sys.argv) != 1:
-    yaml_path = sys.argv[1]
+    config_file = sys.argv[1]
 
-with open(yaml_path, 'r') as f:
+with open(config_file, 'r') as f:
     cfg = yaml.safe_load(f)
     numbr_freq = cfg['numbr_freq']
     initi_freq = cfg['initi_freq']

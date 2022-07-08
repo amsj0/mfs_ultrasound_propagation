@@ -1,4 +1,4 @@
-from attr import define
+#from attr import define
 import numpy as np
 import pyopencl as cl
 
@@ -84,10 +84,8 @@ class Compute:
         h0.shape = host.shape
         h1.shape = host.shape
         
-        bh0 = h0
-        
-        if m == 0:
-            bh1 = h1
+        bh0 = h0      
+        bh1 = h1
         
         del h0_buff,h1_buff
         
@@ -281,5 +279,5 @@ class Compute:
             self.M[probe] += self.F[probe]
 
 
-    def null():
+    def null(self):
         return 0

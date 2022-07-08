@@ -8,10 +8,17 @@ class structtype():
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 2:
-        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
+    if (len(sys.argv) != 3) & (len(sys.argv) != 2 ) :
+        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml output_path.yaml'.format(sys.argv[0]))
 
-    yaml_path = sys.argv[1]
+    print('Running solution code')
 
-    mfsolution(reconfigure, yaml_path)
-    analyse(fn_analyse, yaml_path)
+    config_file = sys.argv[1]
+
+    mfsolution(reconfigure, config_file)
+
+    if len(sys.argv) == 3:
+        print('Running analysis code')
+
+        output_path = sys.argv[2]
+        analyse(fn_analyse, config_file,output_path)
