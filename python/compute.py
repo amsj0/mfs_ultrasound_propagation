@@ -119,9 +119,9 @@ class Compute:
         #Th[:,midsize:] = -1j/4*area[np.newaxis,:]*bh0
         #Th[:,:midsize] = 1j/4*area[np.newaxis,:]*bh1*rcos*k_cur/k_r*dr
         
-        return  factor*Ar*bh1*rcos*k_cur/k_r*dr,factor*Ar*bh0
+        return  factor*Ar*bh1*rcos*k_cur/(k_r*dr),factor*Ar*bh0
 
-    def field_boundary(self, R, C, side , k_cur, k_r):
+    def field_boundary(self, R, C, side , k_cur, k_r, d_r):
 
         m = MCHARGE
         kind = 0
@@ -150,7 +150,7 @@ class Compute:
         #Th[:midsize,:] = area[:,np.newaxis]*1*bh0*ex0*k_r
         #Th[midsize:,:] = area[:,np.newaxis]*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0
 
-        return Ar*1*bh0*ex0*k_r,Ar*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0
+        return Ar*1*bh0*ex0*(k_r*d_r),Ar*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0
 
     def field_side_m(self, R, side, k_cur, k_r, dr ):
 
@@ -172,7 +172,7 @@ class Compute:
         #Bh = bh0
         #Dh = bh1*rcos1*k_cur/k_r*dr
 
-        return bh0,bh1*rcos1*k_cur/k_r*dr
+        return bh0,bh1*rcos1*k_cur/(k_r*dr)
 
     def reference(self,R,C,side,k_cur):
 
@@ -209,10 +209,14 @@ class Compute:
 
         self.T[probe][P.m[side],:self.nS],self.T[probe][P.m[side],self.nS:] = self.propagator_side(P,side,S['collo'],k_cur,k_cur,1)
 
-    def compute_field_boundary(self,S,T,side,k_cur):
+    def compute_field_upper_boundary(self,S,T,side,k_cur,k_out,d_r):
         
-        self.B['emitter'][:self.nS,T.m[side]],self.B['emitter'][self.nS:,T.m[side]] = self.field_boundary(S['collo'],T,side,k_cur,k_cur)
+        self.B['emitter'][:self.nS,T.m[side]],self.B['emitter'][self.nS:,T.m[side]] = self.field_boundary(S['collo'],T,side,k_cur,k_out,d_r)
     
+    def compute_field_lower_boundary(self,S,T,side,k_cur):
+        
+        self.B['emitter'][:self.nS,T.m[side]],self.B['emitter'][self.nS:,T.m[side]] = self.field_boundary(S['collo'],T,side,k_cur,k_cur,1)
+
     def compute_reference(self,P,probe,T,side,k_cur):
         
         #self.F[probe][side[probe][...,np.newaxis]*side['emitter']] = self.reference(P,side[probe],T,side['emitter'],k_cur).reshape(-1)
@@ -223,19 +227,19 @@ class Compute:
         side = 0
 
         self.compute_field_lower_side_m(self.Surfc,k_cur)
-        self.compute_field_boundary(self.Surfc, self.Tranx['emitter'], side, k_cur)
+        self.compute_field_lower_boundary(self.Surfc, self.Tranx['emitter'], side, k_cur)
         for probe, P in self.Probe.items():
             self.compute_propagator_lower_side(P,probe,side,self.Surfc,k_cur)
             self.compute_reference(P,probe,self.Tranx['emitter'],side,k_cur)
 
-    def compute_upper_side(self,k_cur,k_out,d_cur):
+    def compute_upper_side(self,k_cur,k_out,d_r):
         
         side = 1
 
-        self.compute_field_upper_side_m(self.Surfc,k_cur,k_out,d_cur)
-        self.compute_field_boundary(self.Surfc, self.Tranx['emitter'], side, k_cur)
+        self.compute_field_upper_side_m(self.Surfc,k_cur,k_out,d_r)
+        self.compute_field_upper_boundary(self.Surfc, self.Tranx['emitter'], side, k_cur,k_out,d_r)
         for probe, P in self.Probe.items():
-            self.compute_propagator_upper_side(P,probe,side,self.Surfc,k_cur,k_out,d_cur)
+            self.compute_propagator_upper_side(P,probe,side,self.Surfc,k_cur,k_out,d_r)
             self.compute_reference(P,probe,self.Tranx['emitter'],side,k_cur)
 
     def propagate_lower_incref(self):

@@ -79,11 +79,15 @@ def mfsolution(reconfigure, config_file):
         d_out = d_cur
 
         for jj in range(kr_length):
-            k_curi = k_out/kr[jj]
+            
+            k_r = kr[jj]
+            k_curi = k_out/k_r
             k_cur  = k_curi*(1+1j*g.att)/np.abs(1-0*1j*g.att)
 
             for pp in range(dr_length):
-                d_cur  = 1/dr[pp]
+                
+                d_r = dr[pp]
+                d_cur  = d_out/dr[pp]
                             
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
@@ -92,7 +96,7 @@ def mfsolution(reconfigure, config_file):
                 print('Density Ratio')
                 print(dr[pp])
                 
-                CP.compute_upper_side(k_cur,k_out,d_cur)
+                CP.compute_upper_side(k_cur,k_out,d_r)
                 CP.propagate_transfer()
 
                 save_dict_to_hdf5(CP.M, datafile)
