@@ -44,11 +44,11 @@ def fn_analyse(config_tuple,datafile):
         MH = f['domain']
         MR = f['receiver']
 
-        response.pitch = convolve(T.z,np.ones(ppt_per_surface),mode='same')
-        response.catch = convolve(R.z,np.ones(ppt_per_surface),mode='same')
+        response.pitch = convolve(T.z,np.ones(ppt_per_surface),mode='valid')
+        response.catch = convolve(R.z,np.ones(ppt_per_surface),mode='valid')
 
-        field.p = convolve(MH,np.ones((1,ppt_per_surface)),mode='same')
-        response.p = convolve2d(MR,np.ones((ppt_per_surface,ppt_per_surface)),mode='same')
+        field.p = convolve(MH,np.ones((1,ppt_per_surface)),mode='valid')
+        response.p = convolve2d(MR,np.ones((ppt_per_surface,ppt_per_surface)),mode='valid')
         '''
         for t in np.arange(0,response.pitch.size):
             
