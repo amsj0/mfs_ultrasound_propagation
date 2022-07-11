@@ -30,6 +30,8 @@ with open(config_file, 'r') as f:
     sdr = cfg['sdr']
     #piston_radius = cfg['piston_radius']
     pathname = cfg['pathname']
+    radia_siz = int(cfg['RADIA_SIZ'])
+    eleme_wav = int(cfg['ELEME_WAV'])
 
 ref_freq = 1e6
 
@@ -46,6 +48,7 @@ filename = gridname + '_' + str(skr) + '_' + str(sdr) + '.h5'
 # pathname = '../octave/'
 # pathname = sys.argv[1]
 
+grid_scale = radia_siz*eleme_wav/1000
 print(pathname)
 
 mu, sigma = 0, 0.1
@@ -276,11 +279,11 @@ if __name__ == '__main__':
     #this_series = mat_tseries[this_time_ndx,:,2].real
     #this_series = abs(mat_tseries[this_time_ndx,:,2])
     #this_series = this_doma[:,0]
-    this_grid = grid
+    this_grid = grid*grid_scale
     #this_series.shape = this_grid.shape
-    h0 = axs.pcolormesh(this_grid.real,this_grid.imag,this_series.reshape(this_grid.shape),shading='nearest')
+    h0 = axs.pcolormesh(this_grid.real,this_grid.imag,this_series.reshape(this_grid.shape),shading='nearest',vmin=-3,vmax=3)
     axs.set_aspect('equal', 'box')
-    axs.tick_params(axis='x',which='both',bottom=False,top=False,labelbottom=False)
+    axs.tick_params(axis='x',which='both',bottom=True,top=False,labelbottom=True)
     axs.set_title('Refracted')
     '''
     h1 = axs[1].pcolormesh(this_grid.real,this_grid.imag,this_series,shading='nearest',vmin=-1, vmax=1)
@@ -313,7 +316,7 @@ if __name__ == '__main__':
     #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
     
     #factor = 1.25
-    #fg,ax = plt.subplots(1,1,figsize=(10,7))
+    
 
     for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
@@ -426,48 +429,56 @@ if __name__ == '__main__':
                     mat_tseries[:,kk,3] = tseries.transpose()             
                     '''
                 mlim = np.amax(np.abs(mat_tseries))/4
-                for ll in range(int(factor*int(spec_size/dtsr))):
-                    
-                    #this_series = mat_tseries[(ll+1)*dtsr-1,:,0].real/mlim
-                    
-                    this_series[np.logical_not(ndx0)] = mat_tseries[(ll+1)*dtsr-1,:].real/mlim
-                    #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,0]))
-                    #this_series.shape = this_grid.shape
-                    h0.set_array(this_series.ravel())
-                    '''
-                    this_series = mat_tseries[(ll+1)*dtsr-1,:,1].real/mlim
-                    #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,1]))
-                    this_series.shape = this_grid.shape            
-                    h1.set_array(this_series.ravel())
-                    
-                    this_series = mat_tseries[(ll+1)*dtsr-1,:,2].real/mlim
-                    #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,2]))
-                    this_series.shape = this_grid.shape            
-                    h2.set_array(this_series.ravel())
-                    
-                    this_series = mat_tseries[(ll+1)*dtsr-1,:,3].real/mlim
-                    #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,2]))
-                    this_series.shape = this_grid.shape            
-                    h3.set_array(this_series.ravel())
-                    '''
-                    
-                    fg.suptitle('time-step ' + str((ll+1)*dtsr-1) + '| time ' + str(x_spec_full[(ll+1)*dtsr-1]) + ' | height-step ' + str(jj))
-                    #domat.shape
+                if 0:
+                    for ll in range(int(factor*int(spec_size/dtsr))):
+                        
+                        #this_series = mat_tseries[(ll+1)*dtsr-1,:,0].real/mlim
+                        
+                        this_series[np.logical_not(ndx0)] = mat_tseries[(ll+1)*dtsr-1,:].real/mlim
+                        #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,0]))
+                        #this_series.shape = this_grid.shape
+                        h0.set_array(this_series.ravel())
+                        '''
+                        this_series = mat_tseries[(ll+1)*dtsr-1,:,1].real/mlim
+                        #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,1]))
+                        this_series.shape = this_grid.shape            
+                        h1.set_array(this_series.ravel())
+                        
+                        this_series = mat_tseries[(ll+1)*dtsr-1,:,2].real/mlim
+                        #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,2]))
+                        this_series.shape = this_grid.shape            
+                        h2.set_array(this_series.ravel())
+                        
+                        this_series = mat_tseries[(ll+1)*dtsr-1,:,3].real/mlim
+                        #this_series = 20*np.log10(abs(mat_tseries[ll*dtsr,:,2]))
+                        this_series.shape = this_grid.shape            
+                        h3.set_array(this_series.ravel())
+                        '''
+                        
+                        fg.suptitle('time-step ' + str((ll+1)*dtsr-1) + '| time ' + str(x_spec_full[(ll+1)*dtsr-1]) + ' | height-step ' + str(jj))
+                        #domat.shape
 
-                    #plt.draw()
-                    #time.sleep(1e-4)
-                    #clear_output(wait=False)
-                    #plt.show()#draw();
-                    fg.canvas.draw()
-                    #plt.grid(True)
-                    fg.canvas.flush_events()
-        
+                        #plt.draw()
+                        #time.sleep(1e-4)
+                        #clear_output(wait=False)
+                        #plt.show()#draw();
+                        fg.canvas.draw()
+                        #plt.grid(True)
+                        fg.canvas.flush_events()
+
+    #fg,ax = plt.subplots(1,1,figsize=(10,7))
+
     spec_grid,ndx_grid = np.meshgrid(x_spec_full,range(resp_data.shape[-1]))
     #ax.pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest',vmin=-1, vmax=1)
-    ax.pcolormesh(spec_grid,ndx_grid,rlim.real,shading='nearest')
+    #ax.pcolormesh(spec_grid,ndx_grid,rlim.real,shading='nearest')
     #ax.imshow(vlim.real)
-    fg,ax = plt.subplots(1,1,figsize=(10,7))
-    ax.pcolormesh(spec_grid,ndx_grid,vlim.real,shading='nearest')
+
+    fg,axs = plt.subplots(2,1,figsize=(10,7))
+    axs[0].set_title('Real Signal')
+    axs[0].pcolormesh(spec_grid,ndx_grid,vlim.real,shading='nearest')
+    axs[1].set_title('Imag Signal')
+    axs[1].pcolormesh(spec_grid,ndx_grid,np.abs(vlim),shading='nearest')    
+
     fg,ax = plt.subplots(1,1,figsize=(10,7))
     
     rng = range(3,doma_data.shape[0],40)

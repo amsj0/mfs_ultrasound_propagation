@@ -5,7 +5,11 @@ final_freq: 200
 parti_freq: 100
 converge: 'Pr'
 modifier: '2'
-sdr: 800
-skr: 798
+sdr: 1000
+skr: 1000
 pathname: '/tmp/'
+# SCALE WAVELENGTH
+RADIA_SIZ: 10 
+# CENTI SOURCE PER WAVELENGHT
+ELEME_WAV: 500
 #piston_radius: '50'
