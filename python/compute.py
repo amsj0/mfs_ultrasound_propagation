@@ -119,7 +119,7 @@ class Compute:
         #Th[:,midsize:] = -1j/4*area[np.newaxis,:]*bh0
         #Th[:,:midsize] = 1j/4*area[np.newaxis,:]*bh1*rcos*k_cur/k_r*dr
         
-        return  factor*Ar*bh1*rcos*k_cur/k_r*dr,-factor*Ar*bh0
+        return  factor*Ar*bh1*rcos*k_cur/k_r*dr,factor*Ar*bh0
 
     def field_boundary(self, R, C, side , k_cur, k_r):
 
@@ -256,6 +256,19 @@ class Compute:
 
         return inc_ref(p1,v1,p2,v2)
 
+    def propagate_incref(self,side):
+
+        p1 = self.B['lower'][:,:self.nS]
+        v1 = self.B['lower'][:,self.nS:]
+        p2 = -self.B['upper'][:,:self.nS]
+        v2 = -self.B['upper'][:,self.nS:]
+
+        jls_extract_var = inc_ref(p1,v1,p2,v2)
+        if ~side:
+            jls_extract_var = np.identity(2*self.nS)- jls_extract_var
+
+        return jls_extract_var
+
     def propagate_transfer(self):
         
         MUT = transfer(self.propagate_upper_incref(),self.B['emitter'])
@@ -271,10 +284,10 @@ class Compute:
             probe_mask = trans_mask[...,np.newaxis]
             nrobe_mask = nrans_mask[...,np.newaxis]
 
-            self.M[probe][probe_mask*emitter_mask] = (Transfer[trans_mask,...] @ MUT[...,emitter_mask]).reshape(-1)
-            self.M[probe][nrobe_mask*nmitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,nmitter_mask]).reshape(-1)
-            self.M[probe][probe_mask*nmitter_mask] = (Transfer[trans_mask,...] @ MUT[...,nmitter_mask]).reshape(-1)
-            self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,emitter_mask]).reshape(-1)
+            self.M[probe][probe_mask*emitter_mask] = (Transfer[trans_mask,...] @ MUT[...,emitter_mask]).flatten()
+            self.M[probe][nrobe_mask*nmitter_mask] = -(Transfer[nrans_mask,...] @ MLT[...,nmitter_mask]).flatten()
+            self.M[probe][probe_mask*nmitter_mask] = -(Transfer[trans_mask,...] @ MUT[...,nmitter_mask]).flatten()
+            self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,emitter_mask]).flatten()
             
             self.M[probe] += self.F[probe]
 

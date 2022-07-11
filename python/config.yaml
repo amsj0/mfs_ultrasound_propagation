@@ -5,7 +5,7 @@ final_freq: 200
 parti_freq: 100
 converge: 'Pr'
 modifier: '2'
-sdr: 1000
-skr: 998
-pathname: 'D:\MATLAB\menisco\'
+sdr: 800
+skr: 798
+pathname: '/tmp/'
 #piston_radius: '50'

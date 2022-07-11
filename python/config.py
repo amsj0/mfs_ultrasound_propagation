@@ -129,7 +129,7 @@ def create_configfile(fn,filename):
     ##
     
     S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
-           
+               
     S.c = S.x + 1j * S.z
 
     ##
@@ -137,16 +137,17 @@ def create_configfile(fn,filename):
     ##
 
     fn_surface_rectangular_stacking(S)
-    
     ##
     # SCALE SURROUNDING SURFACE WITH SCALING FACTOR
     ##    
-        
+    
     S.a = S.a * RD
     S.x = S.x * RD
     S.z = S.z * RD
     S.y = S.y * RD
-    S.c = S.x + 1j * S.z
+    S.c = S.c * RD
+    S.ci = S.ci * RD
+    S.co = S.co * RD
     
     ##
     # CREATE TRANSMITER TRANSDUCER SURFACE
@@ -220,7 +221,7 @@ def create_configfile(fn,filename):
     ##
     
     _,ndx0 = fn_enclosure_rectan([D.x,D.z],[ 1, 1],interf_centre,0)
-    _,ndx1 = fn_enclosure_rectan([D.x,D.z],[ 1, 1],interf_centre,0)
+    _,ndx1 = fn_enclosure_rectan([D.x,D.z],[ 1, -1],interf_centre,0)
     
     D.ndx = [ndx0,ndx1]
     

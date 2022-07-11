@@ -36,7 +36,7 @@ ref_freq = 1e6
 central_freq = ref_freq/100*final_freq/2
 range_freq = ref_freq*.48
 
-display_time_step_ratio = 256
+display_time_step_ratio = 16
 dtsr = display_time_step_ratio
 
 gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     #this_series = this_doma[:,0]
     this_grid = grid
     #this_series.shape = this_grid.shape
-    h0 = axs.pcolormesh(this_grid.real,this_grid.imag,this_series.reshape(this_grid.shape),shading='nearest',vmin=-1, vmax=1)
+    h0 = axs.pcolormesh(this_grid.real,this_grid.imag,this_series.reshape(this_grid.shape),shading='nearest')
     axs.set_aspect('equal', 'box')
     axs.tick_params(axis='x',which='both',bottom=False,top=False,labelbottom=False)
     axs.set_title('Refracted')
@@ -313,7 +313,7 @@ if __name__ == '__main__':
     #vlim = np.empty((int(doma_dims[0]),resp_data.shape[1]),dtype='complex')
     
     #factor = 1.25
-    fg,ax = plt.subplots(1,1,figsize=(10,7))
+    #fg,ax = plt.subplots(1,1,figsize=(10,7))
 
     for ii in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         osc,freq,spec = synth_fseries_from_centr_freq(central_range[ii-1])
