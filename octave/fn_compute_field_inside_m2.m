@@ -25,7 +25,9 @@ bh1 = 1/2*(besselh(m-1,kind,z)-besselh(m+1,kind,z)); % first derivate
 
 Bh = bh0;
 % DTy = by1.*rcos1*k_cur;
-Dh = bh1.*rcos1*k_cur/k_r*dr;
+% % Dh = bh1.*rcos1*k_cur/k_r*dr;
+Dh = bh1.*rcos1*k_cur/(k_r*dr);
+% Dh = bh1.*rcos1;
 
 p = Bh;
 v = Dh;

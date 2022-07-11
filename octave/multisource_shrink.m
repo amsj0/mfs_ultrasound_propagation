@@ -298,7 +298,7 @@ for ii = g.prop.nfi:g.prop.nff
     TIh = 0;
     if size(b.Ti.c)
 %         [TIj,TIy] = fn_compute_field_boundary_0(S,b.Ti,nR,k_cur,k_cur);
-        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,area_un,k_cur,k_cur,g.golden_ratio);        
+        [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,area_un,k_cur,k_cur,1);        
 %         [~,~,TIh] = fn_compute_field_boundary3(S,b.Ti,nR,1,k_cur,k_cur,g.golden_ratio);        
     % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %         TIh = (TIj + TIy);
@@ -335,17 +335,20 @@ for ii = g.prop.nfi:g.prop.nff
     for jj =1:kr_length   
 
         for pp =1:dr_length   
-            d_cur = 1/dr(pp);
+            
+            d_r = dr(pp);
+            d_cur = d_out/d_r;
             sd_cur = sdr(pp);
     
 % % % % % % % % % % % % % TEMPORARLY % % % % % % % % % % %           
 %             k_cur = k_out/kr(jj)*(1+1j*g.prop.att)/abs(1+1j*g.prop.att);
-            k_curi = k_out/kr(jj);
+            k_r = kr(jj);
+            k_curi = k_out/k_r;
 %             k_cur = k_out/kr(jj)*(1-1j*g.prop.att)/abs(1-1j*g.prop.att);
-            k_cur = k_out/kr(jj)*(1-1j*g.prop.att)/abs(1-0*1j*g.prop.att);
+            k_cur = k_curi*(1-1j*g.prop.att)/abs(1-0*1j*g.prop.att);
 %             k_cur = k_out/(kr(jj)*(1-1i*g.prop.att));            
             disp('Wavenumber Ratio');
-            disp(kr(jj)/(1-1j*g.prop.att)/abs(1-0*1j*g.prop.att))
+            disp(k_r/(1-1j*g.prop.att)/abs(1-0*1j*g.prop.att))
 %             disp(kr(jj)*(1-1i*g.prop.att))
             disp('Density Ratio');
             disp(dr(pp))
@@ -356,7 +359,7 @@ for ii = g.prop.nfi:g.prop.nff
             TOh = 0;
             if size(b.To.c)
 %                 [TOj,TOy] = fn_compute_field_boundary_0(S,b.To,nR,k_cur,k_cur);
-                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,area_un,k_cur,k_cur,g.golden_ratio);        
+                [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,area_un,k_cur,k_cur,d_r);        
 %                 [~,~,TOh] = fn_compute_field_boundary3(S,b.To,nR,1,k_cur,k_cur,g.golden_ratio);        
             % FIELD ON BOUNDARY - TEST DOMAIN / BOUNDARY
 %                 TOh = -(TOj + TOy);
@@ -373,7 +376,7 @@ for ii = g.prop.nfi:g.prop.nff
             
         % COMPUTE MONOPOLE FIELD OUTSIDE - VIRTUAL DOMAIN / BOUNDARY            
 %             [p1h,v1h,~] = fn_compute_field_outside_m2(S,nR,k_curi,k_out,d_cur);
-            [p1h,v1h,~] = fn_compute_field_outside_m2(S,nR,k_curi,k_out,d_cur);
+            [p1h,v1h,~] = fn_compute_field_outside_m2(S,nR,k_curi,k_out,d_r);
         % COMPUTE MONOPOLE FIELD OUTSIDE - VIRTUAL DOMAIN / DOMAIN
         %   [p2o,phO_vd] = fn_compute_field_outside_domain(S,k_cur);   
         % COMPUTE REFERENCE FIELD OUTSIDE - OUTER DOMAIN (0 ORDER TEST)
@@ -382,11 +385,11 @@ for ii = g.prop.nfi:g.prop.nff
         % COMPUTE REFERENCE FIELD OUTSIDE - RECEIVER SURFACE (0 ORDER TEST)             
              p0mO = fn_compute_reference_0_2(mco,k_cur,area_un);
         % COMPUTE PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
-             [~,~,Tho] = fn_compute_propagator_outside3(S,nR,area_un,k_cur,k_out,len_O,d_cur);                
+             [~,~,Tho] = fn_compute_propagator_outside3(S,nR,area_un,k_cur,k_out,len_O,d_r);                
         % PROPAGATOR PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
 %              Tho = TUjo + TUyo;                
         % COMPUTE PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
-             [~,~,Tro] = fn_compute_propagator_receiveroutside_2(S,nR,area_un,k_cur,k_out,len_O,d_cur);                
+             [~,~,Tro] = fn_compute_propagator_receiveroutside_2(S,nR,area_un,k_cur,k_out,len_O,d_r);
         % PROPAGATOR PROPAGATOR OUTSIDE - BOUNDARY / INNER DOMAIN
 %              Tro = TRjo + TRyo;                 
         %    p2 = [p2o;p2i];
@@ -394,6 +397,7 @@ for ii = g.prop.nfi:g.prop.nff
         % COMPUTE PROPAGATOR INCIDENT TO REFRACTED - BOUNDARY / BOUNDARY
              [TFI] = fn_propagator_inc_ref(p1h,v1h,-p2h,-v2h);
              [TFO] = fn_propagator_inc_ref(p2h,v2h,-p1h,-v1h);
+
 %              [TFI] = fn_propagator_inc_ref(p1h,v1h,p2h,v2h);
              
         %    TFO = (eye_T - TFI);

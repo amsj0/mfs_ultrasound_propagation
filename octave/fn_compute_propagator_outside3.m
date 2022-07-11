@@ -67,7 +67,9 @@ end
 
 Th(:,(end/2+1):end) = -1i/4*Ar.*Th(:,(end/2+1):end);
 % AUh = -1i/4*Ar.*by1.*rcos*k_cur;
-Th(:,1:end/2) = 1i/4*Ar.*Th(:,1:end/2).*rcos*k_cur/k_r*dr;
+% Th(:,1:end/2) = 1i/4*Ar.*Th(:,1:end/2).*rcos*k_cur/k_r*dr;
+% Th(:,1:end/2) = 1i/4*Ar.*Th(:,1:end/2).*rcos*k_cur*(k_r*dr);
+Th(:,1:end/2) = 1i/4*Ar.*Th(:,1:end/2).*rcos*k_cur/(k_r*dr);
 
 % Tj = cat(2,AUj,-BUj);
 % Ty = -cat(2,AUy,-BUy);

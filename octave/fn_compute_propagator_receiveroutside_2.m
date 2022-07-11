@@ -57,7 +57,9 @@ end % first derivate
 
 bh0 = -1i/4*Ar.*bh0;
 % AUh = -1i/4*Ar.*by1.*rcos*k_cur;
-bh1 = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
+% bh1 = 1i/4*Ar.*bh1.*rcos*k_cur/k_r*dr;
+% bh1 = 1i/4*Ar.*bh1.*rcos*k_cur*(k_r*dr);
+bh1 = 1i/4*Ar.*bh1.*rcos*k_cur/(k_r*dr);
 
 % Tj = cat(2,AUj,-BUj);
 % Ty = -cat(2,AUy,-BUy);

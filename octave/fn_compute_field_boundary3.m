@@ -1,4 +1,4 @@
-function [Tj,Ty,Th] = fn_compute_field_boundary3(R,C,nR,area_un,k_cur,k_r,factor)
+function [Tj,Ty,Th] = fn_compute_field_boundary3(R,C,nR,area_un,k_cur,k_r,d_r)
 
 caller = evalin('caller','{g.fac, g.m, g.amp, g.hankel_kind}');
 [fac,m,amp,kind] = caller{:};
@@ -6,7 +6,7 @@ caller = evalin('caller','{g.fac, g.m, g.amp, g.hankel_kind}');
 len_C = length(C.c);
 len_R = length(R.c);
 
-Ma = bsxfun(@minus,factor*R.c,C.c);
+Ma = bsxfun(@minus,R.c,C.c);
 
 Ar = area_un(1);
 
@@ -45,11 +45,12 @@ end % first derivate
 % DVy = (by1.*rcos*k_cur + 1i*by0.*m.*rsin).*ex0;
 % DVy = (1*by1.*rcos*k_cur + 1*1i*by0./abs(Ma).*rsin*m).*ex0;
 
-% BVy = by0.*ex0;
-BVh = 1*bh0.*ex0*k_r;
+% BVh = bh0.*ex0;
+% BVh = 1*bh0.*ex0*k_r;
+BVh = 1*bh0.*ex0*(k_r*d_r);
 % DVy = (by1.*rcos*k_cur + 1i*by0.*m.*rsin).*ex0;
 DVh = (1*bh1.*rcos*k_cur + 1*1i*bh0./abs(Ma).*rsin*m).*ex0;
-
+% DVh = (1*bh1.*rcos*k_cur + 1*1i*bh0./abs(Ma).*rsin*m).*ex0/(k_r*d_r);
 % Tj = fac(1)*cat(1,1*BVj,1*DVj);
 % Ty = fac(2)*cat(1,1*BVy,1*DVy);
 Tj = [];
