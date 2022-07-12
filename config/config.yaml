@@ -1,0 +1,18 @@
+
+numbr_freq: 100
+initi_freq: 2
+final_freq: 200
+parti_freq: 100
+sdr: 800
+skr: 998
+spec_size: 512
+ref_freq: 1000000
+    
+# Display_time_step_ratio 
+dtsr : 0 # 0 if not to display
+pathname: '/tmp/'
+CONVE_MOD: 'Pr2'
+# SCALE WAVELENGTH
+RADIA_SIZ: 10 
+# CENTI SOURCE PER WAVELENGHT
+ELEME_WAV: 500
