@@ -1,8 +1,8 @@
 
-numbr_freq: 100
 initi_freq: 2
 final_freq: 200
 parti_freq: 100
+numbr_freq: 100
 sdr: 800
 skr: 998
 spec_size: 512
