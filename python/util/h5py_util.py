@@ -13,13 +13,25 @@ def load_para(pathname,modifier,gridname):
 
     shape = f['D']['s']
 
-    scale = f['nRD']
-    
+    radis = f['nRD']
+
+    lambd = f['g']['wav']
+
+    intec = f['g']['interf_centre']
+   
+    pistc = f['g']['piston_centre']
+
     grid = np.empty(gridx.shape,dtype='complex')
     
     grid.real = gridx;grid.imag = gridy;grid.shape = shape
 
-    return grid/scale,ndx0
+    scale = lambd[()]
+
+    respc = pistc[()]- intec[()]
+    
+    grid =  grid/radis[()]
+
+    return grid,respc,scale,ndx0
 
 
 def load_(pathname,para,filename):
@@ -27,16 +39,6 @@ def load_(pathname,para,filename):
     f =  h5py.File(pathname + para + '_' +  filename,'r')
         
     return f[para]
-    
-    '''
-    f = h5py.File(pathname + para + '_' +  filename,'r')
-
-    dataset = f[para]
-        
-    dims = dataset.shape
-
-    return dataset,dims
-    '''
 
 def save_dict_to_hdf5(M, datafile):
     with h5py.File(datafile + '.h5','w') as f:

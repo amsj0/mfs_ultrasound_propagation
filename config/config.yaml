@@ -10,7 +10,6 @@ ref_freq: 1000000
     
 # Display_time_step_ratio 
 dtsr : 0 # 0 if not to display
-pathname: '/tmp/'
 CONVE_MOD: 'Pr2'
 # SCALE WAVELENGTH
 RADIA_SIZ: 10 
