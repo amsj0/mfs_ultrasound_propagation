@@ -108,8 +108,8 @@ def mfsolution(reconfigure, config_file):
 if __name__ == "__main__":
 
     if len(sys.argv) != 2:
-        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
+        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml'.format(sys.argv[0]))
     
-    config_file = sys.argv[1]
+    input_file = sys.argv[1]
 
-    mfsolution(reconfigure, config_file)
+    mfsolution(reconfigure, input_file)

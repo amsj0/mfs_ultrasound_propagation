@@ -35,6 +35,7 @@ def pre_config(config_file,output_path):
         skr = cfg['skr']
         sdr = cfg['sdr']
         dtsr = cfg['dtsr']
+        off = cfg['off']
 
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
@@ -66,7 +67,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
 
-    return SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0 , grid_scale, x_spec_full
+    return SP, off, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0 , grid_scale, x_spec_full
 
 def plt_arrange(i):
     
@@ -209,15 +210,8 @@ def plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv):
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
     np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('t','s')), comments='')
 
-if __name__ == '__main__':
-   
-    if len(sys.argv) != 3:
-        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml output_path.yaml'.format(sys.argv[0]))
-
-    config_file = sys.argv[1]
-    output_path = sys.argv[2]
-
-    SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
+def tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
+    SP, off, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
 
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
     vec_tseries = np.empty(SP.spec_size,dtype='complex')
@@ -238,3 +232,13 @@ if __name__ == '__main__':
     plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv)
 
     plt.show()
+
+if __name__ == '__main__':
+   
+    if len(sys.argv) != 3:
+        raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml output_path.yaml'.format(sys.argv[0]))
+
+    config_file = sys.argv[1]
+    output_path = sys.argv[2]
+
+    tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)
