@@ -108,11 +108,11 @@ def plt_mat_tseries_1(pathname,converge):
             mat_tseries[i,j] = tstdseries
     return mat_tseries
 
-def set_domain_plot(grid,ndx0, doma_set_shape,grid_scale):
+def set_domain_plot(grid,ndx0, data_set,grid_scale):
     
     this_series = np.empty(np.prod(grid.shape))
     this_series[ndx0] = np.nan
-    this_series[np.logical_not(ndx0)] = np.zeros(doma_set_shape[1])
+    this_series[np.logical_not(ndx0)] = np.zeros(data_set['doma'].shape[1])
     
     this_grid = grid*grid_scale
 
@@ -169,7 +169,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.canvas.draw()
                     fg.canvas.flush_events()
 
-def plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv):
+def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
     
     spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
     tx_grid,rx_grid = np.meshgrid(probv,probv)
@@ -188,7 +188,7 @@ def plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv):
     n_grid = np.diagonal(x_grid,offset=off)
     tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
     
-    axs[1].set_title('{}-Off Diagonal Signal'.format(off*scale))
+    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+off]))
     axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
 
     plt.figure(figsize=(7,7))
@@ -210,26 +210,31 @@ def plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv):
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
     np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('t','s')), comments='')
 
-def tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
-    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
-
+def set_empty_matrix(SP, offset, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
-    vec_tseries = np.empty(SP.spec_size,dtype='complex')
-    
+        
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
     rlim = np.empty(((data_set['resp'].shape[-1]-offset),SP.spec_size*2),dtype='complex')
     
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
 
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
+    return mat_tseries,vlim,rlim,vlimmax,probv
 
-    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set['doma'].shape,grid_scale)
+def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
+
+    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
+
+    mat_tseries, vlim, rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
+
+    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set,grid_scale)
 
     create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(scale, x_spec_full, offset, vlim, rlim, vlimmax, probv)
+    plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv)
 
     plt.show()
+
 
 if __name__ == '__main__':
    
@@ -239,4 +244,4 @@ if __name__ == '__main__':
     config_file = sys.argv[1]
     output_path = sys.argv[2]
 
-    tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)
+    tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)

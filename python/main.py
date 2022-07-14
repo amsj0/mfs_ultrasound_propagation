@@ -28,4 +28,4 @@ if __name__ == "__main__":
         print('Running tseries code')
 
         config_file = sys.argv[3]
-        tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)
+        tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)
