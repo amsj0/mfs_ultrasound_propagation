@@ -216,8 +216,6 @@ def tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
     vec_tseries = np.empty(SP.spec_size,dtype='complex')
     
-    off = 25
-
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
     rlim = np.empty(((data_set['resp'].shape[-1]-off),SP.spec_size*2),dtype='complex')
     
