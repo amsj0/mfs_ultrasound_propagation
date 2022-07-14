@@ -8,7 +8,9 @@ The boundary behaviour is sought by solving the Boundary Value Problem (BVP) usi
 
 Current development implements truncated solution to the infinite plane interface between two fluids.
 
-## Requirements
+
+
+## Octave code
 
 Requires GNU Octave to run.
 
@@ -18,4 +20,50 @@ Setup **inputfile.txt** with model parameter ranges and run
 
 ````
 octave --no-gui run_from_inputfile.m
+````
+
+## Python code
+
+Update the requirements with.
+
+````
+pip install -U -r requirements.txt
+````
+
+### Running
+
+For running the MFS code: 
+
+````
+python main.py inputfile.yaml
+````
+
+or simply
+
+````
+python mfsolution.py inputfile.yaml
+````
+
+For running the MFS and analysis code: 
+
+````
+python main.py inputfile.yaml output_path.yaml
+````
+
+For running the analysis code: 
+
+````
+python analysis.py inputfile.yaml output_path.yaml
+````
+
+For running the MFS, analysis and tseries code : 
+
+````
+python main.py inputfile.yaml output_path.yaml config.yaml
+````
+
+For running the tseries code: 
+
+````
+python tseries.py config.yaml output_path.yaml
 ````
