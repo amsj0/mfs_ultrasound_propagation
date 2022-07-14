@@ -3,6 +3,10 @@ from geometry import *
 from util.h5py_util import *
 import yaml,sys
 
+WATERSPEED = 1490.0
+WATERDENST = 999.6150851557516
+REFFREQUENCY = 1000000.0
+
 class structtype():
     pass
 
@@ -21,9 +25,9 @@ def parse_config(filename = 'config.yaml'):
         g.m = 0
         g.hankel_kind = 2
         
-        g.rj = [999.6150851557516]     # 1 kg/m^3
-        g.cj = [1490.0]                # 1490 m/s
-        g.frequency_reference = 1000000.0 # 1 MHz frequency
+        g.rj = [WATERDENST]     # 1 kg/m^3
+        g.cj = [WATERSPEED]                # 1490 m/s
+        g.frequency_reference = REFFREQUENCY # 1 MHz frequency
         
         g.fac0 = np.array([1,- 1])
         g.fac = np.array([1,- 1])
@@ -82,23 +86,7 @@ def parse_config(filename = 'config.yaml'):
 def create_configfile(fn,filename): 
     
     g = fn(filename)
-    
-    S = structtype()
-    
-    '''
-    T = structtype() 
-    D = structtype()
-    R = structtype()    
-    
-    b = structtype()
-    b.Ri = structtype()
-    b.Ro = structtype()
-    b.Ti = structtype()
-    b.To = structtype()
-    b.D = structtype()
-    #b.A = structtype()
-    '''
-    
+       
     nRD = g.radia_siz
     
     Neltoverlambda = g.eleme_wav
@@ -235,35 +223,6 @@ def create_configfile(fn,filename):
     D.y = D.z * 0
     D.c = D.x + 1j * D.z
     
-    '''   
-    
-    T.p = np.zeros((T.x.shape[0]))
-        
-    b.D.ci = b.D.c[ndx0]
-    b.D.co = b.D.c[ndx1]
-    
-    b.Ti.ndx = np.logical_not( T.ndx[0] )
-    b.To.ndx = np.logical_not( T.ndx[1] ) 
-    
-    fn_copy_filter(T,b.Ti,b.To)
-
-    b.Ti.c = b.Ti.x + 1j * b.Ti.z
-    b.Ti.p = np.zeros((b.Ti.x.shape[0]))
-    
-    b.To.c = b.To.x + 1j * b.To.z
-    b.To.p = np.zeros((b.To.x.shape[0]))
-    
-    b.Ri.ndx0 = np.logical_not( R.ndx[0] )
-    b.Ro.ndx1 = np.logical_not( R.ndx[1] )
-    
-    fn_copy_filter(R,b.Ri,b.Ro)
-
-    b.Ri.c = b.Ri.x + 1j * b.Ri.z
-    b.Ri.p = np.zeros((b.Ri.x.shape[0]))
-    
-    b.Ro.c = b.Ro.x + 1j * b.Ro.z
-    b.Ro.p = np.zeros((b.Ro.x.shape[0]))
-    '''
     keys = ['T','S','D','R','Neltoverlambda','nRD','g']
     values = [T,S,D,R,Neltoverlambda,nRD,g]
     dict = {key: value for key, value in zip(keys, values)}
