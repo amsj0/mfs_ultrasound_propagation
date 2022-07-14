@@ -197,8 +197,8 @@ def create_configfile(fn,filename):
     # REMOVE DOMAIN CLOSE TO SURROUNDING SURFACE
     ##
 
-    _,ndx0 = fn_enclosure_rectan([D.x, D.z],[ 1, 1],interf_centre,lambda0*3)
-    _,ndx1 = fn_enclosure_rectan([D.x, D.z],[ 1,-1],interf_centre,lambda0*3)
+    _,ndx0 = fn_enclosure_rectan([D.x, D.z],[ 1, 1],interf_centre,.3)
+    _,ndx1 = fn_enclosure_rectan([D.x, D.z],[ 1,-1],interf_centre,.3)
     
     D.ndx = np.logical_and(ndx0,ndx1)
     fn_copy_filter(D,D)
