@@ -9,7 +9,7 @@ class structtype():
 
 if __name__ == "__main__":
 
-    if (len(sys.argv) != 3) & (len(sys.argv) != 3) & (len(sys.argv) != 2 ) :
+    if (len(sys.argv) != 4) & (len(sys.argv) != 3) & (len(sys.argv) != 2 ) :
         raise ValueError('Invalid number of arguments. Usage: {} inputfile.yaml output_path.yaml config.yaml'.format(sys.argv[0]))
 
     print('Running solution code')
