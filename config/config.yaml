@@ -4,15 +4,16 @@ final_freq: 200
 parti_freq: 100
 numbr_freq: 100
 sdr: 800
-skr: 998
+skr: 993
 spec_size: 512
 ref_freq: 1000000
     
 # Display_time_step_ratio 
-dtsr : 0 # 0 if not to display
+dtsr: 0 # 0 if not to display
 # Offset data matrix
-off : 0 # 0 if not to offset
-CONVE_MOD: 'Pr2'
+offset: 12 # 0 if not to offset
+
+CONVE_MOD: 'Pr5'
 # SCALE WAVELENGTH
 RADIA_SIZ: 10 
 # CENTI SOURCE PER WAVELENGHT

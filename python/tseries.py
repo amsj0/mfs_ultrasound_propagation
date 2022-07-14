@@ -35,7 +35,7 @@ def pre_config(config_file,output_path):
         skr = cfg['skr']
         sdr = cfg['sdr']
         dtsr = cfg['dtsr']
-        off = cfg['off']
+        offset = cfg['offset']
 
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
@@ -67,7 +67,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
 
-    return SP, off, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0 , grid_scale, x_spec_full
+    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0 , grid_scale, x_spec_full
 
 def plt_arrange(i):
     
@@ -108,7 +108,7 @@ def plt_mat_tseries_1(pathname,converge):
             mat_tseries[i,j] = tstdseries
     return mat_tseries
 
-def set_domain_plot(grid,ndx0, doma_set_shape,):
+def set_domain_plot(grid,ndx0, doma_set_shape,grid_scale):
     
     this_series = np.empty(np.prod(grid.shape))
     this_series[ndx0] = np.nan
@@ -211,23 +211,23 @@ def plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv):
     np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('t','s')), comments='')
 
 def tseries(pre_config, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
-    SP, off, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
+    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
 
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
     vec_tseries = np.empty(SP.spec_size,dtype='complex')
     
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
-    rlim = np.empty(((data_set['resp'].shape[-1]-off),SP.spec_size*2),dtype='complex')
+    rlim = np.empty(((data_set['resp'].shape[-1]-offset),SP.spec_size*2),dtype='complex')
     
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
 
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
 
-    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set['doma'].shape)
+    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set['doma'].shape,grid_scale)
 
-    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, off, vlim, rlim, vlimmax, this_series, fg, h0)
+    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(scale, x_spec_full, off, vlim, rlim, vlimmax, probv)
+    plot_save_table(scale, x_spec_full, offset, vlim, rlim, vlimmax, probv)
 
     plt.show()
 
