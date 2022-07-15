@@ -84,7 +84,7 @@ def analyse(fn_analyse, config_file, output_path):
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 
-    dataroot = g.convergemod + '_' + str(g.nfr) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
+    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
 
     for jj in range(kr_length):
                
@@ -92,7 +92,7 @@ def analyse(fn_analyse, config_file, output_path):
             
             dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
             
-            for ii in range(g.nfi-1,g.nff):
+            for ii in range(g.ifu-1,g.ffu):
                 
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 

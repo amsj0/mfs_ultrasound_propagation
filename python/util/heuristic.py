@@ -3,7 +3,7 @@ import numpy as np
 def heuristic(nRD, g):
     
     # WAVENUMBER VECTOR RANGE
-    k0 = 2*np.pi*np.linspace(nRD,nRD,g.nfr)*(g.sfr/g.fr)
+    k0 = 2*np.pi*np.linspace(nRD,nRD,g.nff)*(g.sfr/g.fr)
     kr = g.skr/1000
     k0_length = k0.shape[0]
     kr_length = kr.shape[0]

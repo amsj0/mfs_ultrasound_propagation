@@ -61,11 +61,11 @@ def mfsolution(reconfigure, config_file):
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
    
-    dataroot = g.convergemod + '_' + str(g.nfr) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100)) 
+    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100)) 
 
     datafile = ''
      
-    for ii in range(g.nfi-1,g.nff):
+    for ii in range(g.ifu-1,g.ffu):
         
         k_cur = k0[ii]*lambda0/(RD)
         
