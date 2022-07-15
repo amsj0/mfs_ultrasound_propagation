@@ -40,15 +40,11 @@ def pre_config(config_file,output_path):
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
         conve_mod = cfg['CONVE_MOD']
-        radia_siz = cfg['RADIA_SIZ']
-        eleme_wav = cfg['ELEME_WAV']
-       
+        
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
     
     filename = gridname + '_' + str(skr) + '_' + str(sdr) + '.h5'    
-           
-    grid_scale = radia_siz*eleme_wav/1000
-    
+              
     mu, sigma = 0, 0.05
     
     sampling_freq = 1/100*(initi_freq*final_freq/numbr_freq)*ref_freq
@@ -67,7 +63,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
 
-    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0 , grid_scale, x_spec_full
+    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full
 
 def plt_arrange(i):
     
@@ -108,13 +104,13 @@ def plt_mat_tseries_1(pathname,converge):
             mat_tseries[i,j] = tstdseries
     return mat_tseries
 
-def set_domain_plot(grid,ndx0, data_set,grid_scale):
+def set_domain_plot(grid,ndx0, data_set):
     
     this_series = np.empty(np.prod(grid.shape))
     this_series[ndx0] = np.nan
     this_series[np.logical_not(ndx0)] = np.zeros(data_set['doma'].shape[1])
     
-    this_grid = grid*grid_scale
+    this_grid = grid
 
     fg,axs = plt.subplots(1,1,figsize=(10,7))
     h0 = axs.pcolormesh(this_grid.real,this_grid.imag,this_series.reshape(this_grid.shape),shading='nearest',vmin=-3,vmax=3)
@@ -237,11 +233,11 @@ def set_empty_matrix(SP, offset, data_set, respc, scale):
 
 def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
 
-    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, grid_scale, x_spec_full = pre_config(config_file,output_path)
+    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
 
     mat_tseries, vlim, rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
 
-    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set,grid_scale)
+    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
 
     create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0)
 
