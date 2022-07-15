@@ -209,6 +209,7 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     plt.figure('off_diagonal_matrix')
     plt.plot(x_table,y_table)
     plt.plot(t_grid,y_off_table)
+    plt.ylim(0,1)
     plt.title('Off Diagonal Matrix')
     plt.tight_layout()
 
