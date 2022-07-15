@@ -17,6 +17,8 @@ def load_para(pathname,modifier,gridname):
 
     lambd = f['g']['wav']
 
+    elemw = f['g']['eleme_wav']
+
     intec = f['g']['interf_centre']
    
     pistc = f['g']['piston_centre']
@@ -25,11 +27,11 @@ def load_para(pathname,modifier,gridname):
     
     grid.real = gridx;grid.imag = gridy;grid.shape = shape
 
-    scale = lambd[()]
+    scale = lambd[()]/(elemw[()]/100)
 
     respc = pistc[()]- intec[()]
     
-    grid =  grid/radis[()]
+    grid =  grid*lambd[()]/radis[()]
 
     return grid,respc,scale,ndx0
 
