@@ -39,15 +39,15 @@ def parse_config(filename = 'config.yaml'):
         g.model_scale = cfg['MODEL_SCL']
         g.att = cfg['ATTEN_RAT']
               
-        g.nfr = int(cfg['PROPE_NFR'])
-        g.nfi = int(cfg['PROPE_NFI'])
-        g.nff = int(cfg['PROPE_NFF'])
+        g.ifu = int(cfg['FREQU_INI'])
+        g.ffu = int(cfg['FREQU_FIN'])
         
-        g.iff = cfg['PROPE_IFF']
-        g.fff = cfg['PROPE_FFF']
+        g.nff = int(cfg['FREQF_DEL'])
+        g.iff = cfg['FREQF_INI']
+        g.fff = cfg['FREQF_FIN']
 
         g.fr  = g.model_scale * g.frequency_reference
-        g.sfr = g.model_scale * g.frequency_reference * np.linspace(g.iff,g.fff,g.nfr)
+        g.sfr = g.model_scale * g.frequency_reference * np.linspace(g.iff,g.fff,g.nff)
 
         # REFERENCE IMPEDANCE AND WAVELENGTH
         g.zed = np.prod((g.cj,g.rj))
@@ -227,7 +227,7 @@ def create_configfile(fn,filename):
     values = [T,S,D,R,Neltoverlambda,nRD,g]
     dict = {key: value for key, value in zip(keys, values)}
 
-    configfile = 'P' + g.convergemod + '_' + str(g.nfr) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
+    configfile = 'P' + g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100))
     save_dict_to_hdf5(dict, configfile)
 
     return T,S,D,R,Neltoverlambda,nRD,g
