@@ -127,7 +127,7 @@ def set_domain_plot(grid,ndx0, data_set,grid_scale):
 
     return this_series, fg, h0
 
-def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, off, vlim, rlim, vlimmax, this_series, fg, h0):
+def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0):
     
     for i in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         _,_,spec = SP.synth_fseries_from_centr_freq(central_range[i-1])
@@ -145,7 +145,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
 
                 if k==j:
                     vlim[j,...] = vec_tseries
-                if k==(j+off):
+                if k==(j+offset):
                     rlim[j,...] = vec_tseries                    
 
 
@@ -169,7 +169,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.canvas.draw()
                     fg.canvas.flush_events()
 
-def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
+def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     
     spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
     tx_grid,rx_grid = np.meshgrid(probv,probv)
@@ -184,11 +184,20 @@ def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
 
     vlimmaxN = vlimmax/np.max(vlimmax)
 
-    t_grid = np.diagonal(y_grid,offset=off)
-    n_grid = np.diagonal(x_grid,offset=off)
+    o_grid = []
+    v_grid = []
+
+    for off in np.arange(-int(probv.size/2),1+int(probv.size/2),5):
+        o_grid.append(np.diagonal(x_grid,offset=off))
+        v_grid.append(np.diagonal(y_grid,offset=off))
+        v_grid.append(np.diagonal(vlimmaxN,offset=off))
+
+
+    t_grid = np.diagonal(y_grid,offset=offset)
+    n_grid = np.diagonal(x_grid,offset=offset)
     tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
     
-    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+off]))
+    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+offset]))
     axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
 
     plt.figure(figsize=(7,7))
@@ -196,7 +205,7 @@ def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
 
     x_table = probv
     y_table = np.diagonal(vlimmaxN)
-    y_off_table = np.diagonal(vlimmaxN,offset=off)
+    y_off_table = np.diagonal(vlimmaxN,offset=offset)
 
     d_table = np.array([x_table,y_table]).transpose()
     d_off_table = np.array([t_grid,y_off_table]).transpose()
@@ -207,8 +216,13 @@ def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
     plt.title('Off Diagonal Matrix')
     plt.tight_layout()
 
-    np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
-    np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('t','s')), comments='')
+    plt.figure('full_off_diagonal_matrix')
+    plt.plot(*v_grid)
+    plt.title('Full Off Diagonal Matrix')
+    plt.tight_layout()    
+
+    np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
+    np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
 def set_empty_matrix(SP, offset, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
