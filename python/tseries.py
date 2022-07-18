@@ -35,7 +35,6 @@ def pre_config(config_file,output_path):
         skr = cfg['skr']
         sdr = cfg['sdr']
         dtsr = cfg['dtsr']
-        offset = cfg['offset']
 
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
@@ -63,7 +62,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
 
-    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full
+    return SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full
 
 def plt_arrange(i):
     
@@ -123,7 +122,7 @@ def set_domain_plot(grid,ndx0, data_set):
 
     return this_series, fg, h0
 
-def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, off, vlim, rlim, vlimmax, this_series, fg, h0):
+def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0):
     
     for i in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
         _,_,spec = SP.synth_fseries_from_centr_freq(central_range[i-1])
@@ -140,9 +139,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                 vlimmax[k,j] = np.max(np.abs(vec_tseries),axis=-1)
 
                 if k==j:
-                    vlim[j,...] = vec_tseries
-                if k==(j+off):
-                    rlim[j - int((np.abs(off) - off)/2),...] = vec_tseries                    
+                    vlim[j,...] = vec_tseries          
 
 
             if dtsr:
@@ -165,69 +162,54 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.canvas.draw()
                     fg.canvas.flush_events()
 
-def plot_save_table(x_spec_full, off, vlim, rlim, vlimmax, probv):
+def plot_save_table(x_spec_full, vlim, vlimmax, probv):
     
     spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
     tx_grid,rx_grid = np.meshgrid(probv,probv)
 
-    x_grid = (tx_grid*np.cos(np.pi/4) - rx_grid*np.sin(np.pi/4))/np.sqrt(2)
-    y_grid = (tx_grid*np.sin(np.pi/4) + rx_grid*np.cos(np.pi/4))/np.sqrt(2)
-
-    fg,axs = plt.subplots(2,1,figsize=(10,7))
+    plt.figure(figsize=(10,7))
  
-    axs[0].set_title('Diagonal Signal')
-    axs[0].pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
+    plt.title('Diagonal Signal')
+    plt.pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
 
     vlimmaxN = vlimmax/np.max(vlimmax)
 
-    t_grid = np.diagonal(y_grid,offset=off)
-    n_grid = np.diagonal(x_grid,offset=off)
-    tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
-    
-    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+off]))
-    axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
-
     plt.figure(figsize=(7,7))
-    plt.pcolormesh(x_grid,y_grid,vlimmaxN,shading='nearest',cmap='Greys')
+    plt.pcolormesh(tx_grid,rx_grid,vlimmaxN,shading='nearest',cmap='Greys')
 
     x_table = probv
     y_table = np.diagonal(vlimmaxN)
-    y_off_table = np.diagonal(vlimmaxN,offset=off)
 
     d_table = np.array([x_table,y_table]).transpose()
-    d_off_table = np.array([t_grid,y_off_table]).transpose()
 
-    plt.figure('off_diagonal_matrix')
+    plt.figure('diagonal_matrix')
     plt.plot(x_table,y_table)
-    plt.plot(t_grid,y_off_table)
-    plt.title('Off Diagonal Matrix')
+    plt.title('Diagonal Matrix')
     plt.tight_layout()
 
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
-    np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('t','s')), comments='')
 
-def set_empty_matrix(SP, offset, data_set, respc, scale):
+def set_empty_matrix(SP, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
         
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
-    rlim = np.empty(((data_set['resp'].shape[-1]-np.abs(offset)),SP.spec_size*2),dtype='complex')
     
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
 
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
-    return mat_tseries,vlim,rlim,vlimmax,probv
+    return mat_tseries,vlim,vlimmax,probv
 
 def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
 
-    SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
+    SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
 
-    mat_tseries, vlim, rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
+    mat_tseries, vlim, vlimmax, probv = set_empty_matrix(SP, data_set, respc, scale)
 
     this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
 
-    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0)
+    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv)
+    plot_save_table(x_spec_full, vlim, vlimmax, probv)
 
     plt.show()
 
