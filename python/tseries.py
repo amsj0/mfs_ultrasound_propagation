@@ -142,7 +142,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                 if k==j:
                     vlim[j,...] = vec_tseries
                 if k==(j+offset):
-                    rlim[j,...] = vec_tseries                    
+                    rlim[j - int((np.abs(offset) - offset)/2),...] = vec_tseries                    
 
 
             if dtsr:
@@ -225,7 +225,7 @@ def set_empty_matrix(SP, offset, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
         
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
-    rlim = np.empty(((data_set['resp'].shape[-1]-offset),SP.spec_size*2),dtype='complex')
+    rlim = np.empty(((data_set['resp'].shape[-1]-np.abs(offset)),SP.spec_size*2),dtype='complex')
     
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
 
