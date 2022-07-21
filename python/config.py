@@ -3,7 +3,7 @@ from geometry import *
 from util.h5py_util import *
 import yaml,sys
 
-WATERSPEED = 1490.0
+WATERSPEED = 1481.44134805
 WATERDENST = 999.6150851557516
 REFFREQUENCY = 1000000.0
 
