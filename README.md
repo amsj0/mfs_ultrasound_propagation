@@ -47,23 +47,23 @@ python mfsolution.py inputfile.yaml
 For running the MFS and analysis code: 
 
 ````
-python main.py inputfile.yaml output_path
+python main.py inputfile.yaml /path/to/output
 ````
 
 For running the analysis code: 
 
 ````
-python analyse.py inputfile.yaml output_path
+python analyse.py inputfile.yaml /path/to/output
 ````
 
 For running the MFS, analysis and tseries code : 
 
 ````
-python main.py inputfile.yaml output_path config.yaml
+python main.py inputfile.yaml /path/to/output config.yaml
 ````
 
 For running the tseries code: 
 
 ````
-python tseries.py config.yaml output_path
+python tseries.py /path/to/output config.yaml
 ````

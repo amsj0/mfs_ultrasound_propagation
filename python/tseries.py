@@ -217,7 +217,7 @@ def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_s
 if __name__ == '__main__':
    
     if len(sys.argv) != 3:
-        raise ValueError('Invalid number of arguments. Usage: {} output_path config.yaml'.format(sys.argv[0]))
+        raise ValueError('Invalid number of arguments. Usage: {} /path/to/output  config.yaml'.format(sys.argv[0]))
 
     output_path = sys.argv[1]
     config_file = sys.argv[2]
