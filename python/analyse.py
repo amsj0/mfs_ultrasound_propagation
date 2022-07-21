@@ -115,7 +115,7 @@ def analyse(fn_analyse, config_file, output_path):
 if __name__ == "__main__":
     
     if len(sys.argv) != 3:
-        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml output_path'.format(sys.argv[0]))
+        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml /path/to/output'.format(sys.argv[0]))
 
     input_file = sys.argv[1]
     output_path = sys.argv[2]
