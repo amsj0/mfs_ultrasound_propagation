@@ -47,7 +47,7 @@ python mfsolution.py inputfile.yaml
 For running the MFS and analysis code: 
 
 ````
-python main.py inputfile.yaml output_path
+python main.py inputfile.yaml /path/to/output
 ````
 
 For running the analysis code: 
