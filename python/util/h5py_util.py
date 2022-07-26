@@ -29,7 +29,7 @@ def load_para(pathname,modifier,gridname):
 
     scale = lambd[()]/(elemw[()]/100)
 
-    respc = pistc[()]- intec[()]
+    respc = (pistc[()]- intec[()])*scale
     
     grid =  grid*lambd[()]/radis[()]
 
