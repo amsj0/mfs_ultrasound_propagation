@@ -294,7 +294,7 @@ class Compute:
             self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,emitter_mask]).flatten()
             
             self.M[probe] += self.F[probe]
-
+            self.M[probe][(probe_mask|nrobe_mask)*(emitter_mask&nmitter_mask)] /= 2
 
     def null(self):
         return 0
