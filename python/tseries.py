@@ -56,7 +56,7 @@ def pre_config(config_file,output_path):
     dom = np.linspace(-.5,.5,x_size)
     gauss = 1/(sigma * np.sqrt(2.0 * np.pi)) * np.exp( - (dom - mu)**2 / (2 * sigma**2) )[...,np.newaxis]
 
-    central_range = ref_freq*(.48*dom + final_freq/(100*2))
+    central_range = ref_freq*(.5*dom + final_freq/(100*2))
 
     data_set,grid,respc,scale,ndx0 = load_dataset(conve_mod, gridname, output_path, filename)
 
@@ -124,7 +124,7 @@ def set_domain_plot(grid,ndx0, data_set):
 
 def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0):
     
-    for i in range(0+1*int(1*x_size*4/8),1+1*int(1*x_size*4/8),1):
+    for i in range(0+1*int(1*x_size*0/8),1+1*int(1*x_size*0/8),1):
         _,_,spec = SP.synth_fseries_from_centr_freq(central_range[i])
         spec0 = spec[0:int(SP.spec_size)]
         
