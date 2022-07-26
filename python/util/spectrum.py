@@ -121,8 +121,8 @@ class Spectrum:
 
 
     def synth_fseries_from_centr_freq(self,cent_freq):
-        osc = np.exp(1j*cent_freq*2*np.pi*self.x)
-        spec = np.fft.fft(osc*self.gauss,n=self.spec_size*2,axis=0)
+        osc = np.exp(1j*2*np.pi*(cent_freq*self.x+1/4))*self.gauss
+        spec = np.fft.fft(osc,n=self.spec_size*2,axis=0)
         freq = np.fft.fftfreq(self.spec_size*2)
 
         return osc,freq,spec
