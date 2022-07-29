@@ -17,6 +17,10 @@ def fn_analyse(config_tuple,datafile):
     
     ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
 
+    range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
+    apodization = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
+
+    apodization2 = apodization[:,np.newaxis] @ apodization[np.newaxis,:]
     '''
     range_ppt = np.arange(ppt_per_surface)
     
@@ -44,11 +48,11 @@ def fn_analyse(config_tuple,datafile):
         MH = f['domain']
         MR = f['receiver']
 
-        response.pitch = convolve(T.z,np.ones(ppt_per_surface),mode='valid')
-        response.catch = convolve(R.z,np.ones(ppt_per_surface),mode='valid')
+        response.pitch = convolve(T.z,apodization,mode='valid')
+        response.catch = convolve(R.z,apodization,mode='valid')
 
-        field.p = convolve(MH,np.ones((1,ppt_per_surface)),mode='valid')
-        response.p = convolve2d(MR,np.ones((ppt_per_surface,ppt_per_surface)),mode='valid')
+        field.p = convolve(MH,apodization[np.newaxis,:],mode='valid')
+        response.p = convolve2d(MR,apodization2,mode='valid')
         '''
         for t in np.arange(0,response.pitch.size):
             
