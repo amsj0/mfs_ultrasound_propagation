@@ -183,7 +183,7 @@ def plot_save_table(x_spec_full, vlim, vlimmax, probv):
     plt.title('Diagonal Signal')
     plt.pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
 
-    vlimmaxN = vlimmax/np.max(vlimmax)
+    vlimmaxN = vlimmax/np.max(vlimmax[0])
 
     plt.figure(figsize=(7,7))
     plt.pcolormesh(tx_grid,rx_grid,vlimmaxN,shading='nearest',cmap='Greys')
