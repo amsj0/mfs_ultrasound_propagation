@@ -5,8 +5,6 @@ from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
 from util.h5py_util import *
 from config import *
-import time
-
 
 def fn_analyse(config_tuple,datafile):
     
@@ -100,13 +98,8 @@ def analyse(fn_analyse, config_file, output_path):
                 
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
-                stop_time = time.time()
-                start_time = stop_time
-
                 r,d = fn_analyse(config_tuple,datafile)
-
-                stop_time = time.time()
-                print(stop_time - start_time)
+                
                 if ii==0:
                     domaset_size = (sfr.size,) + d.shape
                     respset_size = (sfr.size,) + r.shape
@@ -114,6 +107,8 @@ def analyse(fn_analyse, config_file, output_path):
                     create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)           
                 append_keyvalue_to_hdf5('doma', d, ii, output_path + 'doma_', dataset)
                 append_keyvalue_to_hdf5('resp', r, ii, output_path + 'resp_', dataset)
+
+                print('DataFile {} read'.format(datafile))
 
 
 if __name__ == "__main__":
