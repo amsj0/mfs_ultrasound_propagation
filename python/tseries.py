@@ -205,6 +205,24 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+offset]))
     axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
 
+    o_grid = []
+    v_grid = []
+
+    vlimmaxN = vlimmax/np.max(vlimmax[0])
+
+    for off in np.arange(-int(probv.size/2),1+int(probv.size/2),5):
+        o_grid.append(np.diagonal(x_grid,offset=off))
+        v_grid.append(np.diagonal(y_grid,offset=off))
+        v_grid.append(np.diagonal(vlimmaxN,offset=off))
+
+
+    t_grid = np.diagonal(y_grid,offset=offset)
+    n_grid = np.diagonal(x_grid,offset=offset)
+    tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
+    
+    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+offset]))
+    axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
+
     plt.figure(figsize=(7,7))
     plt.pcolormesh(tx_grid,rx_grid,vlimmaxN,shading='nearest',cmap='Greys')
 
