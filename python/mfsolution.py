@@ -65,6 +65,8 @@ def mfsolution(reconfigure, config_file):
 
     datafile = ''
      
+    l = 2
+
     for ii in range(g.ifu-1,g.ffu):
         
         k_cur = k0[ii]*lambda0/(RD)
@@ -82,7 +84,7 @@ def mfsolution(reconfigure, config_file):
             
             k_r = kr[jj]
             k_curi = k_out/k_r
-            k_cur  = k_curi*(1+1j*g.att)/np.abs(1-0*1j*g.att)
+            k_cur  = k_curi+1j*g.att*g.sfr[ii]**(1+l)*g.sfr[int(g.ffu/2)]**(1-l)
 
             for pp in range(dr_length):
                 

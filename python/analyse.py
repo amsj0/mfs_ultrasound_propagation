@@ -5,8 +5,6 @@ from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
 from util.h5py_util import *
 from config import *
-import time
-
 
 def fn_analyse(config_tuple,datafile):
     
@@ -17,6 +15,10 @@ def fn_analyse(config_tuple,datafile):
     
     ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
 
+    range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
+    apodization = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
+
+    apodization2 = apodization[:,np.newaxis] @ apodization[np.newaxis,:]
     '''
     range_ppt = np.arange(ppt_per_surface)
     
@@ -44,11 +46,11 @@ def fn_analyse(config_tuple,datafile):
         MH = f['domain']
         MR = f['receiver']
 
-        response.pitch = convolve(T.z,np.ones(ppt_per_surface),mode='valid')
-        response.catch = convolve(R.z,np.ones(ppt_per_surface),mode='valid')
+        response.pitch = convolve(T.z,apodization,mode='valid')
+        response.catch = convolve(R.z,apodization,mode='valid')
 
-        field.p = convolve(MH,np.ones((1,ppt_per_surface)),mode='valid')
-        response.p = convolve2d(MR,np.ones((ppt_per_surface,ppt_per_surface)),mode='valid')
+        field.p = convolve(MH,apodization[np.newaxis,:],mode='valid')
+        response.p = convolve2d(MR,apodization2,mode='valid')
         '''
         for t in np.arange(0,response.pitch.size):
             
@@ -96,13 +98,8 @@ def analyse(fn_analyse, config_file, output_path):
                 
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
-                stop_time = time.time()
-                start_time = stop_time
-
                 r,d = fn_analyse(config_tuple,datafile)
-
-                stop_time = time.time()
-                print(stop_time - start_time)
+                
                 if ii==0:
                     domaset_size = (sfr.size,) + d.shape
                     respset_size = (sfr.size,) + r.shape
@@ -111,11 +108,13 @@ def analyse(fn_analyse, config_file, output_path):
                 append_keyvalue_to_hdf5('doma', d, ii, output_path + 'doma_', dataset)
                 append_keyvalue_to_hdf5('resp', r, ii, output_path + 'resp_', dataset)
 
+                print('DataFile {} read'.format(datafile))
+
 
 if __name__ == "__main__":
     
     if len(sys.argv) != 3:
-        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml output_path'.format(sys.argv[0]))
+        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml /path/to/output'.format(sys.argv[0]))
 
     input_file = sys.argv[1]
     output_path = sys.argv[2]
