@@ -45,7 +45,7 @@ def pre_config(config_file,output_path):
     
     filename = gridname + '_' + str(skr) + '_' + str(sdr) + '.h5'    
               
-    mu, sigma = -0.25, 0.06
+    mu, sigma = 0, 0.065 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
     sampling_freq = 5*(final_freq/numbr_freq)*ref_freq
     
@@ -124,9 +124,9 @@ def set_domain_plot(grid,ndx0, data_set):
     return this_series, fg, h0
 
 def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0):
-    
-    for i in range(0+1*int(1*x_size*0/8),1+1*int(1*x_size*0/8),1):
-        _,_,spec = SP.synth_fseries_from_centr_freq(central_range[i])
+    respttm = []
+    for i in range(0+1*int(1*x_size* 8/8-1),1+1*int(1*x_size*8/8-1),1):
+        osc,freq,spec = SP.synth_fseries_from_centr_freq(central_range[i])
         spec0 = spec[0:int(SP.spec_size)]
         
         for j in range(data_set['resp'].shape[-1]):
@@ -134,15 +134,24 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
             
             for k in range(data_set['resp'].shape[-2]):
                 resptt = resp_data[...,k].transpose()
-                new_resp = SP.expand_resp_new(resptt)
+                
+                if k==j:
+                    if (k==0 or k==(data_set['resp'].shape[-2]-1)):
+                        respttm.append(resptt)
+
+
+                new_resp = SP.expand_resp_new(resptt/respttm[0])
                 tseries = SP.synth_tseries_from_spec_full_new(new_resp*spec0)            
                 vec_tseries = tseries.transpose()
-                vlimmax[k,j] = np.max(np.abs(vec_tseries),axis=-1)
+
 
                 if k==j:
                     vlim[j,...] = vec_tseries
                 if k==(j+offset):
                     rlim[j - int((np.abs(offset) - offset)/2),...] = vec_tseries                    
+
+                vlimmax[k,j] = np.max(np.abs(vec_tseries),axis=-1)
+
 
 
             if dtsr:
@@ -150,7 +159,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                             
                 for k in range(int(doma_data.shape[-1])):
                     domatt = doma_data[...,k].transpose()
-                    new_doma = SP.expand_resp(domatt)
+                    new_doma = SP.expand_resp_new(domatt)
                     tseries = SP.synth_tseries_from_spec_full_new(new_doma*spec0)
                     mat_tseries[...,k] = tseries.transpose()
 
