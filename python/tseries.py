@@ -35,6 +35,7 @@ def pre_config(config_file,output_path):
         skr = cfg['skr']
         sdr = cfg['sdr']
         dtsr = cfg['dtsr']
+        offset = cfg['offset']
 
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
@@ -177,7 +178,8 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     axs[0].set_title('Diagonal Signal')
     axs[0].pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
 
-
+    vlimmaxN = vlimmax/np.max(vlimmax)
+    
     o_grid = []
     v_grid = []
 
@@ -202,6 +204,7 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     y_off_table = np.diagonal(vlimmaxN,offset=offset)
 
     d_table = np.array([x_table,y_table]).transpose()
+    d_off_table = np.array([t_grid,y_off_table]).transpose()
 
     plt.figure('diagonal_matrix')
     plt.plot(x_table,y_table)
@@ -218,7 +221,7 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
     np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
-def set_empty_matrix(SP, data_set, respc, scale):
+def set_empty_matrix(SP, offset, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
         
     vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
@@ -227,19 +230,19 @@ def set_empty_matrix(SP, data_set, respc, scale):
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
 
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
-    return mat_tseries,vlim,vlimmax,probv
+    return mat_tseries,vlim,rlim,vlimmax,probv
 
 def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
 
     SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
 
-    mat_tseries, vlim, vlimmax, probv = set_empty_matrix(SP, data_set, respc, scale)
+    mat_tseries, vlim,rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
 
     this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
 
-    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0)
+    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(x_spec_full, vlim, vlimmax, probv)
+    plot_save_table(x_spec_full, offset, vlim,rlim, vlimmax, probv)
 
     plt.show()
 
