@@ -4,9 +4,12 @@ import sys
 from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
 from util.h5py_util import *
+from threading import Thread,RLock
+from os import cpu_count
 from config import *
 
-def fn_analyse(config_tuple,datafile):
+
+def fn_analyse(config_tuple,datafile,ii,dataset):
     
     T,_,D,R,Neltoverlambda,nRD,g = config_tuple
     
@@ -76,40 +79,62 @@ def fn_analyse(config_tuple,datafile):
         resp = np.copy(response.p)
         doma = np.copy(field.p)
         
-    return  resp,doma
+    append_keyvalue_to_hdf5('doma', doma, ii, output_path + 'doma_', dataset)
+    append_keyvalue_to_hdf5('resp', resp, ii, output_path + 'resp_', dataset)
+
+    print('DataFile {} read'.format(datafile))
 
 
 def analyse(fn_analyse, config_file, output_path):
     config_tuple = create_configfile(parse_config,config_file)
 
-    T,S,D,R,_,nRD,g = config_tuple
+    T,S,D,R,Neltoverlambda,nRD,g = config_tuple
+
+    ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 
     dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
 
+    rshape = (R.c.size-ppt_per_surface+1,T.c.size-ppt_per_surface+1)
+    dshape = (D.c.size,T.c.size-ppt_per_surface+1)
+
+    domaset_size = (sfr.size,) + dshape
+    respset_size = (sfr.size,) + rshape
+
+    threads = []
+
+    cpc = cpu_count()
+    
     for jj in range(kr_length):
                
         for pp in range(dr_length):
             
             dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
+
+            create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
+            create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset) 
             
+            lock = RLock()
+
             for ii in range(g.ifu-1,g.ffu):
                 
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
-                r,d = fn_analyse(config_tuple,datafile)
-                
-                if ii==0:
-                    domaset_size = (sfr.size,) + d.shape
-                    respset_size = (sfr.size,) + r.shape
-                    create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
-                    create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)           
-                append_keyvalue_to_hdf5('doma', d, ii, output_path + 'doma_', dataset)
-                append_keyvalue_to_hdf5('resp', r, ii, output_path + 'resp_', dataset)
+                #fn_analyse(config_tuple,datafile,ii,dataset)
+                    # create threads
+                threads.append(Thread(target=fn_analyse, args=(config_tuple,datafile,ii,dataset)))
 
-                print('DataFile {} read'.format(datafile))
+            #with lock:
+            while len(threads):
+                thread_group = [ threads.pop() for _ in range(2) if len(threads) ]
+                # start the threads
+                for thread in thread_group:
+                    thread.start()
 
+                # wait for the threads to complete
+                for thread in thread_group:
+                    thread.join()
 
 if __name__ == "__main__":
     
