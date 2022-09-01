@@ -63,7 +63,7 @@ class Compute:
 
         with open('src/pyopencl-hankel-complex.cl', 'r') as code:
             self.pgr = cl.Program(self.ctx,code.read()).build("-Isrc/ -cl-strict-aliasing")
-
+            
     def besselh(self,host,m):
 
         h0 = np.empty((host.size), dtype=np.complex128)
@@ -90,6 +90,30 @@ class Compute:
         del h0_buff,h1_buff
         
         return bh0, bh1
+
+    def partialmult(self,hostA,hostB,width):
+
+        partialShape = (width,hostB.shape[1])
+        C = np.empty((np.prod(partialShape)), dtype=np.complex128)
+        
+        buffA  = cl.Buffer(self.ctx, self.mf.READ_ONLY | self.mf.COPY_HOST_PTR, hostbuf=hostA.astype(np.complex128))
+        buffB  = cl.Buffer(self.ctx, self.mf.READ_ONLY | self.mf.COPY_HOST_PTR, hostbuf=hostB.astype(np.complex128))
+
+        buffC = cl.Buffer(self.ctx, self.mf.WRITE_ONLY, C.nbytes)
+        
+        completeEvent = self.pgr.matrix_mult(self.queue, partialShape, None, buffC, buffA, buffB, np.int32(hostB.shape[1]), np.int32(hostA.shape[0]), np.int32(hostB.shape[0]))
+        # completeEvent = self.pgr.matrix_mult_row(self.queue, partialShape, (np.int16(width/4),np.int16(hostB.shape[1]/320)), buffC, buffA, buffB, np.int32(hostB.shape[1]), np.int32(hostA.shape[0]), np.int32(hostB.shape[0]))
+        # completeEvent = self.pgr.matrix_mult_row(self.queue, partialShape, partialShape, buffC, buffA, buffB, np.int32(hostB.shape[1]), np.int32(hostA.shape[0]), np.int32(hostB.shape[0]))
+        
+        events = [completeEvent]
+        
+        cl.enqueue_copy(self.queue, C, buffC, wait_for=events)
+        
+        C.shape = partialShape
+   
+        del buffC
+        
+        return C
 
     def propagator_side(self, R, side, C, k_cur, k_r, dr ):
 
@@ -287,11 +311,16 @@ class Compute:
             nrans_mask = self.Probe[probe].m[1]
             probe_mask = trans_mask[...,np.newaxis]
             nrobe_mask = nrans_mask[...,np.newaxis]
-
+            """ 
             self.M[probe][probe_mask*emitter_mask] = (Transfer[trans_mask,...] @ MUT[...,emitter_mask]).flatten()
             self.M[probe][nrobe_mask*nmitter_mask] = -(Transfer[nrans_mask,...] @ MLT[...,nmitter_mask]).flatten()
             self.M[probe][probe_mask*nmitter_mask] = -(Transfer[trans_mask,...] @ MUT[...,nmitter_mask]).flatten()
             self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,emitter_mask]).flatten()
+            """
+            self.M[probe][probe_mask*emitter_mask] = self.partialmult(Transfer[trans_mask,...],MUT[...,emitter_mask],np.sum(probe_mask)).flatten()
+            self.M[probe][nrobe_mask*nmitter_mask] = -self.partialmult(Transfer[nrans_mask,...],MLT[...,nmitter_mask],np.sum(nrobe_mask)).flatten()
+            self.M[probe][probe_mask*nmitter_mask] = -self.partialmult(Transfer[trans_mask,...],MUT[...,nmitter_mask],np.sum(probe_mask)).flatten()
+            self.M[probe][nrobe_mask*emitter_mask] = self.partialmult(Transfer[nrans_mask,...],MLT[...,emitter_mask],np.sum(nrobe_mask)).flatten()
             
             self.M[probe] += self.F[probe]
             self.M[probe][(probe_mask|nrobe_mask)*(emitter_mask&nmitter_mask)] /= 2

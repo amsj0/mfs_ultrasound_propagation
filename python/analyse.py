@@ -82,7 +82,9 @@ def fn_analyse(config_tuple,datafile):
 def analyse(fn_analyse, config_file, output_path):
     config_tuple = create_configfile(parse_config,config_file)
 
-    T,S,D,R,_,nRD,g = config_tuple
+    T,S,D,R,Neltoverlambda,nRD,g = config_tuple
+
+    ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 

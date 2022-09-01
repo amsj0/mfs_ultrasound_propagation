@@ -69,6 +69,64 @@ void hank103r(cdouble_t z, int *ier, cdouble_t *h0,cdouble_t *h1, int ifexpon);
  *     by e^{-i \cdot z}.
  */
 
+__kernel void matrix_mult(__global cdouble_t *C,__global const cdouble_t *A,__global const cdouble_t *B, int Mdim, int Ndim, int Pdim)
+{
+  
+  cdouble_t this_A;
+  cdouble_t this_B;
+  cdouble_t this_C;
+
+  cdouble_t value = cdouble_fromreal(0);
+  
+  // value stores the element that is 
+  // computed by the thread
+  uint i = (uint)get_global_id(0);
+  uint j = (uint)get_global_id(1);
+  
+  for (int k = 0; k < Pdim; k++)
+  {
+      this_A = A[i * Pdim + k];
+      this_B = B[k * Mdim + j];
+      this_C = cdouble_mul(this_A,this_B);
+      value = cdouble_add(value,this_C);
+  }
+
+  // Write the matrix to device memory each 
+  // thread writes one element
+  C[i * Mdim + j] = value;
+}
+
+__kernel void matrix_mult_row(__global cdouble_t *C,__global const cdouble_t *A,__global const cdouble_t *B, int Mdim, int Ndim, int Pdim)
+{
+  
+  cdouble_t this_A;
+  cdouble_t this_B;
+  cdouble_t this_C;
+
+  cdouble_t value;
+    
+  // value stores the element that is 
+  // computed by the thread
+  uint i = (uint)get_global_id(0);
+    
+  for (int j = 0; j < Ndim; j++)
+  {  
+    value = cdouble_fromreal(0);
+    for (int k = 0; k < Pdim; k++)
+    {
+        this_A = A[i * Pdim + k];
+        this_B = B[k * Mdim + j];
+        this_C = cdouble_mul(this_A,this_B);
+        value = cdouble_add(value,this_C);
+    }
+    C[i * Mdim + j] = value;
+  }
+
+  // Write the matrix to device memory each 
+  // thread writes one element
+  
+}
+
 __kernel void hankel_01_complex(__global const cdouble_t *z,__global cdouble_t *h0,__global cdouble_t *h1, int ifexpon)
 {
   cdouble_t cclog;
