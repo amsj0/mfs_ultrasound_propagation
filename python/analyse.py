@@ -30,7 +30,6 @@ def worker(q,l):
         q.task_done()
 
 def fn_analyse(elt,apod,l,path):
-#def fn_analyse(elt,apod,path):
     
     output_path,dataroot,heurisset = path
 
@@ -58,7 +57,8 @@ def fn_analyse(elt,apod,l,path):
     print('DataFile {} appended'.format(output_path + '_' + dataset))
 
 
-def analyse(fn_analyse, config_file, output_path):
+def analyse(config_file, output_path):
+
     config_tuple = create_configfile(parse_config,config_file)
 
     T,S,D,R,Neltoverlambda,nRD,g = config_tuple
@@ -130,5 +130,5 @@ if __name__ == "__main__":
 
     input_file = sys.argv[1]
     output_path = sys.argv[2]
-    
-    analyse(fn_analyse, input_file, output_path)
+
+    analyse(input_file, output_path)
