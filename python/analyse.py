@@ -4,85 +4,58 @@ import sys
 from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
 from util.h5py_util import *
-from threading import Thread,RLock
-from os import cpu_count
+#from threading import Thread
+from multiprocessing import Process,Lock,JoinableQueue
+from os import cpu_count,getpid
 from config import *
 
+def worker(q,l):
+    """The process will continually pull elements from the shared queue 
+    to process until reaching a None sentinel.
+    """
+    #pid = getpid()
+    #print(pid)
+    while True:
+        #print("{} getting next element".format(pid))
+        #current_elt,apod,l,path = q.get(timeout=5)
+        current = q.get(timeout=5)  
+        if current is None:
+            q.task_done()
+            break
+        elt,apod,path = current
+        print("Starting to process elt: {}".format(elt))
+        fn_analyse(elt,apod,l,path)
+        #fn_analyse(current_elt,apod,path)
+        print("Finished processing elt: {}".format(elt))
+        q.task_done()
 
-def fn_analyse(config_tuple,datafile,ii,dataset):
+def fn_analyse(elt,apod,l,path):
+#def fn_analyse(elt,apod,path):
     
-    T,_,D,R,Neltoverlambda,nRD,g = config_tuple
-    
-    response = structtype()
-    field = structtype()
-    
-    ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
+    output_path,dataroot,heurisset = path
 
-    range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
-    apodization = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
+    datafile = dataroot + '_' + str(elt+1) + heurisset
+    dataset  = dataroot + heurisset
 
-    apodization2 = apodization[:,np.newaxis] @ apodization[np.newaxis,:]
-    '''
-    range_ppt = np.arange(ppt_per_surface)
-    
-    ndx = structtype()
-    ndx.T = structtype()
-    ndx.R = structtype()
-      
-    response.range = structtype()
-    response.pool = structtype()
-    response.pitch = structtype()
-    response.catch = structtype()
-    response.ndx = structtype()
-    
-    response.pitch.size = (T.a.size - ppt_per_surface + 1)
-    response.catch.size = (R.a.size - ppt_per_surface + 1) 
-    response.pitch.A = np.zeros(response.pitch.size)
-    response.catch.A = np.zeros(response.catch.size)
-
-    #response.pool.p = np.zeros(response.catch.size, dtype=np.complex128)    
-    response.p = np.zeros((response.pitch.size,response.catch.size), dtype=np.complex128)    
-    field.p = np.zeros((response.pitch.size,D.c.size), dtype=np.complex128)    
-    '''
+    apod2 = apod[:,np.newaxis] @ apod[np.newaxis,:]
 
     with h5py.File(datafile + '.h5', 'r') as f:
         MH = f['domain']
         MR = f['receiver']
 
-        response.pitch = convolve(T.z,apodization,mode='valid')
-        response.catch = convolve(R.z,apodization,mode='valid')
+        print('DataFile {} read'.format(datafile))
 
-        field.p = convolve(MH,apodization[np.newaxis,:],mode='valid')
-        response.p = convolve2d(MR,apodization2,mode='valid')
-        '''
-        for t in np.arange(0,response.pitch.size):
-            
-            #   EXTRACT TRANSMITTER PISTON INDEXES          
-            t_range = t + range_ppt
-            response.pitch.A[t] = np.mean(Tz[t_range])
+        domain = convolve(MH,apod[np.newaxis,:],mode='valid')
+        response = convolve2d(MR,apod2,mode='valid')
 
-            #   FILTER FIELD PARAMETERS   
-            field.p[t,...] = np.sum(MH[...,t_range], 1)
-            response.pool.p = np.sum(MR[...,t_range], 1)
-                        
-            for r in np.arange(0,response.catch.size):
+    l.acquire()
+    try:
+        append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
+        append_keyvalue_to_hdf5('resp', response, elt, output_path + 'resp_', dataset)
+    finally:
+        l.release()
 
-                #   EXTRACT RECEIVER PISTON INDEXES
-                r_range = r + range_ppt
-
-                response.catch.A[r] = np.mean(Rz[r_range])
-   
-                #   ANALYSE RESPONSE RANGES                  
-                response.p[t,r] = np.sum(response.pool.p[r_range])
-
-        '''
-        resp = np.copy(response.p)
-        doma = np.copy(field.p)
-        
-    append_keyvalue_to_hdf5('doma', doma, ii, output_path + 'doma_', dataset)
-    append_keyvalue_to_hdf5('resp', resp, ii, output_path + 'resp_', dataset)
-
-    print('DataFile {} read'.format(datafile))
+    print('DataFile {} appended'.format(output_path + '_' + dataset))
 
 
 def analyse(fn_analyse, config_file, output_path):
@@ -102,39 +75,53 @@ def analyse(fn_analyse, config_file, output_path):
     domaset_size = (sfr.size,) + dshape
     respset_size = (sfr.size,) + rshape
 
-    threads = []
+    range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
+
+    apod = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
+    
+    processes = []
 
     cpc = cpu_count()
+
+    lock = Lock()
     
+    path = [output_path,dataroot,'_']
+
+    queue_max_size = 20
+    q = JoinableQueue(maxsize=queue_max_size)
+    # Create processes
+    processes = []
+    
+    for i in range(cpc):
+        p = Process(target=worker, args=(q,lock))
+        p.start()
+        processes.append(p)
+
     for jj in range(kr_length):
                
         for pp in range(dr_length):
             
-            dataset = dataroot + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
+            path[2] = '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
+
+            dataset = path[1] + path[2]
 
             create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
-            create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset) 
-            
-            lock = RLock()
+            create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)
 
-            for ii in range(g.ifu-1,g.ffu):
-                
-                datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
+            for elt in range(g.ifu-1,g.ffu):
 
-                #fn_analyse(config_tuple,datafile,ii,dataset)
-                    # create threads
-                threads.append(Thread(target=fn_analyse, args=(config_tuple,datafile,ii,dataset)))
+                #fn_analyse(config_tuple,datafile,elt,dataset)
+                    # create processes
+                #processes.append(Process(target=fn_analyse, args=(elt,apod,lock,path)))
+                #q.put((elt,apod,lock,path), block=True)
+                q.put((elt,apod,path), block=True)
 
-            #with lock:
-            while len(threads):
-                thread_group = [ threads.pop() for _ in range(2) if len(threads) ]
-                # start the threads
-                for thread in thread_group:
-                    thread.start()
+            # Add sentinels to shut down processes.
+            print('Adding sentinels...')
+            for _ in range(cpc):
+                q.put(None)
 
-                # wait for the threads to complete
-                for thread in thread_group:
-                    thread.join()
+            q.join() # Block until all elements have been processed.
 
 if __name__ == "__main__":
     
@@ -143,5 +130,5 @@ if __name__ == "__main__":
 
     input_file = sys.argv[1]
     output_path = sys.argv[2]
-
+    
     analyse(fn_analyse, input_file, output_path)
