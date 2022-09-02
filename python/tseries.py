@@ -173,7 +173,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.canvas.draw()
                     fg.canvas.flush_events()
 
-def plot_save_table(x_spec_full, vlim, vlimmax, probv):
+def plot_data(x_spec_full, vlim, vlimmax, probv):
     
     spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
     tx_grid,rx_grid = np.meshgrid(probv,probv)
@@ -188,17 +188,22 @@ def plot_save_table(x_spec_full, vlim, vlimmax, probv):
     plt.figure(figsize=(7,7))
     plt.pcolormesh(tx_grid,rx_grid,vlimmaxN,shading='nearest',cmap='Greys')
 
-    x_table = probv
-    y_table = np.diagonal(vlimmaxN)
-
-    d_table = np.array([x_table,y_table]).transpose()
+    x = probv
+    y = np.diagonal(vlimmaxN)
 
     plt.figure('diagonal_matrix')
-    plt.plot(x_table,y_table)
+    plt.plot(x,y)
     plt.title('Diagonal Matrix')
     plt.tight_layout()
 
+def save_table(vlimmax, probv):
+    
+    vlimmaxN = vlimmax/np.max(vlimmax[0])
+
+    d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
+
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
+
 
 def set_empty_matrix(SP, data_set, respc, scale):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
@@ -220,7 +225,9 @@ def tseries(config_file, output_path):
 
     create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(x_spec_full, vlim, vlimmax, probv)
+    plot_data(x_spec_full, vlim, vlimmax, probv)
+
+    save_table(vlimmax, probv)
 
     plt.show()
 
