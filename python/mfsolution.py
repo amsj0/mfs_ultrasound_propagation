@@ -51,7 +51,7 @@ def reconfigure(config_tuple):
     return T,P,S,nRD,g
 
 
-def mfsolution(reconfigure, config_file):
+def mfsolution(config_file):
 
     T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file))  
          
@@ -114,4 +114,4 @@ if __name__ == "__main__":
     
     input_file = sys.argv[1]
 
-    mfsolution(reconfigure, input_file)
+    mfsolution(input_file)

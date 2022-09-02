@@ -79,7 +79,7 @@ def fn_analyse(config_tuple,datafile):
     return  resp,doma
 
 
-def analyse(fn_analyse, config_file, output_path):
+def analyse(config_file, output_path):
     config_tuple = create_configfile(parse_config,config_file)
 
     T,S,D,R,_,nRD,g = config_tuple
@@ -119,4 +119,4 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_path = sys.argv[2]
 
-    analyse(fn_analyse, input_file, output_path)
+    analyse(input_file, output_path)
