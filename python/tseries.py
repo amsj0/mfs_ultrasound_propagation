@@ -62,7 +62,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
 
-    return SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full
+    return SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full, conve_mod
 
 def plt_arrange(i):
     
@@ -122,10 +122,16 @@ def set_domain_plot(grid,ndx0, data_set):
 
     return this_series, fg, h0
 
-def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0):
+def create_matrix(SP, dtsr, x_size, central_range,grid, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax):
     respttm = []
-    for i in range(0+1*int(1*x_size* 8/8-1),1+1*int(1*x_size*8/8-1),1):
-        osc,freq,spec = SP.synth_fseries_from_centr_freq(central_range[i])
+
+    if dtsr:
+        this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
+
+
+    for i in range(0+1*int(1*x_size*4/8-0),1+1*int(1*x_size*4/8-0),1):
+        central_freq = central_range[i]
+        osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
         spec0 = spec[0:int(SP.spec_size)]
         
         for j in range(data_set['resp'].shape[-1]):
@@ -172,6 +178,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.suptitle('time-step ' + str((ll+1)*dtsr-1) + '| time ' + str(x_spec_full[(ll+1)*dtsr-1]) + ' | height-step ' + str(j))
                     fg.canvas.draw()
                     fg.canvas.flush_events()
+    return int(central_freq/central_range[int(x_size*1/2)]*100)
 
 def plot_data(x_spec_full, vlim, vlimmax, probv):
     
@@ -196,13 +203,13 @@ def plot_data(x_spec_full, vlim, vlimmax, probv):
     plt.title('Diagonal Matrix')
     plt.tight_layout()
 
-def save_table(vlimmax, probv):
+def save_table(conve_mod, freq, vlimmax, probv):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0])
 
     d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
 
-    np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
+    np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('t','s')), comments='')
 
 
 def set_empty_matrix(SP, data_set, respc, scale):
@@ -217,17 +224,15 @@ def set_empty_matrix(SP, data_set, respc, scale):
 
 def tseries(config_file, output_path):
 
-    SP, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
+    SP, dtsr, x_size, central_range, data_set, grid,respc,scale, ndx0, x_spec_full, conve_mod = pre_config(config_file,output_path)
 
     mat_tseries, vlim, vlimmax, probv = set_empty_matrix(SP, data_set, respc, scale)
 
-    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
+    freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax)
 
-    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax, this_series, fg, h0)
+    save_table(conve_mod, freq, vlimmax, probv)
 
-    plot_data(x_spec_full, vlim, vlimmax, probv)
-
-    save_table(vlimmax, probv)
+    #plot_data(x_spec_full, vlim, vlimmax, probv)
 
     plt.show()
 
