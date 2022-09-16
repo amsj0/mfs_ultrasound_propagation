@@ -123,8 +123,12 @@ def set_domain_plot(grid,ndx0, data_set):
 
     return this_series, fg, h0
 
-def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax, this_series, fg, h0):
+def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax):
     respttm = []
+
+    if dtsr:
+        this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
+
     for i in range(0+1*int(1*x_size* 8/8-1),1+1*int(1*x_size*8/8-1),1):
         osc,freq,spec = SP.synth_fseries_from_centr_freq(central_range[i])
         spec0 = spec[0:int(SP.spec_size)]
@@ -261,11 +265,9 @@ def tseries(config_file, output_path):
 
     mat_tseries, vlim,rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
 
-    this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
+    create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax)
 
-    create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax, this_series, fg, h0)
-
-    plot_data(x_spec_full, vlim, vlimmax, probv)
+    #plot_data(x_spec_full, vlim, vlimmax, probv)
 
     save_table(vlimmax, probv, offset)
 
