@@ -248,7 +248,7 @@ def save_table(conve_mod, freq, vlimmax, probv, offset):
     d_off_table = np.array([t_grid,y_off_table]).transpose()
 
     np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
-
+    np.savetxt('M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
     np.savetxt('Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
 
