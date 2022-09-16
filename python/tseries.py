@@ -228,7 +228,7 @@ def tseries(config_file, output_path):
 
     mat_tseries, vlim, vlimmax, probv = set_empty_matrix(SP, data_set, respc, scale)
 
-    freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, vlim, vlimmax)
+    freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax)
 
     save_table(conve_mod, freq, vlimmax, probv)
 
