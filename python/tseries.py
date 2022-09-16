@@ -180,6 +180,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                     fg.canvas.draw()
                     fg.canvas.flush_events()
     return int(central_freq/central_range[int(x_size*1/2)]*100)
+    
 
 def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     
