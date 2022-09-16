@@ -174,7 +174,7 @@ def create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, 
                     fg.canvas.draw()
                     fg.canvas.flush_events()
 
-def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
+def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     
     spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
     tx_grid,rx_grid = np.meshgrid(probv,probv)
@@ -187,28 +187,10 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     axs[0].set_title('Diagonal Signal')
     axs[0].pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
 
-    vlimmaxN = vlimmax/np.max(vlimmax)
-    
-    o_grid = []
-    v_grid = []
-
-    for off in np.arange(-int(probv.size/2),1+int(probv.size/2),5):
-        o_grid.append(np.diagonal(x_grid,offset=off))
-        v_grid.append(np.diagonal(y_grid,offset=off))
-        v_grid.append(np.diagonal(vlimmaxN,offset=off))
-
-
-    t_grid = np.diagonal(y_grid,offset=offset)
-    n_grid = np.diagonal(x_grid,offset=offset)
-    tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
-    
-    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+offset]))
-    axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
-
-    o_grid = []
-    v_grid = []
-
     vlimmaxN = vlimmax/np.max(vlimmax[0])
+
+    o_grid = []
+    v_grid = []
 
     for off in np.arange(-int(probv.size/2),1+int(probv.size/2),5):
         o_grid.append(np.diagonal(x_grid,offset=off))
@@ -230,8 +212,6 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     y_table = np.diagonal(vlimmaxN)
     y_off_table = np.diagonal(vlimmaxN,offset=offset)
 
-    d_table = np.array([x_table,y_table]).transpose()
-    d_off_table = np.array([t_grid,y_off_table]).transpose()
 
     plt.figure('diagonal_matrix')
     plt.plot(x_table,y_table)
@@ -245,6 +225,22 @@ def plot_save_table(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     plt.title('Full Off Diagonal Matrix')
     plt.tight_layout()    
 
+def save_table(vlimmax, probv, offset):
+    
+    vlimmaxN = vlimmax/np.max(vlimmax[0])
+
+    tx_grid,rx_grid = np.meshgrid(probv,probv)
+
+    y_grid = (tx_grid*np.sin(np.pi/4) + rx_grid*np.cos(np.pi/4))/np.sqrt(2)
+
+    t_grid = np.diagonal(y_grid,offset=offset)
+    y_off_table = np.diagonal(vlimmaxN,offset=offset)
+
+    d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
+
+    d_off_table = np.array([t_grid,y_off_table]).transpose()
+
+    
     np.savetxt('vlimmax.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
     np.savetxt('vlimmax_off.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
@@ -259,7 +255,7 @@ def set_empty_matrix(SP, offset, data_set, respc, scale):
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
     return mat_tseries,vlim,rlim,vlimmax,probv
 
-def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path):
+def tseries(config_file, output_path):
 
     SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full = pre_config(config_file,output_path)
 
@@ -269,7 +265,9 @@ def tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_s
 
     create_matrix(SP, dtsr, x_size, central_range, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax, this_series, fg, h0)
 
-    plot_save_table(x_spec_full, offset, vlim,rlim, vlimmax, probv)
+    plot_data(x_spec_full, vlim, vlimmax, probv)
+
+    save_table(vlimmax, probv, offset)
 
     plt.show()
 
@@ -282,4 +280,4 @@ if __name__ == '__main__':
     output_path = sys.argv[1]
     config_file = sys.argv[2]
 
-    tseries(pre_config, set_empty_matrix, set_domain_plot, create_matrix, plot_save_table, config_file, output_path)
+    tseries(config_file, output_path)
