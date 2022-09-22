@@ -246,9 +246,9 @@ def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
 
     d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
     d_off_table = np.array([t_grid,y_off_table]).transpose()
-    d_time_table = np.block([[np.nan,x_spec_full.transpose()],[probv[:,np.newaxis],vlim]])
+    d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.abs(vlim)]])
 
-    np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',', comments='')
+    np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
     np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
     np.savetxt('M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
     np.savetxt('Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
