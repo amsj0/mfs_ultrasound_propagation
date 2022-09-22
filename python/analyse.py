@@ -114,12 +114,12 @@ def analyse(config_file, output_path):
                 #q.put((elt,apod,lock,path), block=True)
                 q.put((elt,apod,path), block=True)
 
-            # Add sentinels to shut down processes.
-            print('Adding sentinels...')
-            for _ in range(cpc):
-                q.put(None)
+    # Add sentinels to shut down processes.
+    print('Adding sentinels...')
+    for _ in range(cpc):
+        q.put(None)
 
-            q.join() # Block until all elements have been processed.
+    q.join() # Block until all elements have been processed.
 
 if __name__ == "__main__":
     
