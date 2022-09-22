@@ -233,7 +233,7 @@ def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     plt.title('Full Off Diagonal Matrix')
     plt.tight_layout()    
 
-def save_table(conve_mod, freq, vlimmax, probv, offset):
+def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0])
 
@@ -246,7 +246,9 @@ def save_table(conve_mod, freq, vlimmax, probv, offset):
 
     d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
     d_off_table = np.array([t_grid,y_off_table]).transpose()
+    d_time_table = np.block([[np.nan,x_spec_full.transpose()],[probv[:,np.newaxis],vlim]])
 
+    np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',', comments='')
     np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
     np.savetxt('M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
     np.savetxt('Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
@@ -271,7 +273,7 @@ def tseries(config_file, output_path):
 
     freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax)
 
-    save_table(conve_mod, freq, vlimmax, probv, offset)
+    save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset)
 
     #plot_data(x_spec_full, vlim, vlimmax, probv)
 
