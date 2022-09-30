@@ -6,8 +6,10 @@ from util.heuristic import heuristic
 from util.h5py_util import *
 #from threading import Thread
 from multiprocessing import Process,Lock,JoinableQueue
-from os import cpu_count,getpid
+from os import cpu_count,remove
 from config import parse_config, create_configfile
+
+DELETE_MFS = True
 
 def worker(q,l):
     """The process will continually pull elements from the shared queue 
@@ -44,7 +46,10 @@ def fn_analyse(elt,apod,l,path):
 
         domain = convolve(MH,apod[np.newaxis,:],mode='valid')
         response = convolve2d(MR,apod2,mode='valid')
-
+    
+    if DELETE_MFS:
+        remove(datafile + '.h5')
+    
     l.acquire()
     try:
         append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
