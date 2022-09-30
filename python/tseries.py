@@ -45,7 +45,7 @@ def pre_config(config_file,output_path):
     
     filename = gridname + '_' + str(skr) + '_' + str(sdr) + '.h5'    
               
-    mu, sigma = 0, 0.065 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
+    mu, sigma = 0, 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
     sampling_freq = 5*(final_freq/numbr_freq)*ref_freq
     
@@ -246,7 +246,7 @@ def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
 
     d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
     d_off_table = np.array([t_grid,y_off_table]).transpose()
-    d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.abs(vlim)]])
+    d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.real(vlim)]])
 
     np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
     np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
