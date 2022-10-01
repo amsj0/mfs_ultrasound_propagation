@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 
+from util.store import Store
 from compute import Compute
 from config import *
 from util.heuristic import heuristic
@@ -51,7 +52,7 @@ def reconfigure(config_tuple):
     return T,P,S,nRD,g
 
 
-def mfsolution(config_file):
+def mfsolution(name,config_file):
 
     T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file))  
          
@@ -64,7 +65,9 @@ def mfsolution(config_file):
     dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100)) 
 
     datafile = ''
-     
+    
+    ST = Store(datafile)
+
     l = 2
 
     for ii in range(g.ifu-1,g.ffu):
@@ -101,10 +104,14 @@ def mfsolution(config_file):
                 CP.compute_upper_side(k_cur,k_out,d_r)
                 CP.propagate_transfer()
 
-                save_dict_to_hdf5(CP.M, datafile)
+                if name == "__main__":
+                    ST.load_dict_to_hdf5(CP.M, datafile)
+                else:
+                    save_dict_to_hdf5(CP.M, datafile)
                 #save_keyvalue_to_hdf5('doma',CP.M['domain'], '', datafile)
                 
                 print('Datafile {} created'.format(datafile))
+    return ST
 
 
 if __name__ == "__main__":
@@ -114,4 +121,4 @@ if __name__ == "__main__":
     
     input_file = sys.argv[1]
 
-    mfsolution(input_file)
+    mfsolution(__name__,input_file)
