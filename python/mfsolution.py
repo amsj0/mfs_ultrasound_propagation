@@ -105,8 +105,8 @@ def mfsolution(name,config_file):
                 CP.propagate_transfer()
 
                 if name == "__main__":
-                    ST.load_dict_to_hdf5(CP.M, datafile)
-                else:
+                    ST.load_dict_to_store(CP.M, datafile)
+                elif name == "mfsolution":
                     save_dict_to_hdf5(CP.M, datafile)
                 #save_keyvalue_to_hdf5('doma',CP.M['domain'], '', datafile)
                 

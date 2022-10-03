@@ -9,7 +9,7 @@ class Store:
             datafile : None
         }
 
-    def load_dict_to_hdf5(self, M, datafile):
+    def load_dict_to_store(self, M, datafile):
         
         if '' in self.Solution:
             self.Solution.pop('')
