@@ -265,7 +265,7 @@ def set_empty_matrix(SP, offset, data_set, respc, scale):
     probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
     return mat_tseries,vlim,rlim,vlimmax,probv
 
-def tseries(config_file, output_path):
+def tseries(name,config_file, output_path):
 
     SP, offset, dtsr, x_size, central_range, data_set, grid ,respc ,scale , ndx0, x_spec_full, conve_mod = pre_config(config_file,output_path)
 
@@ -288,4 +288,4 @@ if __name__ == '__main__':
     output_path = sys.argv[1]
     config_file = sys.argv[2]
 
-    tseries(config_file, output_path)
+    tseries("tseries",config_file, output_path)

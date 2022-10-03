@@ -121,4 +121,4 @@ if __name__ == "__main__":
     
     input_file = sys.argv[1]
 
-    mfsolution(__name__,input_file)
+    mfsolution("mfsolution",input_file)

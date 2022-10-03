@@ -67,7 +67,7 @@ def fn_analyse(elt,apod,lock,store,path):
     print('DataFile {} appended'.format(output_path + '_' + dataset))
 
 
-def analyse(store,config_file, output_path):
+def analyse(name,store,config_file, output_path):
 
     config_tuple = create_configfile(parse_config,config_file)
 
@@ -141,4 +141,5 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_path = sys.argv[2]
 
-    analyse(input_file, output_path)
+    store = Store('')
+    analyse("analyse",store,input_file, output_path)
