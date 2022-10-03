@@ -60,7 +60,7 @@ def fn_discretize_geometry_domain(G,centre_vector,grid_ratio):
 
     return M
 
-def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt ,mode, Rotation = fn_rotation() ):
+def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt , angle, Rotation = fn_rotation() ):
 
     P = structtype() 
     
@@ -73,7 +73,7 @@ def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt ,mode, Rotation =
     if pts_number > 1:
         radi += np.linspace(- RN / 2,RN / 2,pts_number)
     
-    thet =              np.zeros((pts_number,))
+    thet = angle / 180 * np.pi * np.ones((pts_number,))
     area = 1 / Nelt   * np.ones((pts_number,))
     norm = - Orientation * np.ones((pts_number,))
 

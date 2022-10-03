@@ -81,6 +81,9 @@ def parse_config(filename = 'config.yaml'):
         g.radia_siz = int(cfg['RADIA_SIZ'])
         g.eleme_wav = int(cfg['ELEME_WAV'])
 
+        g.piston_angle = int(cfg['PISTO_ANG'])
+        g.interf_angle = int(cfg['INTER_ANG'])
+
     return g
 
 def create_configfile(fn,filename): 
@@ -112,6 +115,8 @@ def create_configfile(fn,filename):
     interf_centre = np.array((width_interf_centre,height_interf_centre))
     piston_centre = np.array((width_piston_centre,height_piston_centre))
     
+    interf_angle = np.array(g.interf_angle)
+    piston_angle = np.array(g.piston_angle)
     ##
     # CREATE SURROUNDING SURFACE
     ##
@@ -141,7 +146,7 @@ def create_configfile(fn,filename):
     # CREATE TRANSMITER TRANSDUCER SURFACE
     ##
     
-    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), 0 )
+    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
 
     ##    
     # SLICE TRANSMITER SURFACE WITH SURROUNDING SURFACE
