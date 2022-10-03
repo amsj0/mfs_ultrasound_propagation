@@ -43,15 +43,15 @@ def load_(pathname,para,filename):
     return f[para]
 
 def save_dict_to_hdf5(M, datafile):
-    f = h5py.File(datafile + '.h5','w')
-    for item, dict in M.items():
-        try:
-            f_dict = dict.__dict__
-            f_item = f.create_group(item)
-            for k, v in f_dict.items():
-                f_item[k] = v   
-        except Exception:
-            f[item] = dict
+    with h5py.File(datafile + '.h5','w') as f:
+        for item, dict in M.items():
+            try:
+                f_dict = dict.__dict__
+                f_item = f.create_group(item)
+                for k, v in f_dict.items():
+                    f_item[k] = v   
+            except Exception:
+                f[item] = dict
     
 
 def create_keysized_to_hdf5(key, size, path, dataset):
