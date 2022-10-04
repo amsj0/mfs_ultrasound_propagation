@@ -52,6 +52,7 @@ def save_dict_to_hdf5(M, datafile):
                     f_item[k] = v   
             except Exception:
                 f[item] = dict
+    
 
 def create_keysized_to_hdf5(key, size, path, dataset):
     with h5py.File(path + dataset + '.h5', 'w') as f:

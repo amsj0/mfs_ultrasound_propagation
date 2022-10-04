@@ -6,6 +6,8 @@ from tseries import *
 
 if __name__ == "__main__":
 
+    #Store ST
+    
     if (len(sys.argv) != 4) & (len(sys.argv) != 3) & (len(sys.argv) != 2 ) :
         raise ValueError('Invalid number of arguments. Usage: {} inputfile.yaml output_path.yaml config.yaml'.format(sys.argv[0]))
 
@@ -13,16 +15,16 @@ if __name__ == "__main__":
 
     input_file = sys.argv[1]
 
-    mfsolution(input_file)
+    ST = mfsolution(__name__,input_file)
 
     if len(sys.argv) > 2:
         print('Running analysis code')
 
         output_path = sys.argv[2]
-        analyse(input_file,output_path)
+        analyse(__name__,ST,input_file,output_path)
 
     if len(sys.argv) == 4:
         print('Running tseries code')
 
         config_file = sys.argv[3]
-        tseries(config_file, output_path)
+        tseries(__name__,config_file, output_path)

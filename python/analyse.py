@@ -4,6 +4,7 @@ import sys
 from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
 from util.h5py_util import *
+from util.store import Store
 #from threading import Thread
 from multiprocessing import Process,Lock,JoinableQueue
 from os import cpu_count,remove
@@ -11,7 +12,7 @@ from config import parse_config, create_configfile
 
 DELETE_MFS = True
 
-def worker(q,l):
+def worker(q,a,l):
     """The process will continually pull elements from the shared queue 
     to process until reaching a None sentinel.
     """
@@ -22,14 +23,14 @@ def worker(q,l):
         if current is None:
             q.task_done()
             break
-        elt,apod,path = current
+        elt,store,path = current
         print("Starting to process elt: {}".format(elt))
-        fn_analyse(elt,apod,l,path)
+        fn_analyse(elt,a,l,store,path)
   
         print("Finished processing elt: {}".format(elt))
         q.task_done()
 
-def fn_analyse(elt,apod,l,path):
+def fn_analyse(elt,apod,lock,store,path):
     
     output_path,dataroot,heurisset = path
 
@@ -38,29 +39,35 @@ def fn_analyse(elt,apod,l,path):
 
     apod2 = apod[:,np.newaxis] @ apod[np.newaxis,:]
 
-    with h5py.File(datafile + '.h5', 'r') as f:
-        MH = f['domain']
-        MR = f['receiver']
+    if '' in store.Solution:
+        with h5py.File(datafile + '.h5', 'r') as f:
+            MH = f['domain']
+            MR = f['receiver']
 
-        print('DataFile {} read'.format(datafile))
+            domain = convolve(MH,apod[np.newaxis,:],mode='valid')
+            response = convolve2d(MR,apod2,mode='valid')
+        if DELETE_MFS:
+            remove(datafile + '.h5')
+    else:
+        MH = store.Solution[datafile]['domain']
+        MR = store.Solution[datafile]['receiver']
 
         domain = convolve(MH,apod[np.newaxis,:],mode='valid')
-        response = convolve2d(MR,apod2,mode='valid')
+        response = convolve2d(MR,apod2,mode='valid')        
+    print('DataFile {} read'.format(datafile))
+
     
-    if DELETE_MFS:
-        remove(datafile + '.h5')
-    
-    l.acquire()
+    lock.acquire()
     try:
         append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
         append_keyvalue_to_hdf5('resp', response, elt, output_path + 'resp_', dataset)
     finally:
-        l.release()
+        lock.release()
 
     print('DataFile {} appended'.format(output_path + '_' + dataset))
 
 
-def analyse(config_file, output_path):
+def analyse(name,store,config_file, output_path):
 
     config_tuple = create_configfile(parse_config,config_file)
 
@@ -94,9 +101,10 @@ def analyse(config_file, output_path):
     q = JoinableQueue(maxsize=queue_max_size)
     # Create processes
     processes = []
+    num_proc = min(g.ffu-g.ifu,cpc);
     
-    for i in range(cpc):
-        p = Process(target=worker, args=(q,lock))
+    for i in range(num_proc):
+        p = Process(target=worker, args=(q,apod,lock))
         p.start()
         processes.append(p)
 
@@ -112,16 +120,11 @@ def analyse(config_file, output_path):
             create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)
 
             for elt in range(g.ifu-1,g.ffu):
-
-                #fn_analyse(config_tuple,datafile,elt,dataset)
-                    # create processes
-                #processes.append(Process(target=fn_analyse, args=(elt,apod,lock,path)))
-                #q.put((elt,apod,lock,path), block=True)
-                q.put((elt,apod,path), block=True)
+                q.put((elt,store,path), block=True)
 
     # Add sentinels to shut down processes.
     print('Adding sentinels...')
-    for _ in range(cpc):
+    for _ in range(num_proc):
         q.put(None)
 
     q.join() # Block until all elements have been processed.
@@ -134,4 +137,5 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_path = sys.argv[2]
 
-    analyse(input_file, output_path)
+    store = Store('')
+    analyse("analyse",store,input_file, output_path)
