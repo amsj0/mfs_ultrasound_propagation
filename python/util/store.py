@@ -23,4 +23,4 @@ class Store:
                 for k, v in f_dict.items():
                     f_item[k] = v   
             except Exception:
-                self.Solution[datafile][item] = dict
+                self.Solution[datafile][item] = np.copy(dict)
