@@ -23,37 +23,24 @@ def worker(q,a,l):
         if current is None:
             q.task_done()
             break
-        elt,store,path = current
+        elt,MH,MR,path = current
         print("Starting to process elt: {}".format(elt))
-        fn_analyse(elt,a,l,store,path)
+        fn_analyse(elt,a,l,MH,MR,path)
   
         print("Finished processing elt: {}".format(elt))
         q.task_done()
 
-def fn_analyse(elt,apod,lock,store,path):
+def fn_analyse(elt,apod,lock,MH,MR,path):
     
     output_path,dataroot,heurisset = path
-
+    
     datafile = dataroot + '_' + str(elt+1) + heurisset
     dataset  = dataroot + heurisset
 
     apod2 = apod[:,np.newaxis] @ apod[np.newaxis,:]
 
-    if '' in store.Solution:
-        with h5py.File(datafile + '.h5', 'r') as f:
-            MH = f['domain']
-            MR = f['receiver']
-
-            domain = convolve(MH,apod[np.newaxis,:],mode='valid')
-            response = convolve2d(MR,apod2,mode='valid')
-        if DELETE_MFS:
-            remove(datafile + '.h5')
-    else:
-        MH = store.Solution[datafile]['domain']
-        MR = store.Solution[datafile]['receiver']
-
-        domain = convolve(MH,apod[np.newaxis,:],mode='valid')
-        response = convolve2d(MR,apod2,mode='valid')        
+    domain = convolve(MH,apod[np.newaxis,:],mode='valid')
+    response = convolve2d(MR,apod2,mode='valid')        
     print('DataFile {} read'.format(datafile))
 
     
@@ -120,7 +107,21 @@ def analyse(name,store,config_file, output_path):
             create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)
 
             for elt in range(g.ifu-1,g.ffu):
-                q.put((elt,store,path), block=True)
+                
+                datafile = path[1] + '_' + str(elt+1) + path[2]
+
+                if '' in store.Solution:
+                    with h5py.File(datafile + '.h5', 'r') as f:
+                        MH = np.copy(f['domain'])
+                        MR = np.copy(f['receiver'])
+
+                    if DELETE_MFS:
+                        remove(datafile + '.h5')
+                else:
+                    MH = store.Solution[datafile]['domain']
+                    MR = store.Solution[datafile]['receiver']
+
+                q.put((elt,MH,MR,path), block=True)
 
     # Add sentinels to shut down processes.
     print('Adding sentinels...')
