@@ -81,8 +81,8 @@ def parse_config(filename = 'config.yaml'):
         g.radia_siz = int(cfg['RADIA_SIZ'])
         g.eleme_wav = int(cfg['ELEME_WAV'])
 
-        g.piston_angle = int(cfg['PISTO_ANG'])
-        g.interf_angle = int(cfg['INTER_ANG'])
+        g.piston_angle = (cfg['PISTO_ANG'])
+        g.interf_angle = (cfg['INTER_ANG'])
 
     return g
 
@@ -117,11 +117,12 @@ def create_configfile(fn,filename):
     
     interf_angle = np.array(g.interf_angle)
     piston_angle = np.array(g.piston_angle)
+
     ##
     # CREATE SURROUNDING SURFACE
     ##
     
-    S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
+    S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, 0, list(reversed(fn_rotation())))
                
     S.c = S.x + 1j * S.z
 
@@ -146,7 +147,7 @@ def create_configfile(fn,filename):
     # CREATE TRANSMITER TRANSDUCER SURFACE
     ##
     
-    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
+    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle , g.piston_radius)
 
     ##    
     # SLICE TRANSMITER SURFACE WITH SURROUNDING SURFACE
@@ -171,7 +172,7 @@ def create_configfile(fn,filename):
     # CREATE RECEPTOR TRANSDUCER (SURFACE PROBE)
     ##
     
-    R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 )
+    R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 , 0*g.piston_radius)
     
     ##
     # SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE

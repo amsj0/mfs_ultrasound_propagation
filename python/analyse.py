@@ -1,5 +1,3 @@
-import numpy as np
-import sys
 
 from scipy.signal import (convolve,convolve2d)
 from util.heuristic import heuristic
@@ -7,8 +5,14 @@ from util.h5py_util import *
 from util.store import Store
 #from threading import Thread
 from multiprocessing import Process,Lock,JoinableQueue
-from os import cpu_count,remove
+from os import cpu_count,remove,environ
 from config import parse_config, create_configfile
+
+environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
+import numpy as np
+import tensorflow as tf
+import sys
 
 DELETE_MFS = True
 
@@ -19,7 +23,7 @@ def worker(q,a,l):
 
     while True:
 
-        current = q.get(timeout=5)  
+        current = q.get(timeout=25)  
         if current is None:
             q.task_done()
             break
@@ -39,8 +43,37 @@ def fn_analyse(elt,apod,lock,MH,MR,path):
 
     apod2 = apod[:,np.newaxis] @ apod[np.newaxis,:]
 
-    domain = convolve(MH,apod[np.newaxis,:],mode='valid')
-    response = convolve2d(MR,apod2,mode='valid')        
+    #domain = convolve(MH,apod[np.newaxis,:],mode='valid')
+    #response = convolve2d(MR,apod2,mode='valid')        
+
+    mh_extra_dim = (MH.ndim-2)
+    Mdim = tuple(np.arange(-mh_extra_dim,1))
+
+    kernel1 = np.expand_dims(apod,axis=Mdim)
+
+    domain = np.squeeze(convolve(MH,kernel1,mode='valid'))
+
+
+    #Mdim = tuple(np.arange(-(mh_extra_dim-1),1))
+    
+    x_real = tf.constant(np.moveaxis(np.expand_dims(MR.real,axis=Mdim),-2,0))
+    x_imag = tf.constant(np.moveaxis(np.expand_dims(MR.imag,axis=Mdim),-2,0))
+    
+    Mdim = tuple(np.arange(-(mh_extra_dim+1),0))
+
+    kernel2 = np.expand_dims(apod2,axis=Mdim)
+    kernel2 = tf.constant(kernel2)
+
+    cv2d_real = tf.nn.conv2d(x_real, kernel2, strides=[1, 1, 1, 1], padding='VALID')
+    cv2d_imag = tf.nn.conv2d(x_imag, kernel2, strides=[1, 1, 1, 1], padding='VALID')
+
+    cv2d_real = np.squeeze(np.moveaxis(cv2d_real,0,-2))
+    cv2d_imag = np.squeeze(np.moveaxis(cv2d_imag,0,-2))
+
+    response = np.empty(cv2d_real.shape,dtype=np.complex128)
+
+    response.real = cv2d_real
+    response.imag = cv2d_imag
     print('DataFile {} read'.format(datafile))
 
     
@@ -66,8 +99,17 @@ def analyse(name,store,config_file, output_path):
 
     dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
 
-    rshape = (R.c.size-ppt_per_surface+1,T.c.size-ppt_per_surface+1)
-    dshape = (D.c.size,T.c.size-ppt_per_surface+1)
+    #rshape = (R.c.size-ppt_per_surface+1,T.c.size-ppt_per_surface+1)
+    #dshape = (D.c.size,T.c.size-ppt_per_surface+1)
+    rshape = (R.c.shape[0]-ppt_per_surface+1,T.c.shape[0]-ppt_per_surface+1)
+    dshape = (D.c.shape[0],T.c.shape[0]-ppt_per_surface+1)
+    if T.c.ndim > 1:
+        rshape = rshape + (T.c.shape[1],)
+        dshape = dshape + (T.c.shape[1],)
+
+    # TODO tuple comprehension
+    rshape = np.squeeze(np.empty(rshape)).shape
+    dshape = np.squeeze(np.empty(dshape)).shape
 
     domaset_size = (sfr.size,) + dshape
     respset_size = (sfr.size,) + rshape

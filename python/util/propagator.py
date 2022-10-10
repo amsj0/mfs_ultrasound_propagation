@@ -32,7 +32,7 @@ def impedance(p,v):
 
 def transfer(TF,Th):
       
-    return np.subtract(np.identity(TF.shape[0]),TF) @ Th
+    return np.tensordot(np.subtract(np.identity(TF.shape[0]),TF) , Th, (-1,0))
 
 def transferOLD(Thi,Tho,Tri,Tro,TFI,TFO,TIh,TOh):
     

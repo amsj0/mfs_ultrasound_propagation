@@ -60,14 +60,17 @@ def fn_discretize_geometry_domain(G,centre_vector,grid_ratio):
 
     return M
 
-def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt , angle, Rotation = fn_rotation() ):
+def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt , angle, piston_radius, Rotation = fn_rotation() ):
+
+
+    ppt_per_surface =  int(np.floor(piston_radius * Nelt))
 
     P = structtype() 
     
-    N = 1
+    N = 1 + ppt_per_surface
 
     radi = 0
-    pts_number = int(np.floor(RN / 2 * Nelt) * 2)
+    pts_number = int(np.floor((RN) / 2 * Nelt) * 2) - ppt_per_surface
     RN = (pts_number - 1) / Nelt
         
     if pts_number > 1:
@@ -85,29 +88,43 @@ def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt , angle, Rotation
     areaC = []
     normC = []
     thetC = []
+    xaxsC = []
+    zaxsC = []
 
     for k in np.arange(N).reshape(-1):
-        radiC.append( radi )
+        radiC.append( radi + (k - (N - 1) / 2) * 1 / Nelt)
+        xaxsC.append( radi * Rotation[0](0) + (k - (N - 1) / 2) * 1 / Nelt * Rotation[0](thet))
+        zaxsC.append( radi * Rotation[1](0) + (k - (N - 1) / 2) * 1 / Nelt * Rotation[1](thet))
         areaC.append( area )
         normC.append( norm + k * (2 * np.pi / N) )
         thetC.append( thet + k * (2 * np.pi / N) )
     
     radi = np.array(radiC , dtype=object)
+    xaxs = np.array(xaxsC , dtype=object)
+    zaxs = np.array(zaxsC , dtype=object)
     thet = np.array(thetC , dtype=object)
     area = np.array(areaC , dtype=object)
     norm = np.array(normC , dtype=object)
     
     P.a = area
-    P.x = (radi * Rotation[0](thet) + Centre[0] )
-    P.z = (radi * Rotation[1](thet) + Centre[1] )
+    P.x = xaxs + Centre[0]
+    P.z = zaxs + Centre[1]
     P.y = P.z * 0
     P.n = norm
 
-    P.a = np.hstack(P.a).astype(float)
-    P.x = np.hstack(P.x).astype(float)
-    P.z = np.hstack(P.z).astype(float)
-    P.y = np.hstack(P.y).astype(float)
-    P.n = np.hstack(P.n).astype(float)
+    P.a = (P.a).astype(float)
+    P.x = (P.x).astype(float)
+    P.z = (P.z).astype(float)
+    P.y = (P.y).astype(float)
+    P.n = (P.n).astype(float)
+
+    if(not bool(piston_radius)):
+        P.a = np.hstack(P.a)
+        P.x = np.hstack(P.x)
+        P.z = np.hstack(P.z)
+        P.y = np.hstack(P.y)
+        P.n = np.hstack(P.n)
+
 
     return P
 
