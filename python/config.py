@@ -59,6 +59,7 @@ def parse_config(filename = 'config.yaml'):
         g.piston_distan = g.model_scale * cfg['PISTO_DST']
         g.interf_centre = g.model_scale * cfg['INTER_CEN']
         g.piston_centre = g.model_scale * cfg['PISTO_CEN']
+        g.tank_rad = g.model_scale * cfg['TANK_RAD']
         g.scale = 4
 
         GX = ((cfg['GRIDX_INI']),(cfg['GRIDX_FIN']),int(cfg['GRIDX_DEL']))
@@ -109,19 +110,21 @@ def create_configfile(fn,filename):
     height_interf_centre = g.interf_centre
     height_piston_centre = g.piston_centre
     
-    width_interf_centre = g.piston_distan / 2
+    width_interf_centre = g.piston_distan
     width_piston_centre = g.piston_distan
     
     interf_centre = np.array((width_interf_centre,height_interf_centre))
     piston_centre = np.array((width_piston_centre,height_piston_centre))
     
+    tank_rad = g.tank_rad
+
     interf_angle = np.array(g.interf_angle)
     piston_angle = np.array(g.piston_angle)
     ##
     # CREATE SURROUNDING SURFACE
     ##
     
-    S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
+    S = fn_discretize_geometry_plane(4 * tank_rad, interf_centre , - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
                
     S.c = S.x + 1j * S.z
 
@@ -146,7 +149,7 @@ def create_configfile(fn,filename):
     # CREATE TRANSMITER TRANSDUCER SURFACE
     ##
     
-    T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
+    T = fn_discretize_geometry_circular(g.piston__pitch,[piston_centre[1], piston_centre[0]], np.pi ,Neltoverlambda / (100), 0,  fn_rotation(), tank_rad )
 
     ##    
     # SLICE TRANSMITER SURFACE WITH SURROUNDING SURFACE
@@ -171,7 +174,7 @@ def create_configfile(fn,filename):
     # CREATE RECEPTOR TRANSDUCER (SURFACE PROBE)
     ##
     
-    R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 )
+    R = fn_discretize_geometry_circular(g.piston__catch, [piston_centre[1], piston_centre[0]], 0,Neltoverlambda / (100), 0,  fn_rotation(), tank_rad  )
     
     ##
     # SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE

@@ -151,7 +151,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                 vec_tseries = tseries.transpose()
 
 
-                if k==j:
+                if k==(data_set['resp'].shape[-1]-j):
                     vlim[j,...] = vec_tseries
                 if k==(j+offset):
                     rlim[j - int((np.abs(offset) - offset)/2),...] = vec_tseries                    
@@ -235,7 +235,8 @@ def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
 
 def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
     
-    vlimmaxN = vlimmax/np.max(vlimmax[0])
+    #vlimmaxN = vlimmax/np.max(vlimmax[0])
+    vlimmaxN = vlimmax
 
     tx_grid,rx_grid = np.meshgrid(probv,probv)
 
