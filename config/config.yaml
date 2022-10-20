@@ -1,15 +1,15 @@
 
 #scaled frequency range
-initi_freq: 2
+initi_freq: 0
 numbr_freq: 100
-final_freq: 200
+final_freq: 50
 
 parti_freq: 100
 
 #speed ratio
-skr: 993
+skr: 23
 #density ratio
-sdr: 800
+sdr: 1
 
 spec_size: 512
 ref_freq: 1000000
@@ -17,10 +17,6 @@ ref_freq: 1000000
 # Display_time_step_ratio 
 dtsr: 0 # 0 if not to display
 # Offset data matrix
-offset: 12 # 0 if not to offset
+offset: 0 # 0 if not to offset
 
-CONVE_MOD: 'Pr5'
-# SCALE WAVELENGTH
-RADIA_SIZ: 1
-# CENTI SOURCE PER WAVELENGHT
-ELEME_WAV: 500
+CONVE_MOD: 'horizontal'
