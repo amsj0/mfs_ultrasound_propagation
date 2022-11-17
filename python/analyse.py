@@ -45,6 +45,7 @@ def fn_analyse(elt,apod,lock,MH,MR,path):
 
     
     lock.acquire()
+    # Do not use a proxy object from more than one thread unless you protect it with a lock.
     try:
         append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
         append_keyvalue_to_hdf5('resp', response, elt, output_path + 'resp_', dataset)
