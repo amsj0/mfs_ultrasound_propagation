@@ -38,6 +38,7 @@ def parse_config(filename = 'config.yaml'):
         g.convergemod = cfg['CONVE_MOD']
         g.model_scale = cfg['MODEL_SCL']
         g.att = cfg['ATTEN_RAT']
+        g.tra = cfg['TRANS_RAT']
               
         g.ifu = int(cfg['FREQU_INI'])
         g.ffu = int(cfg['FREQU_FIN'])
@@ -161,7 +162,7 @@ def create_configfile(fn,filename, output_path):
     # SCALE TRANSMITTER SURFACE WITH SCALING FACTOR
     ##    
         
-    T.a = T.a * RD
+    T.a = T.a * RD * (T.ndx[0] + T.ndx[1]*np.sqrt(g.tra))
     T.x = T.x * RD
     T.z = T.z * RD
     T.y = T.y * RD
@@ -186,7 +187,7 @@ def create_configfile(fn,filename, output_path):
     # SCALE RECEPTOR SURFACE WITH SCALING FACTOR
     ##
 
-    R.a = R.a * RD
+    R.a = R.a * RD * (R.ndx[0] + R.ndx[1]*np.sqrt(g.tra))
     R.x = R.x * RD
     R.z = R.z * RD
     R.y = R.y * RD
