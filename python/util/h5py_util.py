@@ -42,8 +42,8 @@ def load_(pathname,para,filename):
         
     return f[para]
 
-def save_dict_to_hdf5(M, datafile):
-    with h5py.File(datafile + '.h5','w') as f:
+def save_dict_to_hdf5(M, path, datafile):
+    with h5py.File(path + datafile + '.h5','w') as f:
         for item, dict in M.items():
             try:
                 f_dict = dict.__dict__

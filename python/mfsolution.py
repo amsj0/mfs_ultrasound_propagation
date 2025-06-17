@@ -52,9 +52,11 @@ def reconfigure(config_tuple):
     return T,P,S,nRD,g
 
 
-def mfsolution(name,config_file):
+def mfsolution(name,config_file, output_path):
 
-    T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file))  
+    print(config_file)
+    print(output_path)
+    T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file, output_path))  
          
     CP = Compute(P,T,S)
 
@@ -62,7 +64,7 @@ def mfsolution(name,config_file):
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
    
-    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100)) 
+    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100)) 
 
     datafile = ''
     
@@ -107,8 +109,7 @@ def mfsolution(name,config_file):
                 if name == "__main__":
                     ST.load_dict_to_store(CP.M, datafile)
                 elif name == "mfsolution":
-                    save_dict_to_hdf5(CP.M, datafile)
-                #save_keyvalue_to_hdf5('doma',CP.M['domain'], '', datafile)
+                    save_dict_to_hdf5(CP.M, output_path, datafile)
                 
                 print('Datafile {} created'.format(datafile))
     return ST
@@ -116,9 +117,10 @@ def mfsolution(name,config_file):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml'.format(sys.argv[0]))
     
     input_file = sys.argv[1]
+    output_path = sys.argv[2]    
 
-    mfsolution("mfsolution",input_file)
+    mfsolution("mfsolution",input_file, output_path)

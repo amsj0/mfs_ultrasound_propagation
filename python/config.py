@@ -86,7 +86,7 @@ def parse_config(filename = 'config.yaml'):
 
     return g
 
-def create_configfile(fn,filename): 
+def create_configfile(fn,filename, output_path): 
     
     g = fn(filename)
        
@@ -233,7 +233,7 @@ def create_configfile(fn,filename):
     dict = {key: value for key, value in zip(keys, values)}
 
     configfile = 'P' + g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100))
-    save_dict_to_hdf5(dict, configfile)
+    save_dict_to_hdf5(dict, output_path, configfile)
 
     return T,S,D,R,Neltoverlambda,nRD,g
 
@@ -243,5 +243,6 @@ if __name__ == "__main__":
         raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
 
     config_file = sys.argv[1]
-
-    create_configfile(parse_config, config_file)
+    output_path = sys.argv[2]
+    
+    create_configfile(parse_config, config_file, output_path)

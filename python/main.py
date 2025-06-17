@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     input_file = sys.argv[1]
 
-    ST = mfsolution(__name__,input_file)
+    ST = mfsolution(__name__,input_file,output_path)
 
     if len(sys.argv) > 2:
         print('Running analysis code')
