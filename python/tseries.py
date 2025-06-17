@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
-#from scipy.signal import hilbert
+from scipy.signal import hilbert
+import scipy.signal as sp
 from util.spectrum import Spectrum
 import yaml
 
@@ -13,7 +14,7 @@ from util.h5py_util import *
 
 def load_dataset(conve_mod, gridname, pathname, filename):
     
-    grid,respc,scale,ndx0 = load_para('', conve_mod, gridname)
+    grid,respc,scale,ndx0 = load_para(pathname, conve_mod, gridname)
     
     data_set = {
         'doma' : load_(pathname,'doma',conve_mod + filename),
@@ -24,6 +25,28 @@ def load_dataset(conve_mod, gridname, pathname, filename):
 
 
 def pre_config(config_file,output_path):
+    """
+    Prepares the configuration for the ultrasound propagation simulation.
+    Parameters:
+        config_file (str): Path to the configuration file in YAML format.
+        output_path (str): Directory path where output files will be saved.
+    Returns:
+        tuple: A tuple containing:
+            - SP (Spectrum): An instance of the Spectrum class initialized with simulation parameters.
+            - offset (float): Offset value from the configuration.
+            - dtsr (float): DTSR value from the configuration.
+            - x_size (int): Size of the x array.
+            - central_range (numpy.ndarray): Central frequency range calculated from reference frequency.
+            - data_set (numpy.ndarray): Loaded dataset from the specified model.
+            - grid (numpy.ndarray): Grid data from the loaded dataset.
+            - respc (numpy.ndarray): Response data from the loaded dataset.
+            - scale (float): Scale factor from the loaded dataset.
+            - ndx0 (int): Index value from the loaded dataset.
+            - x_spec_full (numpy.ndarray): Full spectrum x array.
+            - conve_mod (str): Conversion model from the configuration.
+    Note:
+        freq_scale is calculated as the ratio of the specified spectrum size to the number of frequencies divided by the spectrum band.
+    """
    
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -37,31 +60,44 @@ def pre_config(config_file,output_path):
         dtsr = cfg['dtsr']
         offset = cfg['offset']
 
+        spec_band = cfg['spec_band']
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
         conve_mod = cfg['CONVE_MOD']
         
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
     
-    filename = gridname + '_' + str(skr) + '_' + str(sdr) + '.h5'    
+    filename = gridname + '_' + str(int(skr)) + '_' + str(int(sdr)) + '.h5'    
               
-    mu, sigma = 0, 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
+    mu, sigma = 0, 0.055 # .125 # 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
-    sampling_freq = 5*(final_freq/numbr_freq)*ref_freq
+    freq_scale = int(spec_size/(numbr_freq/spec_band))
+    sampling_freq = freq_scale*10*ref_freq
     
-    x = np.arange(0.0,10/ref_freq,1/sampling_freq)[...,np.newaxis]
+    x = np.linspace(1/sampling_freq,freq_scale*numbr_freq/sampling_freq,freq_scale*numbr_freq)[...,np.newaxis]
     x_size = np.size(x,axis=0)
     
-    x_spec_full = np.arange(0.0,spec_size/sampling_freq,1/sampling_freq)[...,np.newaxis]
+    x_spec_full = np.linspace(1/sampling_freq,spec_size/sampling_freq,spec_size)[...,np.newaxis]
 
-    dom = np.linspace(-.5,.5,x_size)
-    gauss = 1/(sigma * np.sqrt(2.0 * np.pi)) * np.exp( - (dom - mu)**2 / (2 * sigma**2) )[...,np.newaxis]
+    echo_size = 4*ref_freq/sampling_freq
 
-    central_range = ref_freq*(1*dom + final_freq/(100*2))
+    x_dom = np.linspace(1/x_size,1/freq_scale,x_size)
+
+    gauss_filter = 1/(sigma * np.sqrt(2.0 * np.pi)) * np.exp( - (x_dom - mu)**2 / (2 * sigma**2) )[...,np.newaxis]    
+    
+    cosine_filter =  ((0.5 - 0.5 * np.cos(2.0 * np.pi * x_dom / echo_size)) * (x_dom<echo_size)*(x_dom>0))[...,np.newaxis]
+
+    filter = cosine_filter
+
+    expr = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)
+    
+    f_dom = np.linspace(1/x_size,1,x_size) - 0.5
+
+    central_range = ref_freq*(1*f_dom + final_freq/(100*2))
 
     data_set,grid,respc,scale,ndx0 = load_dataset(conve_mod, gridname, output_path, filename)
 
-    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,gauss,spec_size)
+    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,expr,spec_size)
 
     return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full, conve_mod
 
@@ -130,9 +166,10 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
         this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
 
 
-    for i in range(0+1*int(1*x_size*4/8-0),1+1*int(1*x_size*4/8-0),1):
+    for i in range(int(1*x_size*4/8-0)-1,int(1*x_size*4/8-0),1):
         central_freq = central_range[i]
         osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
+        #osc,freq,spec = SP.synth_fseries_from_experiment()
         spec0 = spec[0:int(SP.spec_size)]
         
         for j in range(data_set['resp'].shape[-1]):
@@ -142,12 +179,15 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                 resptt = resp_data[...,k].transpose()
                 
                 if k==j:
-                    if (k==0 or k==(data_set['resp'].shape[-2]-1)):
+                      if (k==0):
                         respttm.append(resptt)
 
 
-                new_resp = SP.expand_resp_new(resptt/respttm[0])
-                tseries = SP.synth_tseries_from_spec_full_new(new_resp*spec0)            
+                new_resp = np.conj(SP.expand_resp_new(resptt/respttm[0]))
+                # new_resp = np.conj(SP.expand_resp_new(resptt))
+                tseries = SP.synth_tseries_from_spec_full_new(new_resp*spec0)    
+                # tseries = SP.synth_tseries_from_spec_full_filtered(new_resp*spec0)    
+        
                 vec_tseries = tseries.transpose()
 
 
@@ -179,7 +219,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                     fg.suptitle('time-step ' + str((ll+1)*dtsr-1) + '| time ' + str(x_spec_full[(ll+1)*dtsr-1]) + ' | height-step ' + str(j))
                     fg.canvas.draw()
                     fg.canvas.flush_events()
-    return int(central_freq/central_range[int(x_size*1/2)]*100)
+    return int(central_freq/central_range[int(x_size*1/2)-1]*100)
     
 
 def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
@@ -235,7 +275,8 @@ def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
 
 def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
     
-    vlimmaxN = vlimmax/np.max(vlimmax[0])
+    vlimmaxN = vlimmax/np.max(vlimmax[0]) # Normalize the maximum value of the diagonal signal
+    #vlimmaxN = vlimmax/np.max(vlimmax[-1])
 
     tx_grid,rx_grid = np.meshgrid(probv,probv)
 

@@ -1,8 +1,18 @@
 import numpy as np
+import scipy.signal as sp
 
 class Spectrum:
+
+    fs =   10000000
+    f1 =     150000
+    f2 =    1850000
+    f3 =    2000000 
+
+    taps =sp.remez(170, [0,0,f1,f2,f3,fs/2], [0,1,0], fs=fs)
+
+    w,h = sp.freqz(taps,[1], worN=500, fs=fs)
         
-    def __init__(self,initi,final,parti,numbr,x,gauss,spec_size):
+    def __init__(self,initi,final,numbr,parti,x,gauss,exper,spec_size):
 
         self.initi = initi
         self.final = final
@@ -11,6 +21,7 @@ class Spectrum:
 
         self.x = x
         self.gauss = gauss
+        self.exper = exper
         self.spec_size = int(spec_size/2)
 
 
@@ -121,7 +132,14 @@ class Spectrum:
 
 
     def synth_fseries_from_centr_freq(self,cent_freq):
-        osc = np.exp(1j*2*np.pi*(cent_freq*self.x+3/8))*self.gauss
+        osc = np.exp(1j*2*np.pi*(cent_freq*self.x-1/8+6/80))*self.gauss
+        spec = np.fft.fft(osc,n=self.spec_size*2,axis=0)
+        freq = np.fft.fftfreq(self.spec_size*2)
+
+        return osc,freq,spec
+
+    def synth_fseries_from_experiment(self):
+        osc = self.exper[:,np.newaxis]
         spec = np.fft.fft(osc,n=self.spec_size*2,axis=0)
         freq = np.fft.fftfreq(self.spec_size*2)
 
@@ -150,4 +168,8 @@ class Spectrum:
 
     def synth_tseries_from_spec_full_new(self,spec):
         tseries = np.fft.ifft(spec,n=self.spec_size*2,axis=0)
+        return tseries
+
+    def synth_tseries_from_spec_full_filtered(self,spec):
+        tseries = np.fft.ifft(spec*self.h[:self.spec_size,np.newaxis],n=self.spec_size*2,axis=0)
         return tseries
