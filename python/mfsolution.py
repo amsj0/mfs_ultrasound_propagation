@@ -80,10 +80,11 @@ def mfsolution(name,config_file, output_path):
         print('Spectrum Ratio')
         print(sf_cur)
 
-        CP.compute_lower_side(k_cur)
 
         k_out = k_cur
         d_out = d_cur
+        p_out = [k_out,d_out]
+        CP.compute_lower_side(p_out)
 
         for jj in range(kr_length):
             
@@ -103,7 +104,7 @@ def mfsolution(name,config_file, output_path):
                 print('Density Ratio')
                 print(dr[pp])
                 
-                CP.compute_upper_side(k_cur,k_out,d_r)
+                CP.compute_upper_side(p_cur,p_out)
                 CP.propagate_transfer()
 
                 if name == "__main__":
