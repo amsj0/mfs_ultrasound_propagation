@@ -57,7 +57,7 @@ def fn_analyse(elt,apod,lock,MH,MR,path):
 
 def analyse(name,store,config_file, output_path):
 
-    config_tuple = create_configfile(parse_config,config_file)
+    config_tuple = create_configfile(parse_config,config_file, output_path)
 
     T,S,D,R,Neltoverlambda,nRD,g = config_tuple
 
