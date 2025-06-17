@@ -25,8 +25,16 @@ def heuristic(nRD, g):
     max_k0 = np.amax(k0) # Maximum wavenumber
 
     # SET DIMENSIONS FOR RECTANGULAR GRID
-    lambda0 = 2*np.pi/max_k0
-
+    lambda0 = 1
     d_cur = d0
+    ac_iomega = 2*np.pi*g.sfr
+    rho_r = lambda rd: g.rj[0]*rd
+    spd_r = lambda rc: g.cj[0]*rc
+    delta_diff = lambda rd: (4*g.att/3)/rho_r(rd)
+    c_c = lambda rc,rd: (spd_r(rc)**2-1j*ac_iomega*delta_diff(rd))**0.5
+    rho_var = lambda rc,rd: spd_r(rc)**2/(c_c(rc,rd))**2
+    g.cjR = lambda rc,rd: c_c(rc,rd)
+    g.rjR = lambda rc,rd: (rho_r(rd)*rho_var(rc,rd))
+    g.keq = lambda rc,rd: np.sqrt(-(1j*ac_iomega/g.cjR(rc,rd))**2)
 
     return k0,kr,kr_length,dr,dr_length,sfr,RD,lambda0,d_cur

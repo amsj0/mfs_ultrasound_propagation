@@ -89,20 +89,25 @@ def mfsolution(name,config_file, output_path):
         for jj in range(kr_length):
             
             k_r = kr[jj]
-            k_curi = k_out/k_r
-            k_cur  = k_curi+1j*g.att*g.sfr[ii]**(1+l)*g.sfr[int(g.ffu/2)]**(1-l)
 
             for pp in range(dr_length):
                 
+                d_aux = d_out*dr[pp]
+
                 d_r = dr[pp]
-                d_cur  = d_out/dr[pp]
+                dc_cur = g.rjR(k_r,d_r)[ii]
+                kc_cur = g.keq(k_r,d_r)[ii]
+                d_r = dc_cur/d_out
+
                             
+                p_cur = [kc_cur,dc_cur]
+
                 datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
                 print('Wavenumber Ratio')
                 print(kr[jj]/(1-1j*g.att)/np.abs(1-0*1j*g.att))
                 print('Density Ratio')
-                print(dr[pp])
+                print(d_r)
                 
                 CP.compute_upper_side(p_cur,p_out)
                 CP.propagate_transfer()
