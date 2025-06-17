@@ -65,7 +65,7 @@ def analyse(name,store,config_file, output_path):
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 
-    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.model_scale*100))
+    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100)) 
 
     rshape = (R.c.size-ppt_per_surface+1,T.c.size-ppt_per_surface+1)
     dshape = (D.c.size,T.c.size-ppt_per_surface+1)
@@ -76,6 +76,7 @@ def analyse(name,store,config_file, output_path):
     range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
 
     apod = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
+    # apod = np.ones((ppt_per_surface,))
     
     processes = []
 
@@ -89,7 +90,7 @@ def analyse(name,store,config_file, output_path):
     q = JoinableQueue(maxsize=queue_max_size)
     # Create processes
     processes = []
-    num_proc = min(g.ffu-g.ifu,cpc);
+    num_proc = min(g.ffu-g.ifu,cpc)
     
     for i in range(num_proc):
         p = Process(target=worker, args=(q,apod,lock))
@@ -97,9 +98,7 @@ def analyse(name,store,config_file, output_path):
         processes.append(p)
 
     for jj in range(kr_length):
-               
         for pp in range(dr_length):
-            
             path[2] = '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
 
             dataset = path[1] + path[2]
@@ -109,7 +108,7 @@ def analyse(name,store,config_file, output_path):
 
             for elt in range(g.ifu-1,g.ffu):
                 
-                datafile = path[1] + '_' + str(elt+1) + path[2]
+                datafile = path[0] + path[1] + '_' + str(elt+1) + path[2]
 
                 if '' in store.Solution:
                     with h5py.File(datafile + '.h5', 'r') as f:
