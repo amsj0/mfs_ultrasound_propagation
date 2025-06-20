@@ -10,7 +10,7 @@ from multiprocessing import Process,Lock,JoinableQueue
 from os import cpu_count,remove
 from config import parse_config, create_configfile
 
-DELETE_MFS = True
+DELETE_MFS = False
 
 def worker(q,a,l):
     """The process will continually pull elements from the shared queue 
@@ -73,7 +73,12 @@ def analyse(name,store,config_file, output_path):
     domaset_size = (sfr.size,) + dshape
     respset_size = (sfr.size,) + rshape
 
-    range_ppt = .5+np.arange(-int(ppt_per_surface/2),int(ppt_per_surface/2))
+    # Ensure range_ppt has ppt_per_surface points, centered around 0
+    half = ppt_per_surface // 2
+    if ppt_per_surface % 2 == 0:
+        range_ppt = np.arange(-half, half) + 0.5
+    else:
+        range_ppt = np.arange(-half, half + 1)
 
     apod = 8/(ppt_per_surface*np.pi)*np.sqrt(int(ppt_per_surface/2)**2-range_ppt**2)
     # apod = np.ones((ppt_per_surface,))
@@ -108,15 +113,15 @@ def analyse(name,store,config_file, output_path):
 
             for elt in range(g.ifu-1,g.ffu):
                 
-                datafile = path[0] + path[1] + '_' + str(elt+1) + path[2]
+                datafile = path[1] + '_' + str(elt+1) + path[2]
 
                 if '' in store.Solution:
-                    with h5py.File(datafile + '.h5', 'r') as f:
+                    with h5py.File(path[0] + datafile + '.h5', 'r') as f:
                         MH = np.copy(f['domain'])
                         MR = np.copy(f['receiver'])
 
                     if DELETE_MFS:
-                        remove(datafile + '.h5')
+                        remove(path[0] + datafile + '.h5')
                 else:
                     MH = store.Solution[datafile]['domain']
                     MR = store.Solution[datafile]['receiver']

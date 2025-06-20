@@ -44,6 +44,7 @@ def pre_config(config_file,output_path):
             - ndx0 (int): Index value from the loaded dataset.
             - x_spec_full (numpy.ndarray): Full spectrum x array.
             - conve_mod (str): Conversion model from the configuration.
+            - tranx_num (int): Number of transducers from the configuration.
     Note:
         freq_scale is calculated as the ratio of the specified spectrum size to the number of frequencies divided by the spectrum band.
     """
@@ -60,10 +61,12 @@ def pre_config(config_file,output_path):
         dtsr = cfg['dtsr']
         offset = cfg['offset']
 
+        tranx_num = cfg['tranx_num']
         spec_band = cfg['spec_band']
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
         conve_mod = cfg['CONVE_MOD']
+        input_mod = cfg['INPUT_MOD']
         
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
     
@@ -89,7 +92,10 @@ def pre_config(config_file,output_path):
 
     filter = cosine_filter
 
-    expr = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)
+    if input_mod == 'experiment':
+        expr = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)
+    elif input_mod == 'synthetic':
+        expr = np.sin(2 * np.pi * ref_freq * x_dom) * gauss_filter  
     
     f_dom = np.linspace(1/x_size,1,x_size) - 0.5
 
@@ -99,7 +105,7 @@ def pre_config(config_file,output_path):
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,expr,spec_size)
 
-    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full, conve_mod
+    return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full, conve_mod, tranx_num
 
 def plt_arrange(i):
     
@@ -159,12 +165,19 @@ def set_domain_plot(grid,ndx0, data_set):
 
     return this_series, fg, h0
 
-def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim, rlim, vlimmax):
+def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, lim, vlimmax):
     respttm = []
+
+    vlim,mlim,rlim = lim
 
     if dtsr:
         this_series, fg, h0 = set_domain_plot(grid,ndx0,data_set)
 
+    data_x_size = data_set['resp'].shape[-1]
+    data_y_size = data_set['resp'].shape[-2]
+
+    matrix_x_strafe = (data_x_size-1)/(mlim.shape[0])
+    matrix_y_strafe = (data_y_size-1)/(mlim.shape[1])
 
     for i in range(int(1*x_size*4/8-0)-1,int(1*x_size*4/8-0),1):
         central_freq = central_range[i]
@@ -172,12 +185,18 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
         #osc,freq,spec = SP.synth_fseries_from_experiment()
         spec0 = spec[0:int(SP.spec_size)]
         
-        for j in range(data_set['resp'].shape[-1]):
+
+
+        for j in range(data_x_size):
             resp_data = data_set['resp'][...,j]
+
+            matrix_x_ndx = j % matrix_x_strafe
             
-            for k in range(data_set['resp'].shape[-2]):
+            for k in range(data_y_size):
                 resptt = resp_data[...,k].transpose()
                 
+                matrix_y_ndx = k % matrix_y_strafe
+
                 if k==j:
                       if (k==0):
                         respttm.append(resptt)
@@ -190,6 +209,8 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
         
                 vec_tseries = tseries.transpose()
 
+                if not matrix_x_ndx and not matrix_y_ndx:
+                    mlim[int(-.5+j/matrix_x_strafe),int(-.5+k/matrix_y_strafe),...] = vec_tseries
 
                 if k==j:
                     vlim[j,...] = vec_tseries
@@ -273,10 +294,13 @@ def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
     plt.title('Full Off Diagonal Matrix')
     plt.tight_layout()    
 
-def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
+def save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0]) # Normalize the maximum value of the diagonal signal
     #vlimmaxN = vlimmax/np.max(vlimmax[-1])
+
+    vlim,mlim,rlim = lim
+    probv,probm = prob
 
     tx_grid,rx_grid = np.meshgrid(probv,probv)
 
@@ -288,33 +312,45 @@ def save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset):
     d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
     d_off_table = np.array([t_grid,y_off_table]).transpose()
     d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.real(vlim)]])
+    
+    m_time_table = np.block([[0,0,x_spec_full.transpose()],[probm.reshape(probm.shape[0]*probm.shape[1],probm.shape[2]),np.real(mlim.reshape(mlim.shape[0]*mlim.shape[1],mlim.shape[2]))]])
 
     np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
+    np.savetxt('N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
     np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
     np.savetxt('M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
     np.savetxt('Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
 
-def set_empty_matrix(SP, offset, data_set, respc, scale):
+def set_empty_matrix(SP, offset, data_set, respc, scale, tranx_num=1):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
         
-    vlim = np.empty((data_set['resp'].shape[-1],SP.spec_size*2),dtype='complex')
+    data_m_size = data_set['resp'].shape[-2],data_set['resp'].shape[-1]
+    respv_size = (data_m_size[1]-1)/2
+    
+
+    probv = respc+(np.arange(-respv_size,1+respv_size))[:]*scale
+    probm = respc+(.5+np.arange(-int(tranx_num/2),int(tranx_num/2)))[:]*scale
+    probmx,probmy = np.meshgrid(probm,probm)
+    probm = np.stack((probmx,probmy),axis=-1)
+
+    vlim = np.empty((probv.shape[0],SP.spec_size*2),dtype='complex')
+    mlim = np.empty((probm.shape[0],probm.shape[1],SP.spec_size*2),dtype='complex')
     rlim = np.empty(((data_set['resp'].shape[-1]-np.abs(offset)),SP.spec_size*2),dtype='complex')
     
     vlimmax = np.empty((int(data_set['resp'].shape[-2]),int(data_set['resp'].shape[-1])),dtype='float')
-
-    probv =  respc+(.5+np.arange(-int(data_set['resp'].shape[-1])/2,int(data_set['resp'].shape[-1])/2))[:]*scale
-    return mat_tseries,vlim,rlim,vlimmax,probv
+    
+    return mat_tseries,(vlim,mlim,rlim),vlimmax,(probv,probm)
 
 def tseries(name,config_file, output_path):
 
-    SP, offset, dtsr, x_size, central_range, data_set, grid ,respc ,scale , ndx0, x_spec_full, conve_mod = pre_config(config_file,output_path)
+    SP, offset, dtsr, x_size, central_range, data_set, grid ,respc ,scale , ndx0, x_spec_full, conve_mod, tranx_num = pre_config(config_file,output_path)
 
-    mat_tseries, vlim,rlim, vlimmax, probv = set_empty_matrix(SP, offset, data_set, respc, scale)
+    mat_tseries, lim, vlimmax, prob = set_empty_matrix(SP, offset, data_set, respc, scale, tranx_num)
 
-    freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, vlim,rlim, vlimmax)
+    freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, lim, vlimmax)
 
-    save_table(conve_mod, x_spec_full, freq, vlim, vlimmax, probv, offset)
+    save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset)
 
     #plot_data(x_spec_full, vlim, vlimmax, probv)
 

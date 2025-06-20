@@ -14,6 +14,7 @@ if __name__ == "__main__":
     print('Running solution code')
 
     input_file = sys.argv[1]
+    output_path = ''
 
     ST = mfsolution(__name__,input_file,output_path)
 

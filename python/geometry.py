@@ -111,6 +111,33 @@ def fn_discretize_geometry_plane(RN ,Centre, Orientation ,Nelt , angle, Rotation
 
     return P
 
+
+def fn_discretize_geometry_circular(RN, Centre, Orientation, Nelt, mode, Rotation, Radius):
+
+    P = structtype()
+    pts_number = int(np.floor(RN / 2 * Nelt) * 2)
+    RN = (pts_number - 1) / Nelt
+
+    thet = np.linspace( -RN / (2*Radius), RN / (2*Radius), pts_number) - Orientation
+
+    area = 1 / Nelt * np.ones((pts_number,))
+
+    norm = thet + np.pi
+
+    P.a = area * 2
+    P.x = (Radius * Rotation[1](thet) + Centre[1])
+    P.z = (Radius * Rotation[0](thet) + Centre[0])
+    P.y = P.z * 0
+    P.n = norm
+
+    P.a = np.hstack(P.a).astype(float)
+    P.x = np.hstack(P.x).astype(float)
+    P.z = np.hstack(P.z).astype(float)
+    P.y = np.hstack(P.y).astype(float)
+    P.n = np.hstack(P.n).astype(float)
+
+    return P
+
 def fn_surface_rectangular_stacking(P,gap = 0.5):
     
     # RECTANGULAR SHIFT BASED ON RECTANGULAR PACKING
