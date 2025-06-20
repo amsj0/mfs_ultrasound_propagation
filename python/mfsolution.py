@@ -1,6 +1,8 @@
 import numpy as np
 import sys
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import copy
+from time import sleep
 from util.store import Store
 from compute import Compute
 from config import *
@@ -51,82 +53,90 @@ def reconfigure(config_tuple):
 
     return T,P,S,nRD,g
 
+# Helper to run both lower-side and upper-side in the background
+def _compute_full(P, T, S, p_out, p_cur):
+    cp = Compute(P, T, S)
+    cp.InitCL("GPU")
+    cp.compute_lower_side(p_out)
+    cp.compute_upper_side(p_cur, p_out)
+    return cp
 
-def mfsolution(name,config_file, output_path):
+# Worker to run scatter propagation and saving in background
+# Delays propagate_scatter until inside save thread
+def _scatter_and_save(cp_inst, datafile, outpath, task_name, ST):
+    M = cp_inst.propagate_scatter()
+    if task_name == "__main__":
+        ST.load_dict_to_store(M, datafile)
+    else:
+        save_dict_to_hdf5(M, outpath, datafile)
 
-    print(config_file)
-    print(output_path)
-    T,P,S,nRD,g = reconfigure(create_configfile(parse_config,config_file, output_path))  
-         
-    CP = Compute(P,T,S)
-
-    CP.InitCL("GPU")
+def mfsolution(name, config_file, output_path):
+    print(f"Config: {config_file}")
+    print(f"Output path: {output_path}")
+    T, P, S, nRD, g = reconfigure(create_configfile(parse_config, config_file, output_path))
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
-   
-    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100)) 
+    dataroot = f"{g.convergemod}_{g.nff}_{int(g.iff*g.model_scale*100)}_{int(g.fff*g.model_scale*100)}"
 
-    datafile = ''
+    ST = Store('')
+
+    # Pools: one for compute, one for saving
+    compute_pool = ThreadPoolExecutor(max_workers=1)
+    save_pool = ThreadPoolExecutor(max_workers=1)
     
-    ST = Store(datafile)
+    # Aggregate all compute futures across ii, jj, pp
+    compute_futures = {}
+    try:
+        for ii in range(g.ifu - 1, g.ffu):
+            # Prepare parameters
+            k_cur = k0[ii] * lambda0 / RD
+            p_out = [k_cur, d_cur]
 
-    l = 2
+            for jj in range(kr_length):
+                for pp in range(dr_length):
+                    dc_cur = g.rjR(kr[jj], dr[pp])[ii]
+                    kc_cur = g.keq(kr[jj], dr[pp])[ii]
+                    p_cur = [kc_cur, dc_cur]
+                    datafile = (
+                        f"{dataroot}_{ii+1}_"
+                        f"{int(g.skr[jj])}_{int(g.sdr[pp])}"
+                    )
+                    future = compute_pool.submit(
+                        _compute_full, P, T, S, p_out, p_cur
+                    )
+                    compute_futures[future] = (datafile, name, output_path)
 
-    for ii in range(g.ifu-1,g.ffu):
-        
-        k_cur = k0[ii]*lambda0/(RD)
-        
-        sf_cur = sfr[ii]
-        print('Spectrum Ratio')
-        print(sf_cur)
+        # As each compute future completes, handle propagate and schedule scatter+save
+        for comp_future in as_completed(compute_futures):
+                cp_inst = comp_future.result()
+                datafile, task_name, outpath = compute_futures[comp_future]
 
+                # Sequential propagate_transfer (heavy CPU)
+                cp_inst.propagate_transfer()
 
-        k_out = k_cur
-        d_out = d_cur
-        p_out = [k_out,d_out]
-        CP.compute_lower_side(p_out)
-
-        for jj in range(kr_length):
-            
-            k_r = kr[jj]
-
-            for pp in range(dr_length):
+                # Background scatter + save: propagate_scatter runs here
+                save_future = save_pool.submit(
+                    _scatter_and_save,
+                    cp_inst,
+                    datafile,
+                    outpath,
+                    task_name,
+                    ST,
+                )
                 
-                d_aux = d_out*dr[pp]
+                save_future.add_done_callback(
+                    lambda f, df=datafile: print(f"Datafile {df} saved")
+                )                
+    finally:
+        # Ensure pools shut down
+        compute_pool.shutdown(wait=True)
+        save_pool.shutdown(wait=True)
 
-                d_r = dr[pp]
-                dc_cur = g.rjR(k_r,d_r)[ii]
-                kc_cur = g.keq(k_r,d_r)[ii]
-                d_r = dc_cur/d_out
-
-                            
-                p_cur = [kc_cur,dc_cur]
-
-                datafile = dataroot + '_' + str(ii+1) + '_' + str(int(g.skr[jj])) + '_' + str(int(g.sdr[pp]))
-
-                print('Wavenumber Ratio')
-                print(kr[jj]/(1-1j*g.att)/np.abs(1-0*1j*g.att))
-                print('Density Ratio')
-                print(d_r)
-                
-                CP.compute_upper_side(p_cur,p_out)
-                CP.propagate_transfer()
-
-                if name == "__main__":
-                    ST.load_dict_to_store(CP.M, datafile)
-                elif name == "mfsolution":
-                    save_dict_to_hdf5(CP.M, output_path, datafile)
-                
-                print('Datafile {} created'.format(datafile))
     return ST
-
 
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
-        raise ValueError('Invalid number of arguments. Usage: {} input_file.yaml'.format(sys.argv[0]))
-    
-    input_file = sys.argv[1]
-    output_path = sys.argv[2]    
-
-    mfsolution("mfsolution",input_file, output_path)
+        raise ValueError(f'Invalid number of arguments. Usage: {sys.argv[0]} input_file.yaml')
+    input_file, output_path = sys.argv[1], sys.argv[2]
+    mfsolution("mfsolution", input_file, output_path)

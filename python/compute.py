@@ -44,7 +44,10 @@ class Compute:
         self.M = { # Behaviour Field
             'domain'   : np.zeros((nD,nT), dtype=np.complex128),  # on Domain
             'receiver' : np.zeros((nR,nT), dtype=np.complex128)   # on Receiver
-        }        
+        }
+
+        self.MUT = np.zeros((2*nS,nT), dtype=np.complex128) # Upper Transfer
+        self.MLT = np.zeros((2*nS,nT), dtype=np.complex128) # Lower Transfer        
 
         self.nT = nT
         self.nR = nR
@@ -284,9 +287,11 @@ class Compute:
 
     def propagate_transfer(self):
         
-        MUT = transfer(self.propagate_upper_incref(),self.B['emitter'])
-        MLT = transfer(self.propagate_lower_incref(),self.B['emitter'])
+        self.MUT = transfer(self.propagate_upper_incref(),self.B['emitter'])
+        self.MLT = transfer(self.propagate_lower_incref(),self.B['emitter'])
 
+    def propagate_scatter(self):
+        
         emitter_mask = self.Tranx['emitter'].m[0]
         nmitter_mask = self.Tranx['emitter'].m[1]
 
@@ -297,13 +302,15 @@ class Compute:
             probe_mask = trans_mask[...,np.newaxis]
             nrobe_mask = nrans_mask[...,np.newaxis]
 
-            self.M[probe][probe_mask*emitter_mask] = (Transfer[trans_mask,...] @ MUT[...,emitter_mask]).flatten()
-            self.M[probe][nrobe_mask*nmitter_mask] = -(Transfer[nrans_mask,...] @ MLT[...,nmitter_mask]).flatten()
-            self.M[probe][probe_mask*nmitter_mask] = -(Transfer[trans_mask,...] @ MUT[...,nmitter_mask]).flatten()
-            self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ MLT[...,emitter_mask]).flatten()
+            self.M[probe][probe_mask*emitter_mask] = (Transfer[trans_mask,...] @ self.MUT[...,emitter_mask]).flatten()
+            self.M[probe][nrobe_mask*nmitter_mask] = -(Transfer[nrans_mask,...] @ self.MLT[...,nmitter_mask]).flatten()
+            self.M[probe][probe_mask*nmitter_mask] = -(Transfer[trans_mask,...] @ self.MUT[...,nmitter_mask]).flatten()
+            self.M[probe][nrobe_mask*emitter_mask] = (Transfer[nrans_mask,...] @ self.MLT[...,emitter_mask]).flatten()
             
             self.M[probe] += self.F[probe]
             self.M[probe][(probe_mask|nrobe_mask)*(emitter_mask&nmitter_mask)] /= 2
+
+        return self.M
 
     def null(self):
         return 0
