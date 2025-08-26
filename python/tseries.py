@@ -5,6 +5,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.animation as animation
 from scipy.signal import hilbert
 import scipy.signal as sp
+from multiprocessing import Process, JoinableQueue, cpu_count
 from util.spectrum import Spectrum
 import yaml
 
@@ -107,45 +108,6 @@ def pre_config(config_file,output_path):
 
     return SP, offset, dtsr, x_size, central_range, data_set, grid,respc,scale , ndx0, x_spec_full, conve_mod, tranx_num
 
-def plt_arrange(i):
-    
-    _,_,tseries = SP.synth_fseries_from_centr_freq(central_range[i])
-
-    plt.plot(np.max(abs(tseries),axis=0).transpose())
-    plt.savefig('tseries' + str(i) + '.png')
-    plt.clear(True)
-
-
-def plt_max_tseries(pathname,converge):
-    
-    resp = load_(pathname,'resp',converge)
-
-    new_resp = SP.expand_resp_2(resp)
-    max_tseries = np.empty((x_size,new_resp.shape[2],new_resp.shape[1]),dtype='double')
-     
-    for i in range(x_size):
-        _,_,tseries = SP.synth_tseries(new_resp,central_range[i])
-        max_tseries[i,:,:] = np.max(abs(tseries),axis=0).transpose()
-
-    return max_tseries
-
-
-def plt_mat_tseries_1(pathname,converge):
-    
-    resp = load_(pathname,'resp',converge)
-    
-    mat_tseries = np.empty((x_size,resp.shape[2]),dtype='complex')
-     
-    for i in range(int(x_size)):
-        _,_,spec = SP.synth_fseries_from_centr_freq(central_range[i])
-        for j  in range(int(resp.shape[2])):
-            new_resp = SP.expand_resp_1(resp[:,:,j])
-            _,tseries = SP.synth_tseries_from_spec(new_resp,spec)
-            tsumseries = np.sum(tseries,axis=-1)
-            tstdseries = np.std(tsumseries)
-            mat_tseries[i,j] = tstdseries
-    return mat_tseries
-
 def set_domain_plot(grid,ndx0, data_set):
     
     this_series = np.empty(np.prod(grid.shape))
@@ -243,58 +205,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
     return int(central_freq/central_range[int(x_size*1/2)-1]*100)
     
 
-def plot_data(x_spec_full, offset, vlim, rlim, vlimmax, probv):
-    
-    spec_grid,resp_grid = np.meshgrid(x_spec_full,probv)
-    tx_grid,rx_grid = np.meshgrid(probv,probv)
-
-    x_grid = (tx_grid*np.cos(np.pi/4) - rx_grid*np.sin(np.pi/4))/np.sqrt(2)
-    y_grid = (tx_grid*np.sin(np.pi/4) + rx_grid*np.cos(np.pi/4))/np.sqrt(2)
-
-    fg,axs = plt.subplots(2,1,figsize=(10,7))
- 
-    axs[0].set_title('Diagonal Signal')
-    axs[0].pcolormesh(spec_grid,resp_grid,np.abs(vlim),shading='nearest')
-
-    vlimmaxN = vlimmax/np.max(vlimmax[0])
-
-    o_grid = []
-    v_grid = []
-
-    for off in np.arange(-int(probv.size/2),1+int(probv.size/2),5):
-        o_grid.append(np.diagonal(x_grid,offset=off))
-        v_grid.append(np.diagonal(y_grid,offset=off))
-        v_grid.append(np.diagonal(vlimmaxN,offset=off))
-
-
-    t_grid = np.diagonal(y_grid,offset=offset)
-    n_grid = np.diagonal(x_grid,offset=offset)
-    tpec_grid,tesp_grid = np.meshgrid(x_spec_full,t_grid)
-    
-    axs[1].set_title('{}-Off Diagonal Signal'.format(probv[int(probv.size/2)+offset]))
-    axs[1].pcolormesh(tpec_grid,tesp_grid,np.abs(rlim),shading='nearest')
-
-    plt.figure(figsize=(7,7))
-    plt.pcolormesh(tx_grid,rx_grid,vlimmaxN,shading='nearest',cmap='Greys')
-
-    x_table = probv
-    y_table = np.diagonal(vlimmaxN)
-    y_off_table = np.diagonal(vlimmaxN,offset=offset)
-
-
-    plt.figure('diagonal_matrix')
-    plt.plot(x_table,y_table)
-    plt.plot(t_grid,y_off_table)
-    plt.ylim(0,1)
-    plt.title('Off Diagonal Matrix')
-    plt.tight_layout()
-
-    plt.figure('full_off_diagonal_matrix')
-    plt.plot(*v_grid)
-    plt.title('Full Off Diagonal Matrix')
-    plt.tight_layout()    
-
-def save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset):
+def save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset, output_path=''):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0]) # Normalize the maximum value of the diagonal signal
     #vlimmaxN = vlimmax/np.max(vlimmax[-1])
@@ -315,24 +226,44 @@ def save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset):
     
     m_time_table = np.block([[0,0,x_spec_full.transpose()],[probm.reshape(probm.shape[0]*probm.shape[1],probm.shape[2]),np.real(mlim.reshape(mlim.shape[0]*mlim.shape[1],mlim.shape[2]))]])
 
-    np.savetxt('T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
-    np.savetxt('N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
-    np.savetxt('V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
-    np.savetxt('M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
-    np.savetxt('Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
+    np.savetxt(output_path+'T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
+    np.savetxt(output_path+'N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
+    np.savetxt(output_path+'V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
+    np.savetxt(output_path+'M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
+    np.savetxt(output_path+'Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='')
 
 
 def set_empty_matrix(SP, offset, data_set, respc, scale, tranx_num=1):
     mat_tseries = np.empty((SP.spec_size,data_set['doma'].shape[-2]),dtype='complex')
         
     data_m_size = data_set['resp'].shape[-2],data_set['resp'].shape[-1]
-    respv_size = (data_m_size[1]-1)/2
-    
+    respv_size = (np.array(data_m_size) - 1) / 2
 
-    probv = respc+(np.arange(-respv_size,1+respv_size))[:]*scale
-    probm = respc+(.5+np.arange(-int(tranx_num/2),int(tranx_num/2)))[:]*scale
-    probmx,probmy = np.meshgrid(probm,probm)
-    probm = np.stack((probmx,probmy),axis=-1)
+    probmn = tuple()
+    probvn = tuple()
+    for respv_s in respv_size:
+        respvn = 0 * respc + (np.arange(-respv_s, 1 + respv_s))[:] * scale
+        step_n = int(2 * respv_s / tranx_num)
+        start_n = len(respvn) // 2 - (tranx_num // 2) * step_n + int(step_n / 2)
+        stop_n = start_n + tranx_num * step_n
+        probmn += (respvn[start_n:stop_n:step_n],)
+        probvn += (respvn,)
+
+    
+    # respv_x = 0 * respc + (np.arange(-respv_size[1], 1 + respv_size[1]))[:] * scale
+    # step_x = int(2 * respv_size[1] / tranx_num)
+    # start_x = len(respv_x) // 2 - (tranx_num // 2) * step_x
+    # stop_x = start_x + tranx_num * step_x
+    # probmx = respv_x[start_x:stop_x:step_x]
+
+    # respv_y = 0 * respc + (np.arange(-respv_size[0], 1 + respv_size[0]))[:] * scale
+    # step_y = int(2 * respv_size[0] / tranx_num)
+    # start_y = len(respv_y) // 2 - (tranx_num // 2) * step_y
+    # stop_y = start_y + tranx_num * step_y
+    # probmy = respv_y[start_y:stop_y:step_y]
+    probt = np.meshgrid(*probmn)
+    probm = np.stack(probt,axis=-1)
+    probv = probvn[0]
 
     vlim = np.empty((probv.shape[0],SP.spec_size*2),dtype='complex')
     mlim = np.empty((probm.shape[0],probm.shape[1],SP.spec_size*2),dtype='complex')
@@ -350,12 +281,7 @@ def tseries(name,config_file, output_path):
 
     freq = create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_full, mat_tseries, offset, lim, vlimmax)
 
-    save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset)
-
-    #plot_data(x_spec_full, vlim, vlimmax, probv)
-
-    plt.show()
-
+    save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset, output_path)
 
 if __name__ == '__main__':
    
