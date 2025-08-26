@@ -19,7 +19,7 @@ def worker(q,a,l):
 
     while True:
 
-        current = q.get(timeout=5)  
+        current = q.get(timeout=25)  
         if current is None:
             q.task_done()
             break
