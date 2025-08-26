@@ -49,6 +49,8 @@ class Compute:
         self.MUT = np.zeros((2*nS,nT), dtype=np.complex128) # Upper Transfer
         self.MLT = np.zeros((2*nS,nT), dtype=np.complex128) # Lower Transfer        
 
+        self.MT = np.zeros((2*nS,2*nS), dtype=np.complex128) # Transfer Matrix
+
         self.nT = nT
         self.nR = nR
         self.nS = nS
@@ -261,7 +263,7 @@ class Compute:
         p2 = -self.B['lower'][:,:self.nS]
         v2 = -self.B['lower'][:,self.nS:]
 
-        return inc_ref(p1,v1,p2,v2)
+        self.MT = inc_ref(p1,v1,p2,v2)
 
     def propagate_upper_incref(self):
 
@@ -270,7 +272,7 @@ class Compute:
         p2 = -self.B['upper'][:,:self.nS]
         v2 = -self.B['upper'][:,self.nS:]
 
-        return inc_ref(p1,v1,p2,v2)
+        self.MT = inc_ref(p1,v1,p2,v2)
 
     def propagate_incref(self,side):
 
@@ -279,16 +281,14 @@ class Compute:
         p2 = -self.B['upper'][:,:self.nS]
         v2 = -self.B['upper'][:,self.nS:]
 
-        jls_extract_var = inc_ref(p1,v1,p2,v2)
+        self.MT = inc_ref(p1,v1,p2,v2)
         if ~side:
-            jls_extract_var = np.identity(2*self.nS)- jls_extract_var
-
-        return jls_extract_var
+            self.MT = np.identity(2*self.nS) - self.MT
 
     def propagate_transfer(self):
         
-        self.MUT = transfer(self.propagate_upper_incref(),self.B['emitter'])
-        self.MLT = transfer(self.propagate_lower_incref(),self.B['emitter'])
+        self.MUT = transfer(self.MT,self.B['emitter'])
+        self.MLT = transfer(self.MT,self.B['emitter'])
 
     def propagate_scatter(self):
         

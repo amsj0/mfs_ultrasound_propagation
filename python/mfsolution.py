@@ -107,6 +107,7 @@ def mfsolution(name, config_file, output_path):
                     compute_futures[future] = (datafile, name, output_path)
 
         # As each compute future completes, handle propagate and schedule scatter+save
+        print("Waiting for computations to complete...")
         for comp_future in as_completed(compute_futures):
                 cp_inst = comp_future.result()
                 datafile, task_name, outpath = compute_futures[comp_future]
