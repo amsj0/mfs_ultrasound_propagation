@@ -32,13 +32,13 @@ def analyse_concurrent(
     config_tuple = create_configfile(parse_config, input_file, output_path)
 
     if '' in store.Solution:
-        T, M, S, D, R, Neltoverlambda, nRD, g = config_tuple
+        T, S, D, R, Neltoverlambda, nRD, g = config_tuple
         dataroot = f"{g.convergemod}_{g.nff}_{int(g.iff*g.model_scale*100)}_{int(g.fff*g.model_scale*100)}"
     else:
         config = store.Configuration
         dataroot = list(config.keys())[0]
         g = config[dataroot]
-        T, M, S, D, R, Neltoverlambda, nRD, _ = config_tuple
+        T, S, D, R, Neltoverlambda, nRD, _ = config_tuple
 
     ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
