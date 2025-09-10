@@ -237,10 +237,10 @@ def create_configfile(fn,filename, output_path):
 
 if __name__ == "__main__":
     
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         raise ValueError('Invalid number of arguments. Usage: {} config_file.yaml'.format(sys.argv[0]))
 
-    config_file = sys.argv[1]
+    input_file = sys.argv[1]
     output_path = sys.argv[2]
     
-    create_configfile(parse_config, config_file, output_path)
+    create_configfile(parse_config, input_file, output_path)

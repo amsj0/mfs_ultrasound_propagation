@@ -6,31 +6,31 @@ from util.heuristic import heuristic
 from util.h5py_util import *
 from util.store import Store
 #from threading import Thread
-from multiprocessing import Process,Lock,JoinableQueue
+from multiprocessing import Process,Lock,JoinableQueue, Queue
 from os import cpu_count,remove
 from config import parse_config, create_configfile
 
 DELETE_MFS = False
 
-def worker(q,a,l):
+def worker(q,r,a,l):
     """The process will continually pull elements from the shared queue 
     to process until reaching a None sentinel.
     """
 
     while True:
-
+        
         current = q.get(timeout=25)  
         if current is None:
             q.task_done()
             break
-        elt,MH,MR,path = current
+        elt,MH,MR,path,task_name,dataset = current
         print("Starting to process elt: {}".format(elt))
-        fn_analyse(elt,a,l,MH,MR,path)
-  
+        result = fn_analyse(elt,a,l,MH,MR,path,task_name)
+        r.put((elt,result,dataset))
         print("Finished processing elt: {}".format(elt))
         q.task_done()
 
-def fn_analyse(elt,apod,lock,MH,MR,path):
+def fn_analyse(elt,apod,lock,MH,MR,path,task_name):
     
     output_path,dataroot,heurisset = path
     
@@ -40,32 +40,40 @@ def fn_analyse(elt,apod,lock,MH,MR,path):
     apod2 = apod[:,np.newaxis] @ apod[np.newaxis,:]
 
     domain = convolve(MH,apod[np.newaxis,:],mode='valid')
-    response = convolve2d(MR,apod2,mode='valid')        
+    respon = convolve2d(MR,apod2,mode='valid')        
     print('DataFile {} read'.format(datafile))
 
-    
-    lock.acquire()
-    # Do not use a proxy object from more than one thread unless you protect it with a lock.
-    try:
-        append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
-        append_keyvalue_to_hdf5('resp', response, elt, output_path + 'resp_', dataset)
-    finally:
-        lock.release()
+    if task_name == "analyse" or task_name == "mfsolution_analyse":
+        lock.acquire()
+        # Do not use a proxy object from more than one thread unless you protect it with a lock.
+        try:
+            append_keyvalue_to_hdf5('doma', domain, elt, output_path + 'doma_', dataset)
+            append_keyvalue_to_hdf5('resp', respon, elt, output_path + 'resp_', dataset)
+        finally:
+            lock.release()       
 
-    print('DataFile {} appended'.format(output_path + '_' + dataset))
+    return domain,respon
 
 
-def analyse(name,store,config_file, output_path):
+def analyse(
+        store: Store, input_file: str, output_path: str, task_name: str) -> Store:
 
-    config_tuple = create_configfile(parse_config,config_file, output_path)
+    config_tuple = create_configfile(parse_config,input_file, output_path)
 
-    T,S,D,R,Neltoverlambda,nRD,g = config_tuple
+    if '' in store.Solution:
+        T,M,S,D,R,Neltoverlambda,nRD,g = config_tuple
+        dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100)) 
+    else:
+        config  = store.Configuration
+        dataroot = list(config.keys())[0]
+        g = config[dataroot]
+        T,M,S,D,R,Neltoverlambda,nRD,_ = config_tuple
+        
 
     ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
 
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
 
-    dataroot = g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100)) 
 
     rshape = (R.c.size-ppt_per_surface+1,T.c.size-ppt_per_surface+1)
     dshape = (D.c.size,T.c.size-ppt_per_surface+1)
@@ -92,13 +100,14 @@ def analyse(name,store,config_file, output_path):
     path = [output_path,dataroot,'_']
 
     queue_max_size = 20
-    q = JoinableQueue(maxsize=queue_max_size)
+    task_q = JoinableQueue()
+    resp_q = JoinableQueue()
     # Create processes
     processes = []
     num_proc = min(g.ffu-g.ifu,cpc)
     
     for i in range(num_proc):
-        p = Process(target=worker, args=(q,apod,lock))
+        p = Process(target=worker, args=(task_q,resp_q,apod,lock))
         p.start()
         processes.append(p)
 
@@ -108,8 +117,12 @@ def analyse(name,store,config_file, output_path):
 
             dataset = path[1] + path[2]
 
-            create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
-            create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)
+            if task_name == "analyse" or task_name == "mfsolution_analyse":
+                create_keysized_to_hdf5('doma', domaset_size, output_path + 'doma_', dataset)
+                create_keysized_to_hdf5('resp', respset_size, output_path + 'resp_', dataset)
+            else:
+                store.init_store_behavior('doma_' + dataset,domaset_size)
+                store.init_store_behavior('resp_' + dataset,respset_size)
 
             for elt in range(g.ifu-1,g.ffu):
                 
@@ -126,14 +139,26 @@ def analyse(name,store,config_file, output_path):
                     MH = store.Solution[datafile]['domain']
                     MR = store.Solution[datafile]['receiver']
 
-                q.put((elt,MH,MR,path), block=True)
+                task_q.put((elt,MH,MR,path,task_name,dataset), block=True)
 
     # Add sentinels to shut down processes.
     print('Adding sentinels...')
     for _ in range(num_proc):
-        q.put(None)
+        task_q.put(None)
 
-    q.join() # Block until all elements have been processed.
+    for _ in range(kr_length*kr_length*(g.ffu-g.ifu+1)):
+        elt,result,dataset = resp_q.get()
+        
+        if '' not in store.Behavior:
+            domain,respon = result
+            result = {'doma_'+ dataset: domain, 'resp_'+ dataset: respon}
+            store.load_dict_to_store_behaviour(result , elt)
+        resp_q.task_done()
+
+    resp_q.join()  # Block until all tasks are done.
+    task_q.join() # Block until all elements have been processed.
+
+    return store
 
 if __name__ == "__main__":
     
@@ -143,5 +168,5 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_path = sys.argv[2]
 
-    store = Store('')
-    analyse("analyse",store,input_file, output_path)
+    store = Store('','')
+    analyse(store,input_file, output_path,"analyse")

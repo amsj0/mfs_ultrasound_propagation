@@ -16,16 +16,26 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_path = ''
 
-    ST = mfsolution(__name__,input_file,output_path)
+    ST = mfsolution(input_file,output_path,__name__)
 
     if len(sys.argv) > 2:
         print('Running analysis code')
 
         output_path = sys.argv[2]
-        analyse(__name__,ST,input_file,output_path)
+        ST = analyse(
+            store=ST,
+            input_file=input_file,
+            output_path=output_path,
+            task_name=__name__
+        )
 
     if len(sys.argv) == 4:
         print('Running tseries code')
 
         config_file = sys.argv[3]
-        tseries(__name__,config_file, output_path)
+        tseries(
+            store=ST,
+            config_file=config_file,
+            output_path=output_path,
+            task_name=__name__
+        )

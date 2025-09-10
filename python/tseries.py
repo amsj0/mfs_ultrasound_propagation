@@ -7,25 +7,35 @@ from scipy.signal import hilbert
 import scipy.signal as sp
 from multiprocessing import Process, JoinableQueue, cpu_count
 from util.spectrum import Spectrum
+from util.store import Store
+from util.entry import Entry
+from util.h5py_util import *
 import yaml
 
 import sys
 
 from util.h5py_util import *
 
-def load_dataset(conve_mod, gridname, pathname, filename):
+def load_dataset(task_name,store ,conve_mod, gridname, pathname, filename):
     
     grid,respc,scale,ndx0 = load_para(pathname, conve_mod, gridname)
     
-    data_set = {
-        'doma' : load_(pathname,'doma',conve_mod + filename),
-        'resp' : load_(pathname,'resp',conve_mod + filename)
-    }
+    dataset = conve_mod + filename
+    if task_name == "tseries":
+        data_set = {
+            'doma' : load_(pathname,'doma',dataset + '.h5'),
+            'resp' : load_(pathname,'resp',dataset + '.h5')
+        }
+    else:
+        data_set = {
+            'doma' : store.Behavior['doma_' + dataset],
+            'resp' : store.Behavior['resp_' + dataset]
+        }
 
     return data_set,grid,respc,scale,ndx0
 
 
-def pre_config(config_file,output_path):
+def pre_config(task_name, store, config_file,output_path):
     """
     Prepares the configuration for the ultrasound propagation simulation.
     Parameters:
@@ -71,7 +81,7 @@ def pre_config(config_file,output_path):
         
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
     
-    filename = gridname + '_' + str(int(skr)) + '_' + str(int(sdr)) + '.h5'    
+    filename = gridname + '_' + str(int(skr)) + '_' + str(int(sdr))    
               
     mu, sigma = 0, 0.055 # .125 # 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
@@ -102,7 +112,7 @@ def pre_config(config_file,output_path):
 
     central_range = ref_freq*(1*f_dom + final_freq/(100*2))
 
-    data_set,grid,respc,scale,ndx0 = load_dataset(conve_mod, gridname, output_path, filename)
+    data_set,grid,respc,scale,ndx0 = load_dataset(task_name, store, conve_mod, gridname, output_path, filename)
 
     SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,expr,spec_size)
 
@@ -148,7 +158,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
         spec0 = spec[0:int(SP.spec_size)]
         
 
-
+        print('Central frequency: ' + str(central_freq) + ' MHz' )
         for j in range(data_x_size):
             resp_data = data_set['resp'][...,j]
 
@@ -164,8 +174,8 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                         respttm.append(resptt)
 
 
-                new_resp = np.conj(SP.expand_resp_new(resptt/respttm[0]))
-                # new_resp = np.conj(SP.expand_resp_new(resptt))
+                # new_resp = np.conj(SP.expand_resp_new(resptt/respttm[0]))
+                new_resp = np.conj(SP.expand_resp_new(resptt))
                 tseries = SP.synth_tseries_from_spec_full_new(new_resp*spec0)    
                 # tseries = SP.synth_tseries_from_spec_full_filtered(new_resp*spec0)    
         
@@ -180,7 +190,7 @@ def create_matrix(SP, dtsr, x_size, central_range, grid, data_set, ndx0, x_spec_
                     rlim[j - int((np.abs(offset) - offset)/2),...] = vec_tseries                    
 
                 vlimmax[k,j] = np.max(np.abs(vec_tseries),axis=-1)
-
+                
 
 
             if dtsr:
@@ -226,6 +236,20 @@ def save_table(conve_mod, x_spec_full, freq, lim, vlimmax, prob, offset, output_
     
     m_time_table = np.block([[0,0,x_spec_full.transpose()],[probm.reshape(probm.shape[0]*probm.shape[1],probm.shape[2]),np.real(mlim.reshape(mlim.shape[0]*mlim.shape[1],mlim.shape[2]))]])
 
+
+    data = {
+        "T": Entry(d_time_table, ("height", "a")),
+        "V": Entry(d_table, ("height", "amax")),
+        "N": Entry(m_time_table, ("height","height", "a")),
+        "M": Entry(vlimmaxN, ("height", "amax")),
+        "Voff": Entry(d_off_table, ("height", "amax"))
+    }
+    
+    save_data_to_hdf5(
+        data,
+        output_path,
+        {'conve_mod': conve_mod,'freq': freq}
+        )
     np.savetxt(output_path+'T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
     np.savetxt(output_path+'N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
     np.savetxt(output_path+'V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
@@ -273,9 +297,9 @@ def set_empty_matrix(SP, offset, data_set, respc, scale, tranx_num=1):
     
     return mat_tseries,(vlim,mlim,rlim),vlimmax,(probv,probm)
 
-def tseries(name,config_file, output_path):
+def tseries(store,config_file, output_path,task_name):
 
-    SP, offset, dtsr, x_size, central_range, data_set, grid ,respc ,scale , ndx0, x_spec_full, conve_mod, tranx_num = pre_config(config_file,output_path)
+    SP, offset, dtsr, x_size, central_range, data_set, grid ,respc ,scale , ndx0, x_spec_full, conve_mod, tranx_num = pre_config(task_name, store, config_file,output_path)
 
     mat_tseries, lim, vlimmax, prob = set_empty_matrix(SP, offset, data_set, respc, scale, tranx_num)
 
@@ -291,4 +315,6 @@ if __name__ == '__main__':
     output_path = sys.argv[1]
     config_file = sys.argv[2]
 
-    tseries("tseries",config_file, output_path)
+
+    store = Store('','')
+    tseries(store,config_file, output_path,"tseries")

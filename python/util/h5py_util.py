@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import h5py
 
@@ -8,8 +9,6 @@ def load_para(pathname,modifier,gridname):
     gridx = f['D']['X']
 
     gridy = f['D']['Z']
-
-    ndx0 = f['D']['ndx0']
 
     shape = f['D']['s']
 
@@ -33,7 +32,7 @@ def load_para(pathname,modifier,gridname):
     
     grid =  grid*lambd[()]/radis[()]
 
-    return grid,respc,scale,ndx0
+    return respc,scale
 
 
 def load_(pathname,para,filename):
@@ -53,6 +52,52 @@ def save_dict_to_hdf5(M, path, datafile):
             except Exception:
                 f[item] = dict
     
+
+def save_data_to_hdf5(data, path, attrs):
+
+    # Assume: d_time_table, m_time_table, d_table, vlimmaxN, d_off_table already exist
+    # and conve_mod, freq, output_path are defined.
+
+    conve_mod = attrs['conve_mod']
+    freq = attrs['freq']
+    kr = 10*attrs.get('kr', None)
+    dr = 10*attrs.get('dr', None)
+    
+    
+    out_dir = Path(path)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    h5_path = out_dir / f"bundle_{conve_mod}_{freq}_{kr}_{dr}.h5"
+
+    with h5py.File(h5_path, "w") as h5:
+        # File-level metadata (optional but handy)
+        h5.attrs["conve_mod"] = str(conve_mod)
+        h5.attrs["freq"] = str(freq)
+        h5.attrs["kr"] = str(kr)
+        h5.attrs["dr"] = str(dr)
+
+        def write_dataset(name, arr, columns=None):
+            arr = np.asarray(arr)
+            dset = h5.create_dataset(
+                name,
+                data=arr,
+                compression="gzip",        # compact
+                compression_opts=4,
+                shuffle=True,              # better compression
+                fletcher32=True            # integrity check
+            )
+            if columns is not None:
+                # store column names like your CSV headers
+                dset.attrs["columns"] = np.array(columns, dtype="S")
+
+        for item, entry in data.items():
+            arr    = entry.arr
+            header = entry.header
+            write_dataset(item, arr, columns=header)
+
+        # Example usage:
+
+    print(f"Saved: {h5_path}")
+
 
 def create_keysized_to_hdf5(key, size, path, dataset):
     with h5py.File(path + dataset + '.h5', 'w') as f:
