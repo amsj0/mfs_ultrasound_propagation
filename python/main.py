@@ -2,7 +2,7 @@ import sys
 
 from mfsolution import *
 from analyse_concurrent import *
-from tseries_parallel import *
+from run_tseries_parallel import *
 
 if __name__ == "__main__":
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         print('Running tseries code')
 
         config_file = sys.argv[3]
-        tseries_parallel(
+        run_tseries_parallel(
             store=ST,
             config_file=config_file,
             output_path=output_path,
