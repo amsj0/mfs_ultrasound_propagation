@@ -12,6 +12,14 @@ MCHARGE = 0
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 os.environ['PYOPENCL_self.ctx'] = '0'
 
+def _has_fp64(dev: cl.Device) -> bool:
+    try:
+        if dev.get_info(cl.device_info.DOUBLE_FP_CONFIG) != 0:
+            return True
+    except Exception:
+        pass
+    return "cl_khr_fp64" in dev.extensions
+
 class Compute:
         
     def __init__(self,P,T,S):
@@ -56,18 +64,67 @@ class Compute:
         self.nS = nS
         self.nD = nD
 
-    def InitCL(self, DEVICE="CPU"):
-       
-        platforms = cl.get_platforms()
+    def InitCL(self, DEVICE="CPU", prefer_fp64=False, enable_profiling=True):
+        """
+        DEVICE:
+          - "CPU", "GPU", "ACCELERATOR", "ALL" (device type)
+          - int (index across all devices)
+          - substring (match in device or platform name, e.g. "intel", "nvidia", "rx 7900")
+        """
+        dev_type_map = {
+            "CPU": cl.device_type.CPU,
+            "GPU": cl.device_type.GPU,
+            "ACCELERATOR": cl.device_type.ACCELERATOR,
+            "ALL": cl.device_type.ALL,
+        }
 
-        self.ctx = cl.Context(
-            dev_type=cl.device_type.ALL,
-            properties=[(cl.context_properties.PLATFORM, platforms[0])])
-        self.queue = cl.CommandQueue(self.ctx)
-        self.mf    = cl.mem_flags
+        plats = cl.get_platforms()
+        all_devs = []
+        for p in plats:
+            for d in p.get_devices():
+                all_devs.append((p, d))
+
+        # Build candidate list based on DEVICE
+        candidates = []
+        if isinstance(DEVICE, int):
+            if not (0 <= DEVICE < len(all_devs)):
+                raise IndexError(f"Device index {DEVICE} out of range (0..{len(all_devs)-1})")
+            candidates = [all_devs[DEVICE]]
+        elif isinstance(DEVICE, str):
+            key = DEVICE.upper()
+            if key in dev_type_map:
+                for p in plats:
+                    for d in p.get_devices(dev_type_map[key]):
+                        candidates.append((p, d))
+            else:
+                needle = DEVICE.lower()
+                for p, d in all_devs:
+                    if needle in d.name.lower() or needle in p.name.lower():
+                        candidates.append((p, d))
+        else:
+            raise TypeError("DEVICE must be str or int")
+
+        if not candidates:
+            raise RuntimeError(f"No devices matched DEVICE={DEVICE!r}")
+
+        # Optionally prefer FP64-capable candidates
+        if prefer_fp64:
+            fp64_cands = [(p, d) for (p, d) in candidates if _has_fp64(d)]
+            if fp64_cands:
+                candidates = fp64_cands  # only keep FP64 devices
+
+        # Pick the first candidate
+        platform, dev = candidates[0]
+
+        # Build context and queue
+        props = [(cl.context_properties.PLATFORM, platform)]
+        self.ctx = cl.Context(devices=[dev], properties=props)
+        qprops = cl.command_queue_properties.PROFILING_ENABLE if enable_profiling else 0
+        self.queue = cl.CommandQueue(self.ctx, dev, properties=qprops)
+        self.mf = cl.mem_flags
 
         with open('src/pyopencl-hankel-complex.cl', 'r') as code:
-            self.pgr = cl.Program(self.ctx,code.read()).build("-Isrc/ -cl-strict-aliasing")
+            self.pgr = cl.Program(self.ctx,code.read()).build("-Isrc/")
 
     def besselh(self,host,m):
 

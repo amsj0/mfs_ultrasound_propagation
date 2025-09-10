@@ -117,7 +117,7 @@ def map_geometry_to_compute_inputs(
 
 def _compute_full(P_map, T_map, S_map, p_out, p_cur) -> Compute:
     cp = Compute(P_map, T_map, S_map)
-    cp.InitCL("GPU")
+    cp.InitCL("CPU", prefer_fp64=True)
     cp.compute_lower_side(p_out)
     cp.compute_upper_side(p_cur, p_out)
     return cp
