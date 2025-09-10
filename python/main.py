@@ -1,8 +1,8 @@
 import sys
 
 from mfsolution import *
-from analyse import *
-from tseries import *
+from analyse_concurrent import *
+from tseries_parallel import *
 
 if __name__ == "__main__":
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         print('Running analysis code')
 
         output_path = sys.argv[2]
-        ST = analyse(
+        ST = analyse_concurrent(
             store=ST,
             input_file=input_file,
             output_path=output_path,
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         print('Running tseries code')
 
         config_file = sys.argv[3]
-        tseries(
+        tseries_parallel(
             store=ST,
             config_file=config_file,
             output_path=output_path,
