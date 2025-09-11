@@ -2,6 +2,7 @@ import numpy as np
 from geometry import *
 from util.h5py_util import *
 import yaml,sys
+import copy
 
 WATERSPEED = 1481.44134805
 WATERDENST = 999.6150851557516
@@ -39,6 +40,7 @@ def parse_config(filename = 'config.yaml'):
         g.model_scale = cfg['MODEL_SCL']
         g.att = cfg['ATTEN_RAT']
         g.tra = cfg['TRANS_RAT']
+        g.rco = cfg['MIRRO_RCO']
               
         g.ifu = int(cfg['FREQU_INI'])
         g.ffu = int(cfg['FREQU_FIN'])
@@ -59,6 +61,8 @@ def parse_config(filename = 'config.yaml'):
         g.piston__catch = g.model_scale * cfg['PISTO_VCR']
         g.piston_distan = g.model_scale * cfg['PISTO_DST']
         g.interf_centre = g.model_scale * cfg['INTER_CEN']
+        g.mirror_centre = g.model_scale * cfg['MIRRO_CEN']
+        g.mirror_rcoeff = cfg['MIRRO_RCO']
         g.piston_centre = g.model_scale * cfg['PISTO_CEN']
         g.tank_rad = g.model_scale * cfg['TANK_RAD']
         g.scale = 4
@@ -109,12 +113,14 @@ def create_configfile(fn,filename, output_path):
    
     # COORDINATE CENTRE INTERFACE AND PISTON
     height_interf_centre = g.interf_centre
+    height_mirror_centre = g.mirror_centre
     height_piston_centre = g.piston_centre
     
     width_interf_centre = g.piston_distan / 2
     width_piston_centre = g.piston_distan
     
     interf_centre = np.array((width_interf_centre,height_interf_centre))
+    mirror_centre = np.array((width_interf_centre,height_mirror_centre))
     piston_centre = np.array((width_piston_centre,height_piston_centre))
     
     interf_angle = np.array(g.interf_angle)
@@ -126,11 +132,11 @@ def create_configfile(fn,filename, output_path):
     if g.tank_rad:    
         interf_centre[0] = interf_centre[0] * 2
         S = fn_discretize_geometry_plane(4 * g.tank_rad, interf_centre , - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
-        T = fn_discretize_geometry_circular(g.piston__pitch,[piston_centre[1], piston_centre[0]], np.pi ,Neltoverlambda / (100), 0,  fn_rotation(), g.tank_rad)
+        T = fn_discretize_geometry_circular(g.piston__pitch, [piston_centre[1], piston_centre[0]], np.pi ,Neltoverlambda / (100), 0,  fn_rotation(), g.tank_rad)
         R = fn_discretize_geometry_circular(g.piston__catch, [piston_centre[1], piston_centre[0]], 0,Neltoverlambda / (100), 0,  fn_rotation(), g.tank_rad)
     else:
         S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
-        T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
+        T = fn_discretize_geometry_plane(g.piston__pitch, mirror_centre,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
         R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 )
                
     S.c = S.x + 1j * S.z
@@ -140,7 +146,8 @@ def create_configfile(fn,filename, output_path):
     ##
 
     fn_surface_rectangular_stacking(S)
-    ##
+
+
     # SCALE SURROUNDING SURFACE WITH SCALING FACTOR
     ##    
     
@@ -152,25 +159,55 @@ def create_configfile(fn,filename, output_path):
     S.ci = S.ci * RD
     S.co = S.co * RD
 
+    ##
+    # REMOVE TRANSMITER SURFACE ABOVE MIRROR
+    ##
+
+    _,ndxM0 = fn_enclosure_rectan([T.x,T.z],[ 1, 1],mirror_centre,0)
+    _,ndxM1 = fn_enclosure_rectan([T.x,T.z],[ 1, -1],mirror_centre,0)
+   
     ##    
     # SLICE TRANSMITER SURFACE WITH SURROUNDING SURFACE
     ##
     
     _,ndx0 = fn_enclosure_rectan([T.x,T.z],[ 1, 1],interf_centre,0)
-    _,ndx1 = fn_enclosure_rectan([T.x,T.z],[ 1,-1],interf_centre,0)
+    _,ndx1 = fn_enclosure_rectan([T.x,T.z],[ 1,-1],interf_centre,0)    
+    ##
+    # MIRROR APPLIED BASED ON RECTANGULAR SURFACE
+    ##
 
-    T.ndx  = [ndx0,ndx1]
-
+    #T.ndx  = [np.logical_and(ndx0,ndxM0),np.logical_and(ndx1,ndxM0)]
+    T.ndx  = [ndx0,ndx1,ndxM0,ndxM1]
+    M = copy.deepcopy(T)
+    # M.ndx[0] = np.logical_and(ndxM0,ndxM1)
+    fn_surface_rectangular_mirror(M,mirror_centre[1])
+    ##
     ##
     # SCALE TRANSMITTER SURFACE WITH SCALING FACTOR
     ##    
-        
-    T.a = T.a * RD * (T.ndx[0] + T.ndx[1]*np.sqrt(g.tra))
+    T.a = T.a * RD 
     T.x = T.x * RD
     T.z = T.z * RD
     T.y = T.y * RD
     T.c = T.x + 1j * T.z  
+
+    M.a = M.a * RD
+    M.x = M.x * RD
+    M.z = M.z * RD
+    M.y = M.y * RD
+    M.c = M.x + 1j * M.z
     
+    T.a = T.a * (T.ndx[0] + T.ndx[1]*np.sqrt(g.tra))
+    M.a = M.a * g.mirror_rcoeff * (M.ndx[0] + M.ndx[1]*np.sqrt(g.tra))
+
+
+    ##
+    # REMOVE RECEIVER SURFACE ABOVE MIRROR
+    ##
+
+    _,ndxM0 = fn_enclosure_rectan([R.x,R.z],[ 1, 1],mirror_centre,0)
+    _,ndxM1 = fn_enclosure_rectan([R.x,R.z],[ 1, -1],mirror_centre,0)
+       
     ##
     # SLICE RECEPTOR SURFACE WITH SURROUNDING SURFACE
     ##
@@ -178,8 +215,8 @@ def create_configfile(fn,filename, output_path):
     _,ndx0 = fn_enclosure_rectan([R.x, R.z],[ 1, 1],interf_centre,0)
     _,ndx1 = fn_enclosure_rectan([R.x, R.z],[ 1,-1],interf_centre,0)
 
-    R.ndx  = [ndx0,ndx1]
-    
+    #R.ndx  = [np.logical_and(ndx0,ndxM0),np.logical_and(ndx1,ndxM0)]
+    R.ndx  = [ndx0,ndx1,ndxM0,ndxM1]
     ##
     # SCALE RECEPTOR SURFACE WITH SCALING FACTOR
     ##
@@ -196,6 +233,7 @@ def create_configfile(fn,filename, output_path):
     
     D = fn_discretize_geometry_domain([g.grid_x,g.grid_y],[g.cent_x,g.cent_y],g.grid_ratio)
 
+
     ##
     # REMOVE DOMAIN CLOSE TO SURROUNDING SURFACE
     ##
@@ -208,13 +246,20 @@ def create_configfile(fn,filename, output_path):
     D.ndx0 = np.logical_and(ndx0,ndx1)
 
     ##
+    # REMOVE RECEIVER SURFACE ABOVE MIRROR
+    ##
+
+    _,ndxM0 = fn_enclosure_rectan([D.x,D.z],[ 1, 1],mirror_centre,0)
+    _,ndxM1 = fn_enclosure_rectan([D.x,D.z],[ 1, -1],mirror_centre,0)
+       
+    ##
     # SLICE DOMAIN WITH SURROUNDING SURFACE
     ##
     
     _,ndx0 = fn_enclosure_rectan([D.x,D.z],[ 1, 1],interf_centre,0)
     _,ndx1 = fn_enclosure_rectan([D.x,D.z],[ 1, -1],interf_centre,0)
     
-    D.ndx = [ndx0,ndx1]
+    D.ndx = [ndx0,ndx1,ndxM0,ndxM1]
     
     ##
     # SCALE DOMAIN SURFACE WITH SCALING FACTOR
@@ -226,14 +271,14 @@ def create_configfile(fn,filename, output_path):
     D.y = D.z * 0
     D.c = D.x + 1j * D.z
     
-    keys = ['T','S','D','R','Neltoverlambda','nRD','g']
-    values = [T,S,D,R,Neltoverlambda,nRD,g]
+    keys = ['T','M','S','D','R','Neltoverlambda','nRD','g']
+    values = [T,M,S,D,R,Neltoverlambda,nRD,g]
     dict = {key: value for key, value in zip(keys, values)}
 
     configfile = 'P' + g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*100)) + '_' + str(int(g.fff*g.model_scale*100))
     save_dict_to_hdf5(dict, output_path, configfile)
 
-    return T,S,D,R,Neltoverlambda,nRD,g
+    return T,M,S,D,R,Neltoverlambda,nRD,g
 
 if __name__ == "__main__":
     

@@ -155,6 +155,11 @@ def fn_surface_rectangular_stacking(P,gap = 0.5):
     P.co = P.c + co
     P.ci = P.c - ci
 
+def fn_surface_rectangular_mirror(P, mirror = 0):
+   
+    P.z = (2*mirror - P.z)
+    P.n = 2 * np.pi - P.n
+
 def f_surface_circular_stacking(P,Np,lambda0,gap = 0.0015):
 
     f0 = 1.0

@@ -102,6 +102,11 @@ def map_geometry_to_compute_inputs(
     T_map['emitter'].a = getattr(T_src, 'a')
     T_map['emitter'].m = getattr(T_src, 'ndx')
 
+    T_map['mirror'].c = getattr(M_src, 'c')
+    T_map['mirror'].n = getattr(M_src, 'n')
+    T_map['mirror'].a = getattr(M_src, 'a')
+    T_map['mirror'].m = getattr(M_src, 'ndx')        
+
     # Problem/domain (D) and receiver (R)
     P_map = {'domain': structtype(), 'receiver': structtype()}
     P_map['domain'].c = getattr(D_src, 'c')
@@ -156,10 +161,10 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
     print(f"Output path: {output_path}")
 
     # 1) Load parsed parameters and discretized geometry
-    T_src, S_src, D_src, R_src, _, nRD, g = load_geometry(config_file, output_path)
+    T_src, M_src, S_src, D_src, R_src, _, nRD, g = load_geometry(config_file, output_path)
 
     # 2) Convert raw geometry into the structures expected by Compute
-    T_map, P_map, S_map = map_geometry_to_compute_inputs(T_src, S_src, D_src, R_src)
+    T_map, P_map, S_map = map_geometry_to_compute_inputs(T_src, M_src, S_src, D_src, R_src)
 
     # 3) Precompute heuristics and naming
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)

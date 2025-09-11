@@ -7,6 +7,7 @@ from util.propagator import inc_ref,transfer
 import os
 
 MCHARGE = 0
+MSIDE = 0
 '''
 '''
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -29,6 +30,7 @@ class Compute:
         self.Surfc = S
         
         nT = np.size(self.Tranx['emitter'].c)
+        nM = np.size(self.Tranx['mirror'].c)
         nS = np.size(self.Surfc['collo'].c)
         nR = np.size(self.Probe['receiver'].c)
         nD = np.size(self.Probe['domain'].c)
@@ -60,6 +62,7 @@ class Compute:
         self.MT = np.zeros((2*nS,2*nS), dtype=np.complex128) # Transfer Matrix
 
         self.nT = nT
+        self.nM = nM
         self.nR = nR
         self.nS = nS
         self.nD = nD
@@ -164,9 +167,17 @@ class Compute:
 
         factor = 1j/4
         
-        mask = R.m[side]
 
-        Ma = R.c[mask,np.newaxis] - C.c
+        maskR1 = R.m[2+MSIDE]
+        maskR2 = R.m[0+side]
+        maskRT = maskR1[maskR2]
+        maskR = maskR1 & maskR2
+        #mask = R.m[side]
+
+        dP = np.zeros((np.sum(R.m[0+side]),C.c.shape[0]), dtype=np.complex128)
+        dV = np.zeros((np.sum(R.m[0+side]),C.c.shape[0]), dtype=np.complex128)
+
+        Ma = R.c[maskR,np.newaxis] - C.c
 
         #midsize = Ma.shape[1]
 
@@ -182,8 +193,10 @@ class Compute:
         
         #Th[:,midsize:] = -1j/4*area[np.newaxis,:]*bh0
         #Th[:,:midsize] = 1j/4*area[np.newaxis,:]*bh1*rcos*k_cur/k_r*dr
+        dP[maskRT,...] = factor*Ar*bh1*rcos*(k_cur/d_cur)
+        dV[maskRT,...] = factor*Ar*bh0
         
-        return  factor*Ar*bh1*rcos*(k_cur/d_cur),factor*Ar*bh0 # testing
+        return  dP, dV # testing
 
     def field_boundary(self, R, C, side , p_cur, p_out):
 
@@ -192,31 +205,49 @@ class Compute:
         k_cur,d_cur = p_cur
         k_out,d_out = p_out
 
-        mask = C.m[side]
-
-        Ar = C.a[np.newaxis,mask]
-
-        Ma = R.c[:,np.newaxis] - C.c[mask]
-        
-        #midsize = Ma.shape[0]
-        #Th = np.zeros((2*midsize,Ma.shape[1]), dtype=np.complex128)
-
-        ny = R.n[:,np.newaxis]
+        dP = np.zeros((R.c.shape[0],np.sum(C[0].m[0+side])), dtype=np.complex128)
+        dV = dP.copy()
+        #dV = np.zeros((R.c.shape[0],np.sum(C[0].m[0+side])), dtype=np.complex128)
 
         
-        rcos = (Ma.real*np.cos(ny)+Ma.imag*np.sin(ny))/np.abs(Ma)
-        rsin = (Ma.real*np.sin(ny)-Ma.imag*np.cos(ny))/np.abs(Ma)
-        
-        ex0 = np.exp(1j*(m*np.angle(Ma)-C.n[np.newaxis,mask]))
-        
-        z_host = k_cur*np.abs(Ma)
-        
-        bh0, bh1 = self.besselh(z_host,m)
+        for c in C: # TEMPORARY FIX
             
-        #Th[:midsize,:] = area[:,np.newaxis]*1*bh0*ex0*k_r
-        #Th[midsize:,:] = area[:,np.newaxis]*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0
-        
-        return Ar*1*bh0*ex0*d_cur,Ar*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0 # testing
+            #mask = c.m[2+MSIDE][c.m[0+side]]
+
+
+            mask1 = c.m[2+MSIDE]
+            mask2 = c.m[0+side]
+            maskT = mask1[mask2]
+            mask = mask1 & mask2
+
+            if not np.any(mask):
+                continue
+
+            Ar = c.a[np.newaxis,mask]
+
+            Ma = R.c[:,np.newaxis] - c.c[mask]
+            
+            #midsize = Ma.shape[0]
+            #Th = np.zeros((2*midsize,Ma.shape[1]), dtype=np.complex128)
+
+            ny = R.n[:,np.newaxis]
+
+            
+            rcos = (Ma.real*np.cos(ny)+Ma.imag*np.sin(ny))/np.abs(Ma)
+            rsin = (Ma.real*np.sin(ny)-Ma.imag*np.cos(ny))/np.abs(Ma)
+            
+            ex0 = np.exp(1j*(m*np.angle(Ma)-c.n[np.newaxis,mask]))
+            
+            z_host = k_cur*np.abs(Ma)
+            
+            bh0, bh1 = self.besselh(z_host,m)
+                
+            #Th[:midsize,:] = area[:,np.newaxis]*1*bh0*ex0*k_r
+            #Th[midsize:,:] = area[:,np.newaxis]*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0
+            dP[:,maskT] += Ar*1*bh0*ex0*d_cur # testing
+            dV[:,maskT] += Ar*(1*bh1*rcos*k_cur + 1j*bh0/np.abs(Ma)*rsin*m)*ex0 # testing
+
+        return dP,dV
 
 
     def field_side_m(self, R, side, p_cur, p_out ):
@@ -250,19 +281,34 @@ class Compute:
         kind = 0
         k_cur = p_cur[0]
         
-        maskR = R.m[side]
+        maskR1 = R.m[2+MSIDE]
+        maskR2 = R.m[0+side]
+        maskRT = maskR1[maskR2]
+        maskR = maskR1 & maskR2
 
-        maskC = C.m[side]
+        dP = np.zeros((maskR2.sum(),C[0].m[side].sum()), dtype=np.complex128)
 
-        Ar = C.a[np.newaxis,maskC]
+        for c in C: # TEMPORARY FIX:
 
-        Ma = R.c[maskR,np.newaxis]-C.c[maskC]
-        
-        z_host = k_cur*np.abs(Ma)
+            maskC1 = c.m[2+MSIDE]
+            maskC2 = c.m[0+side]
+            maskCT = maskC1[maskC2]
+            maskC = maskC1 & maskC2
+            
+            #maskC = c.m[side]
+            if not np.any(maskC):
+                continue
+            Ar = c.a[np.newaxis,maskC]
 
-        bh0, _ = self.besselh(z_host,m)
+            Ma = R.c[maskR,np.newaxis]-c.c[maskC]
+            
+            z_host = k_cur*np.abs(Ma)
 
-        return bh0*Ar
+            bh0, _ = self.besselh(z_host,m)
+
+            dP[maskRT[...,np.newaxis]*maskCT] += (bh0*Ar).flatten() 
+
+        return dP
 
     def compute_field_upper_side_m(self,S,p_cur,p_out):
 
@@ -282,36 +328,36 @@ class Compute:
 
     def compute_field_upper_boundary(self,S,T,side,p_cur,p_out):
         
-        self.B['emitter'][:self.nS,T.m[side]],self.B['emitter'][self.nS:,T.m[side]] = self.field_boundary(S['collo'],T,side,p_cur,p_out)
+        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_out)
     
     def compute_field_lower_boundary(self,S,T,side,p_cur):
         
-        self.B['emitter'][:self.nS,T.m[side]],self.B['emitter'][self.nS:,T.m[side]] = self.field_boundary(S['collo'],T,side,p_cur,p_cur)
+        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_cur)
 
     def compute_reference(self,P,probe,T,side,p_cur):
         
         #self.F[probe][side[probe][...,np.newaxis]*side['emitter']] = self.reference(P,side[probe],T,side['emitter'],k_cur).reshape(-1)
-        self.F[probe][P.m[side][...,np.newaxis]*T.m[side]] = self.reference(P,T,side,p_cur).reshape(-1)
+        self.F[probe][P.m[side][...,np.newaxis]*T['emitter'].m[side]] = self.reference(P,(T['emitter'],T['mirror']),side,p_cur).reshape(-1)
 
     def compute_lower_side(self,p_cur):
         
         side = 0
 
         self.compute_field_lower_side_m(self.Surfc,p_cur)
-        self.compute_field_lower_boundary(self.Surfc, self.Tranx['emitter'], side, p_cur)
+        self.compute_field_lower_boundary(self.Surfc, self.Tranx, side, p_cur)
         for probe, P in self.Probe.items():
             self.compute_propagator_lower_side(P,probe,side,self.Surfc,p_cur)
-            self.compute_reference(P,probe,self.Tranx['emitter'],side,p_cur)
+            self.compute_reference(P,probe,self.Tranx,side,p_cur)
 
     def compute_upper_side(self,p_cur,p_out):
         
         side = 1
 
         self.compute_field_upper_side_m(self.Surfc,p_cur,p_out)
-        self.compute_field_upper_boundary(self.Surfc, self.Tranx['emitter'], side, p_cur,p_out)
+        self.compute_field_upper_boundary(self.Surfc, self.Tranx, side, p_cur,p_out)
         for probe, P in self.Probe.items():
             self.compute_propagator_upper_side(P,probe,side,self.Surfc,p_cur,p_out)
-            self.compute_reference(P,probe,self.Tranx['emitter'],side,p_cur)
+            self.compute_reference(P,probe,self.Tranx,side,p_cur)
 
     def propagate_lower_incref(self):
 
