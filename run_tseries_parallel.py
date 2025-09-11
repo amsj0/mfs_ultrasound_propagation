@@ -1,16 +1,13 @@
-
 """
-Refactored time-series orchestration with readable APIs.
+Orchestrates the time-series synthesis pipeline.
+- Loads configuration from YAML.
+- Prepares datasets.
+- Allocates matrices.
+- Computes time-series.
+- Saves results to disk.
 
-This module defines a clean, documented, and strongly-typed entry point
-`tseries_parallel_refactored` that wraps your existing pipeline helpers:
-- pre_config
-- set_empty_matrix
-- create_matrix
-- save_table
-
-It introduces small dataclasses to replace ambiguous tuples and raw dicts
-and uses named arguments at callsites for clarity.
+author: Agesinaldo Silva
+date: June, 2024
 """
 
 from __future__ import annotations

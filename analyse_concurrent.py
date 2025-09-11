@@ -1,3 +1,13 @@
+"""
+Concurrent analysis of mesh-free solutions with apodization.
+- Loads geometry from YAML config or Store.
+- Discretizes geometry.
+- Applies apodization via convolution.
+- Saves results to HDF5 or Store object.
+
+author: Agesinaldo Silva
+date: June, 2024
+"""
 
 from __future__ import annotations
 

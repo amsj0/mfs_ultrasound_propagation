@@ -1,3 +1,13 @@
+"""
+Main script to run mesh-free solution, analysis, and time series.
+- Runs mfsolution always.
+- Runs analysis if output_path is provided.
+- Runs tseries if both output_path and config_file are provided.
+
+author: Agesinaldo Silva
+date: June, 2024
+"""
+
 import sys
 
 from mfsolution import *

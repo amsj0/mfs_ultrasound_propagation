@@ -1,15 +1,12 @@
+""""
+Mesh-free solution pipeline.
+- Loads geometry from YAML config.
+- Discretizes geometry.
+- Runs mesh-free solution across frequency and ratio sweeps.
+- Saves results to HDF5 or Store object.
 
-"""
-Refactored mfsolution: clearer configuration loading and geometry mapping.
-
-Key changes:
-- Replaced the nested call `reconfigure(create_configfile(parse_config, ...))`
-  with explicit, documented helper steps:
-    1) load_geometry() -> calls parse_config + create_configfile
-    2) map_geometry_to_compute_inputs() -> builds the Compute-friendly dicts
-- Dropped wildcard imports; only import what we use.
-- Added docstrings, type hints, and descriptive variable names.
-- Kept the compute + save threading flow and the GPU cleanup.
+author: Agesinaldo Silva
+date: June, 2024
 """
 
 from __future__ import annotations
