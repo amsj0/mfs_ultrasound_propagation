@@ -68,7 +68,7 @@ def load_geometry(config_file: str, output_path: str):
 
 
 def map_geometry_to_compute_inputs(
-    T_src, S_src, D_src, R_src
+    T_src, M_src, S_src, D_src, R_src
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Map raw geometry objects (T/S/D/R) to the dictionary structures expected
