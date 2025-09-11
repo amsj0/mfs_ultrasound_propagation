@@ -1,69 +1,116 @@
-# Meshless boundary collocation techniques applied to Ultrasound Field Modelling
+# Meshless Boundary Collocation for Ultrasound Field Modelling
 
-This code solves for ultrasound field modelling (Helmholtz PDE) using among others the idea behind the Distributed Point Source Method (DPSM). 
-Solution for incident wave on homogeneous domain is sought by using Huygens principle based on real sources.
-The boundary behaviour is sought by solving the Boundary Value Problem (BVP) using the Method of Fundamental Solution (MFS) based on virtual sources.
+This repository solves 2D ultrasound field modelling (Helmholtz PDE) using meshless/boundary-collocation ideas inspired by the **Method of Fundamental Solutions (MFS)**. The propagating, reflecting and transmitting fields are assembled from real (Huygens) and virtual (MFS) sources and validated over an **infinite plane fluid–fluid interface** (current scope).
 
-## Infinite Plane interface
+---
 
-Current development implements truncated solution to the infinite plane interface between two fluids.
+## What’s here
 
+- **mfsolution** – discretises the scene, assembles/solves the MFS system, and writes per-sweep HDF5 results (or to an in‑memory `Store`).
+- **analyse_concurrent** – post-processes the MFS results by convolving with an **apodization window** (across piston taps per surface) using multi‑process workers; appends results into HDF5 or `Store`.
+- **tseries_parallel** – builds time‑series synthesis matrices from the analysed spectra; writes per‑dataset outputs.
+- **config.build_geometry** – thin wrapper that hides the legacy `create_configfile(parse_config, ...)` signature. Use this for new code.
 
+Refactored drop‑in modules (kept behaviour, improved readability):
 
-## Octave code
+- `analyse_concurrent.py`
+- `run_tseries_parallel.py`
 
-Requires GNU Octave to run.
+> You can continue to use the legacy modules; the refactored ones provide the same I/O with clearer APIs and named arguments.
 
-### Running
+---
 
-Setup **inputfile.txt** with model parameter ranges and run 
+## Installation
 
-````
-octave --no-gui run_from_inputfile.m
-````
-
-## Python code
-
-Update the requirements with
-
-````
+```bash
+python -m venv .venv && source .venv/bin/activate  # (Windows: .venv\Scripts\activate)
+pip install -U pip
 pip install -U -r requirements.txt
-````
+```
 
-### Running
+**Tested with** Python 3.10+ and NumPy/SciPy recent releases. OpenCL/CPU is required GPU is optional but recommended for `mfsolution` (via `Compute.InitCL("GPU")`).
 
-For running the MFS code: 
+---
 
-````
-python main.py inputfile.yaml
-````
+## Quickstart (CLI)
 
-or simply
+### 1) MFS only
 
-````
-python mfsolution.py inputfile.yaml
-````
+```bash
+python main.py INPUT.yaml
+# or
+python mfsolution.py INPUT.yaml
+```
 
-For running the MFS and analysis code: 
+### 2) MFS + Analysis (requires output directory)
 
-````
-python main.py inputfile.yaml /path/to/output
-````
+```bash
+python main.py INPUT.yaml /path/to/output
+# or
+python analyse.py INPUT.yaml /path/to/output
+```
 
-For running the analysis code: 
+### 3) MFS + Analysis + Time‑series (requires tseries config)
 
-````
-python analyse.py inputfile.yaml /path/to/output
-````
+```bash
+python main.py INPUT.yaml /path/to/output TSERIES.yaml
+# or
+python tseries.py /path/to/output TSERIES.yaml
+```
 
-For running the MFS, analysis and tseries code : 
+---
 
-````
-python main.py inputfile.yaml /path/to/output config.yaml
-````
+## Configuration & Data Flow
 
-For running the tseries code: 
+### Geometry/Config
+- **New code**: call `config.build_geometry(INPUT.yaml, /path/to/output)` which internally runs `parse_config` and `create_configfile`, returning the standard tuple:
+  ```text
+  T, M, S, D, R, Neltoverlambda, nRD, g
+  ```
+- **Legacy code**: still supported: `create_configfile(parse_config, INPUT.yaml, /path/to/output)`.
 
-````
-python tseries.py /path/to/output config.yaml
-````
+### MFS outputs
+For each frequency index `elt` and sweep pair `(skr, sdr)`, MFS writes/produces an HDF5 file:
+```
+{dataroot}_{elt+1}_{skr}_{sdr}.h5
+```
+containing at least the datasets:
+- `domain` (MH) – propagation in the domain
+- `receiver` (MR) – pressure at the receiver grid
+
+`analyse_concurrent` reads these back (or from `Store`), applies apodization, and appends to per‑sweep files:
+```
+doma_{dataroot}_{skr}_{sdr}.h5
+resp_{dataroot}_{skr}_{sdr}.h5
+```
+with shapes:
+- `doma`: (|sfr|, |D.c|, |T.c| − PPT + 1)
+- `resp`: (|sfr|, |R.c| − PPT + 1, |T.c| − PPT + 1)
+
+`tseries_parallel` consumes `doma_*`/`resp_*` plus its own `config.yaml` to build synthesis matrices and tables.
+
+---
+
+## Notes on the refactors
+
+- **No algorithm changes**, only readability:
+  - Named arguments at all helper callsites (no ambiguous tuples)
+  - Small dataclasses (`DatasetBundle`, `Limits`, `RunConfig`, `CreateMatrixResult`) in the refactored modules
+  - Clear separation of concerns: load→map→compute→save
+  - Workers take only what they need (e.g., `compute_analyse(elt, apod, MH, MR)`)
+
+You can migrate gradually: call the refactored modules from your existing scripts, or replace imports one by one.
+
+---
+
+## Citation
+
+If you use this code in research, please cite this repository and standard references on MFS relevant to your work.
+
+---
+
+## Troubleshooting
+
+- *OpenCL errors*: confirm your platform is detected; fall back to CPU by switching the device in `Compute.InitCL(...)` if needed.
+- *Shape mismatches in analysis*: ensure the same `PPT` (piston taps per surface) is used when creating and consuming datasets.
+- *NaNs in tseries*: verify that height refs are interpolated and that full profiles are exported independently (per earlier guidance).
