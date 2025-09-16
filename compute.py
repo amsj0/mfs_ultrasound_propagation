@@ -344,7 +344,9 @@ class Compute:
 
     def propagate_transfer(self):
         
+        self.propagate_upper_incref()
         self.MUT = transfer(self.MT,self.B['emitter'])
+        self.propagate_lower_incref()
         self.MLT = transfer(self.MT,self.B['emitter'])
 
     def propagate_scatter(self):
