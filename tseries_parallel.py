@@ -59,7 +59,7 @@ def pre_config(task_name, store, config_file,output_path):
             - data_set (numpy.ndarray): Loaded dataset from the specified model.
             - grid (numpy.ndarray): Grid data from the loaded dataset.
             - respc (numpy.ndarray): Response data from the loaded dataset.
-            - scale (float): Scale factor from the loaded dataset.
+            - scale (float): Scale factors from the loaded dataset.
             - ndx0 (int): Index value from the loaded dataset.
             - x_spec_full (numpy.ndarray): Full spectrum x array.
             - conve_mod (str): Conversion model from the configuration.
@@ -261,7 +261,7 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     return int(central_freq/central_range[int(x_size*1/2)-1]*100)
     
 
-def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, output_path=''):
+def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, scale, output_path=''):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0]) # Normalize the maximum value of the diagonal signal
     #vlimmaxN = vlimmax/np.max(vlimmax[-1])
@@ -275,33 +275,25 @@ def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, ou
 
     t_grid = np.diagonal(y_grid,offset=offset)
     y_off_table = np.diagonal(vlimmaxN,offset=offset)
-
-    d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
-    d_off_table = np.array([t_grid,y_off_table]).transpose()
-    d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.real(vlim)]])
     
-    m_time_table = np.block([[0,0,x_spec_full.transpose()],[probm.reshape(probm.shape[0]*probm.shape[1],probm.shape[2]),np.real(mlim.reshape(mlim.shape[0]*mlim.shape[1],mlim.shape[2]))]])
-
+    d_table = np.diagonal(vlimmaxN)
+    d_off_table = y_off_table
+    d_time_table = np.real(vlim)
+    m_time_table = np.real(mlim)
 
     data = {
-        "T": Entry(d_time_table, ("height", "a")),
-        "V": Entry(d_table, ("height", "amax")),
-        "N": Entry(m_time_table, ("height","height", "a")),
-        "M": Entry(vlimmaxN, ("height", "amax")),
-        "Voff": Entry(d_off_table, ("height", "amax"))
+        "M": Entry(vlimmaxN, ("wavelenght", "wavelenght"),(probv,probv)),
+        "N": Entry(m_time_table, ("wavelenght","wavelenght", "time"),(probm[...,0],probm[...,1],x_spec_full.transpose())),
+        "T": Entry(d_time_table, ("wavelenght", "time"),(probv,x_spec_full.transpose())),
+        "V": Entry(d_table, ("wavelenght",),(probv,)),
+        "Voff": Entry(d_off_table, ("wavelenght",),(t_grid,))
     }
     
     save_data_to_hdf5(
         data,
         output_path,
-        {'conve_mod': conve_mod,'freq': freq, 'kr': par[0], 'dr': par[1]}
+        {'conve_mod': conve_mod,'freq': freq, 'kr': par[0], 'dr': par[1], 'wavelength': scale[0]}
         )
-    """ np.savetxt(output_path+'T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
-    np.savetxt(output_path+'N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
-    np.savetxt(output_path+'V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
-    np.savetxt(output_path+'M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
-    np.savetxt(output_path+'Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='') """
-
 
 def set_empty_matrix(SP, offset, doma_size, resp_size, respc, scale, tranx_num=1):
     
@@ -314,7 +306,7 @@ def set_empty_matrix(SP, offset, doma_size, resp_size, respc, scale, tranx_num=1
     probmn = tuple()
     probvn = tuple()
     for respv_s in respv_size:
-        respvn = 0 * respc + (np.arange(-respv_s, 1 + respv_s))[:] * scale
+        respvn = 0 * respc + (np.arange(-respv_s, 1 + respv_s))[:] / scale[1]
         step_n = int(2 * respv_s / tranx_num)
         start_n = len(respvn) // 2 - (tranx_num // 2) * step_n + int(step_n / 2)
         stop_n = start_n + tranx_num * step_n
@@ -345,7 +337,7 @@ def tseries_parallel(store,config_file, output_path,task_name):
 
         freq = create_matrix(SP, x_size, central_range, set, x_spec_full, mat_tseries, offset, lim, vlimmax)
 
-        save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, output_path)
+        save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, scale, output_path)
 
 if __name__ == '__main__':
    
