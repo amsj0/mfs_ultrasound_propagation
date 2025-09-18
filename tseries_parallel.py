@@ -68,37 +68,45 @@ def pre_config(task_name, store, config_file,output_path):
         freq_scale is calculated as the ratio of the specified spectrum size to the number of frequencies divided by the spectrum band.
     """
    
-    dataroot = list(store.Configuration)[-1]
+    if task_name == "tseries":
+        with open(config_file, 'r') as f:
+            cfg = yaml.safe_load(f)
+            initi_freq = cfg['initi_freq']
+            final_freq = cfg['final_freq']
+            parti_freq = cfg['parti_freq']
+            numbr_freq = cfg['numbr_freq']
+            conve_mod = cfg['CONVE_MOD']
 
-    parts = dataroot.split('_')
-    final_freq = int(parts[-1])
-    initi_freq = int(parts[-2])
-    numbr_freq = int(parts[-3])
-    conve_mod  = '_'.join(parts[:-3])
+            sdr = [cfg['sdr']]
+            skr = [cfg['skr']]
+    else:
 
-    parti_freq = numbr_freq
+        dataroot = list(store.Configuration)[-1]
 
-    skr = store.Configuration[dataroot].skr
-    sdr = store.Configuration[dataroot].sdr
+        parts = dataroot.split('_')
+        try :
+            final_freq = int(parts[-1])
+            initi_freq = int(parts[-2])
+            numbr_freq = int(parts[-3])
+            conve_mod  = '_'.join(parts[:-3])
 
+            parti_freq = numbr_freq
+
+            skr = store.Configuration[dataroot].skr
+            sdr = store.Configuration[dataroot].sdr
+        except:
+            print('Error in the name of the dataset stored in the Store object. The name must be in the format CONVE_MOD_NUMBR_FREQ_INITI_FREQ_FINAL_FREQ')
+        
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
-        initi_freq = cfg['initi_freq']
-        final_freq = cfg['final_freq']
-        parti_freq = cfg['parti_freq']
-        numbr_freq = cfg['numbr_freq']
-
-        #skr = cfg['skr']
-        #sdr = cfg['sdr']
         offset = cfg['offset']
 
         tranx_num = cfg['tranx_num']
         spec_band = cfg['spec_band']
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
-        conve_mod = cfg['CONVE_MOD']
         input_mod = cfg['INPUT_MOD']
-        
+            
               
     mu, sigma = 0, 0.055 # .125 # 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
