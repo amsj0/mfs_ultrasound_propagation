@@ -60,14 +60,14 @@ def save_data_to_hdf5(data, path, attrs):
 
     conve_mod = attrs['conve_mod']
     freq = attrs['freq']
-    kr = 10*attrs.get('kr', None)
-    dr = 10*attrs.get('dr', None))
+    kr = int(10*attrs.get('kr', None))
+    dr = int(10*attrs.get('dr', None))
     scale = attrs.get('wavelength', None)
     
     
     out_dir = Path(path)
     out_dir.mkdir(parents=True, exist_ok=True)
-    h5_path = out_dir / f"bundle_{conve_mod}_{freq}_{kr}_{dr}.h5"
+    h5_path = out_dir / f"data_{conve_mod}_{freq}_{kr}_{dr}.h5"
 
     with h5py.File(h5_path, "w") as h5:
         # File-level metadata (optional but handy)
