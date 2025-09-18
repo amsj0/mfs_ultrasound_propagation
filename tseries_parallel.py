@@ -119,20 +119,24 @@ def pre_config(task_name, store, config_file,output_path):
     cosine_filter =  ((0.5 - 0.5 * np.cos(2.0 * np.pi * x_dom / echo_size)) * (x_dom<echo_size)*(x_dom>0))[...,np.newaxis]
 
     filter = cosine_filter
-
-    expr = np.empty((x_size,1),dtype='complex')
-    if input_mod == 'experiment':
-        expr = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)
-    elif input_mod == 'synthetic':
-        expr = np.sin(2 * np.pi * ref_freq * x_dom) * gauss_filter  
-    
     f_dom = np.linspace(1/x_size,1,x_size) - 0.5
 
     central_range = ref_freq*(1*f_dom + final_freq/(100*2))
 
+    input = np.empty((x_size,1),dtype='complex')
+    if input_mod == 'experiment':
+        input = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)[np.newaxis,:]
+    elif input_mod == 'synthetic_gauss':
+        input = np.sin(2 * np.pi * central_range * x_dom) * gauss_filter
+    elif input_mod == 'synthetic_cosine':
+        input = np.exp(1j * 2 * np.pi * (central_range * x - 1 / 5)) * cosine_filter.T
+        #np.sin(2 * np.pi * central_range * x_dom) * filter
+    else:
+        raise ValueError("Invalid INPUT_MOD. Choose 'experiment' or 'synthetic' or 'synthetic_cosine'.")
+    
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
 
-    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,expr,spec_size)
+    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,input,spec_size)
     
     results = [load_dataset(task_name, store, conve_mod, gridname, output_path, kr, dr) for kr, dr in product(skr, sdr)]
     
@@ -243,8 +247,8 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     i = x_size // 2 - 1
     central_freq = central_range[i]
 
-    osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
-    #osc,freq,spec = SP.synth_fseries_from_experiment()
+    #osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
+    osc,freq,spec = SP.synth_fseries_from_input(i)
     spec0 = spec[0:int(SP.spec_size)]
     
 

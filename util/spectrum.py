@@ -12,7 +12,7 @@ class Spectrum:
 
     w,h = sp.freqz(taps,[1], worN=500, fs=fs)
         
-    def __init__(self,initi,final,numbr,parti,x,gauss,exper,spec_size):
+    def __init__(self,initi,final,numbr,parti,x,gauss,input,spec_size):
 
         self.initi = initi
         self.final = final
@@ -21,7 +21,7 @@ class Spectrum:
 
         self.x = x
         self.gauss = gauss
-        self.exper = exper
+        self.input = input
         self.spec_size = int(spec_size/2)
 
 
@@ -138,8 +138,13 @@ class Spectrum:
 
         return osc,freq,spec
 
-    def synth_fseries_from_experiment(self):
-        osc = self.exper[:,np.newaxis]
+    def synth_fseries_from_input(self,input_index=0 ):
+        
+        input_index = min(input_index, self.input.shape[0] - 1)
+
+
+        #osc = self.input[input_index,:][:,np.newaxis]
+        osc = self.input[input_index,np.newaxis].T
         spec = np.fft.fft(osc,n=self.spec_size*2,axis=0)
         freq = np.fft.fftfreq(self.spec_size*2)
 
