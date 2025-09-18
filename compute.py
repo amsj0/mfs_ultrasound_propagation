@@ -2,7 +2,7 @@
 import numpy as np
 import pyopencl as cl
 
-from util.propagator import inc_ref,transfer
+from util.propagator import inc_ref2,inc_ref2,transfer
 
 import os
 
@@ -320,7 +320,7 @@ class Compute:
         p2 = -self.B['lower'][:,:self.nS]
         v2 = -self.B['lower'][:,self.nS:]
 
-        self.MT = inc_ref(p1,v1,p2,v2)
+        self.MT = inc_ref2(p1,v1,p2,v2)
 
     def propagate_upper_incref(self):
 
@@ -329,24 +329,31 @@ class Compute:
         p2 = -self.B['upper'][:,:self.nS]
         v2 = -self.B['upper'][:,self.nS:]
 
-        self.MT = inc_ref(p1,v1,p2,v2)
+        self.MT = inc_ref2(p1,v1,p2,v2)
 
     def propagate_incref(self,side):
+
+        if ~side:
+            self.MT = np.identity(2*self.nS) - self.MT
+            return
 
         p1 = self.B['lower'][:,:self.nS]
         v1 = self.B['lower'][:,self.nS:]
         p2 = -self.B['upper'][:,:self.nS]
         v2 = -self.B['upper'][:,self.nS:]
 
-        self.MT = inc_ref(p1,v1,p2,v2)
-        if ~side:
-            self.MT = np.identity(2*self.nS) - self.MT
+        self.MT = inc_ref2(p1,v1,p2,v2)
 
     def propagate_transfer(self):
         
         self.propagate_upper_incref()
+        # TODO 
+        # Propagate once
+        #self.propagate_incref(1)
         self.MUT = transfer(self.MT,self.B['emitter'])
         self.propagate_lower_incref()
+        # Then take the identity
+        #self.propagate_incref(0)
         self.MLT = transfer(self.MT,self.B['emitter'])
 
     def propagate_scatter(self):
