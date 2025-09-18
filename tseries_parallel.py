@@ -197,6 +197,9 @@ def run_per_j_processes(lim,vlimmax,SP,
                         matrix_x_strafe, matrix_y_strafe, offset,
                         max_workers=None, chunksize=4):
     resp = np.asarray(data_set["resp"])  # expected shape (..., data_y_size, data_x_size)
+    den = resp[..., 0, 0][..., np.newaxis, np.newaxis]
+    np.divide(resp, den, out=resp, where=den != 0)
+    
     #data_y_size = resp.shape[-2]
     data_x_size = resp.shape[-1]
 
