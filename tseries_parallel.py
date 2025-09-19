@@ -263,7 +263,7 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     spec0 = spec[0:int(SP.spec_size)]
     
 
-    print('Central frequency: ' + str(central_freq) + ' MHz' )
+    print('Central frequency: ' + str(central_freq) + ' Hz' )
 
     run_per_j_processes(
         lim, vlimmax, SP,
@@ -273,7 +273,7 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     )
         
 
-    return int(central_freq/central_range[int(x_size*1/2)-1]*100)
+    return int(central_freq/1000)
     
 
 def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, scale, output_path=''):
