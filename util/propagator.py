@@ -12,6 +12,35 @@ def inc_ref(p1,v1,p2,v2):
 
     return np.concatenate((np.concatenate((p2 @ v1,p2 @ p1),axis=1),np.concatenate((v2 @ v1,v2 @ p1),axis=1)),axis=0)
 
+def inc_ref2(p1, v1, p2, v2):
+    """
+    All inputs are square matrices with compatible shapes.
+    This version avoids explicit inverses (np.linalg.inv) in favor of solves.
+    """
+    # Step 1: p1 := p1 @ inv(v1)  -> right-side solve: solve(v1.T, p1.T).T
+    p1_r = np.linalg.solve(v1.T, p1.T).T
+
+    # Step 2: S := p2 - p1 @ v2   (note: @ has higher precedence than -)
+    S = p2 - p1_r @ v2
+
+    # We need p2 @ inv(S) and v2 @ inv(S) -> left solves on S^T
+    p2_invS = np.linalg.solve(S.T, p2.T).T
+    v2_invS = np.linalg.solve(S.T, v2.T).T
+
+    # Step 3: T := v2 - inv(p1) @ p2  -> inv(p1) @ p2 = solve(p1, p2)
+    T = v2 - np.linalg.solve(p1_r, p2)
+
+    # We need p2 @ inv(T) and v2 @ inv(T) -> left solves on T^T
+    p2_invT = np.linalg.solve(T.T, p2.T).T
+    v2_invT = np.linalg.solve(T.T, v2.T).T
+
+    # Assemble the 2x2 block:
+    # [[p2 @ inv(S), p2 @ inv(T)],
+    #  [v2 @ inv(S), v2 @ inv(T)]]
+    return np.block([[p2_invS, p2_invT],
+                     [v2_invS, v2_invT]])
+
+
 def inc_ref3(z1,y1,p2,v2):
  
     v1 = p2 - z1 @ v2

@@ -225,6 +225,7 @@ def run_tseries_parallel(
             vlimmax=vlimmax,
             prob=(probv, probm),
             offset=cfg.offset,
+            scale=b.scale,
             output_path=output_path,
         )
 

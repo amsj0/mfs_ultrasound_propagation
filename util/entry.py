@@ -6,3 +6,4 @@ import numpy as np
 class Entry:
     arr: np.ndarray
     header: Optional[Tuple[str, ...]] = None
+    axis: Optional[Tuple[np.ndarray, ...]] = None

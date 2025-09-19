@@ -59,7 +59,7 @@ def pre_config(task_name, store, config_file,output_path):
             - data_set (numpy.ndarray): Loaded dataset from the specified model.
             - grid (numpy.ndarray): Grid data from the loaded dataset.
             - respc (numpy.ndarray): Response data from the loaded dataset.
-            - scale (float): Scale factor from the loaded dataset.
+            - scale (float): Scale factors from the loaded dataset.
             - ndx0 (int): Index value from the loaded dataset.
             - x_spec_full (numpy.ndarray): Full spectrum x array.
             - conve_mod (str): Conversion model from the configuration.
@@ -68,37 +68,45 @@ def pre_config(task_name, store, config_file,output_path):
         freq_scale is calculated as the ratio of the specified spectrum size to the number of frequencies divided by the spectrum band.
     """
    
-    dataroot = list(store.Configuration)[-1]
+    if task_name == "tseries":
+        with open(config_file, 'r') as f:
+            cfg = yaml.safe_load(f)
+            initi_freq = cfg['initi_freq']
+            final_freq = cfg['final_freq']
+            parti_freq = cfg['parti_freq']
+            numbr_freq = cfg['numbr_freq']
+            conve_mod = cfg['CONVE_MOD']
 
-    parts = dataroot.split('_')
-    final_freq = int(parts[-1])
-    initi_freq = int(parts[-2])
-    numbr_freq = int(parts[-3])
-    conve_mod  = '_'.join(parts[:-3])
+            sdr = [cfg['sdr']]
+            skr = [cfg['skr']]
+    else:
 
-    parti_freq = numbr_freq
+        dataroot = list(store.Configuration)[-1]
 
-    skr = store.Configuration[dataroot].skr
-    sdr = store.Configuration[dataroot].sdr
+        parts = dataroot.split('_')
+        try :
+            final_freq = int(parts[-1])
+            initi_freq = int(parts[-2])
+            numbr_freq = int(parts[-3])
+            conve_mod  = '_'.join(parts[:-3])
 
+            parti_freq = numbr_freq
+
+            skr = store.Configuration[dataroot].skr
+            sdr = store.Configuration[dataroot].sdr
+        except:
+            print('Error in the name of the dataset stored in the Store object. The name must be in the format CONVE_MOD_NUMBR_FREQ_INITI_FREQ_FINAL_FREQ')
+        
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
-        initi_freq = cfg['initi_freq']
-        final_freq = cfg['final_freq']
-        parti_freq = cfg['parti_freq']
-        numbr_freq = cfg['numbr_freq']
-
-        #skr = cfg['skr']
-        #sdr = cfg['sdr']
         offset = cfg['offset']
 
         tranx_num = cfg['tranx_num']
         spec_band = cfg['spec_band']
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
-        conve_mod = cfg['CONVE_MOD']
         input_mod = cfg['INPUT_MOD']
-        
+            
               
     mu, sigma = 0, 0.055 # .125 # 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
@@ -119,20 +127,24 @@ def pre_config(task_name, store, config_file,output_path):
     cosine_filter =  ((0.5 - 0.5 * np.cos(2.0 * np.pi * x_dom / echo_size)) * (x_dom<echo_size)*(x_dom>0))[...,np.newaxis]
 
     filter = cosine_filter
-
-    expr = np.empty((x_size,1),dtype='complex')
-    if input_mod == 'experiment':
-        expr = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)
-    elif input_mod == 'synthetic':
-        expr = np.sin(2 * np.pi * ref_freq * x_dom) * gauss_filter  
-    
     f_dom = np.linspace(1/x_size,1,x_size) - 0.5
 
     central_range = ref_freq*(1*f_dom + final_freq/(100*2))
 
+    input = np.empty((x_size,1),dtype='complex')
+    if input_mod == 'experiment':
+        input = np.loadtxt(output_path + 'experimental_pulse.txt', dtype=np.complex_)[np.newaxis,:]
+    elif input_mod == 'synthetic_gauss':
+        input = np.sin(2 * np.pi * central_range * x_dom) * gauss_filter
+    elif input_mod == 'synthetic_cosine':
+        input = np.exp(1j * 2 * np.pi * (central_range * x - 1 / 5)) * cosine_filter.T
+        #np.sin(2 * np.pi * central_range * x_dom) * filter
+    else:
+        raise ValueError("Invalid INPUT_MOD. Choose 'experiment' or 'synthetic' or 'synthetic_cosine'.")
+    
     gridname = '_' + str(numbr_freq) + '_' + str(initi_freq) + '_' + str(final_freq) 
 
-    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,expr,spec_size)
+    SP = Spectrum(initi_freq,final_freq,numbr_freq,parti_freq,x,filter,input,spec_size)
     
     results = [load_dataset(task_name, store, conve_mod, gridname, output_path, kr, dr) for kr, dr in product(skr, sdr)]
     
@@ -193,6 +205,9 @@ def run_per_j_processes(lim,vlimmax,SP,
                         matrix_x_strafe, matrix_y_strafe, offset,
                         max_workers=None, chunksize=4):
     resp = np.asarray(data_set["resp"])  # expected shape (..., data_y_size, data_x_size)
+    den = resp[..., 0, 0][..., np.newaxis, np.newaxis]
+    np.divide(resp, den, out=resp, where=den != 0)
+    
     #data_y_size = resp.shape[-2]
     data_x_size = resp.shape[-1]
 
@@ -243,8 +258,8 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     i = x_size // 2 - 1
     central_freq = central_range[i]
 
-    osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
-    #osc,freq,spec = SP.synth_fseries_from_experiment()
+    #osc,freq,spec = SP.synth_fseries_from_centr_freq(central_freq)
+    osc,freq,spec = SP.synth_fseries_from_input(i)
     spec0 = spec[0:int(SP.spec_size)]
     
 
@@ -261,7 +276,7 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     return int(central_freq/central_range[int(x_size*1/2)-1]*100)
     
 
-def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, output_path=''):
+def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, scale, output_path=''):
     
     vlimmaxN = vlimmax/np.max(vlimmax[0]) # Normalize the maximum value of the diagonal signal
     #vlimmaxN = vlimmax/np.max(vlimmax[-1])
@@ -275,33 +290,25 @@ def save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, ou
 
     t_grid = np.diagonal(y_grid,offset=offset)
     y_off_table = np.diagonal(vlimmaxN,offset=offset)
-
-    d_table = np.array([probv,np.diagonal(vlimmaxN)]).transpose()
-    d_off_table = np.array([t_grid,y_off_table]).transpose()
-    d_time_table = np.block([[0,x_spec_full.transpose()],[probv[:,np.newaxis],np.real(vlim)]])
     
-    m_time_table = np.block([[0,0,x_spec_full.transpose()],[probm.reshape(probm.shape[0]*probm.shape[1],probm.shape[2]),np.real(mlim.reshape(mlim.shape[0]*mlim.shape[1],mlim.shape[2]))]])
-
+    d_table = np.diagonal(vlimmaxN)
+    d_off_table = y_off_table
+    d_time_table = np.real(vlim)
+    m_time_table = np.real(mlim)
 
     data = {
-        "T": Entry(d_time_table, ("height", "a")),
-        "V": Entry(d_table, ("height", "amax")),
-        "N": Entry(m_time_table, ("height","height", "a")),
-        "M": Entry(vlimmaxN, ("height", "amax")),
-        "Voff": Entry(d_off_table, ("height", "amax"))
+        "M": Entry(vlimmaxN, ("wavelenght", "wavelenght"),(probv,probv)),
+        "N": Entry(m_time_table, ("wavelenght","wavelenght", "time"),(probm[...,0],probm[...,1],x_spec_full.transpose())),
+        "T": Entry(d_time_table, ("wavelenght", "time"),(probv,x_spec_full.transpose())),
+        "V": Entry(d_table, ("wavelenght",),(probv,)),
+        "Voff": Entry(d_off_table, ("wavelenght",),(t_grid,))
     }
     
     save_data_to_hdf5(
         data,
         output_path,
-        {'conve_mod': conve_mod,'freq': freq, 'kr': par[0], 'dr': par[1]}
+        {'conve_mod': conve_mod,'freq': freq, 'kr': par[0], 'dr': par[1], 'wavelength': scale[0]}
         )
-    """ np.savetxt(output_path+'T'+conve_mod+'_'+str(freq)+'.csv',d_time_table, delimiter=',')
-    np.savetxt(output_path+'N'+conve_mod+'_'+str(freq)+'.csv',m_time_table, delimiter=',')
-    np.savetxt(output_path+'V'+conve_mod+'_'+str(freq)+'.csv',d_table, delimiter=',', header=','.join(('height','amax')), comments='')
-    np.savetxt(output_path+'M'+conve_mod+'_'+str(freq)+'.csv',vlimmaxN, delimiter=',')
-    np.savetxt(output_path+'Voff'+conve_mod+'_'+str(freq)+'.csv',d_off_table, delimiter=',', header=','.join(('height','amax')), comments='') """
-
 
 def set_empty_matrix(SP, offset, doma_size, resp_size, respc, scale, tranx_num=1):
     
@@ -314,7 +321,7 @@ def set_empty_matrix(SP, offset, doma_size, resp_size, respc, scale, tranx_num=1
     probmn = tuple()
     probvn = tuple()
     for respv_s in respv_size:
-        respvn = 0 * respc + (np.arange(-respv_s, 1 + respv_s))[:] * scale
+        respvn = 0 * respc + (np.arange(-respv_s, 1 + respv_s))[:] / scale[1]
         step_n = int(2 * respv_s / tranx_num)
         start_n = len(respvn) // 2 - (tranx_num // 2) * step_n + int(step_n / 2)
         stop_n = start_n + tranx_num * step_n
@@ -345,7 +352,7 @@ def tseries_parallel(store,config_file, output_path,task_name):
 
         freq = create_matrix(SP, x_size, central_range, set, x_spec_full, mat_tseries, offset, lim, vlimmax)
 
-        save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, output_path)
+        save_table(conve_mod, x_spec_full, freq, par, lim, vlimmax, prob, offset, scale, output_path)
 
 if __name__ == '__main__':
    

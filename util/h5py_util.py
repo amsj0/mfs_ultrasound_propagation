@@ -26,9 +26,9 @@ def load_para(pathname,modifier,gridname):
     
     grid.real = gridx;grid.imag = gridy;grid.shape = shape
 
-    scale = lambd[()]/(elemw[()]/100)
+    scale = (lambd[()],(elemw[()]/100))
 
-    respc = (pistc[()]- intec[()])*scale
+    respc = (pistc[()]- intec[()])*(scale[0]/scale[1])
     
     grid =  grid*lambd[()]/radis[()]
 
@@ -60,13 +60,14 @@ def save_data_to_hdf5(data, path, attrs):
 
     conve_mod = attrs['conve_mod']
     freq = attrs['freq']
-    kr = 10*attrs.get('kr', None)
-    dr = 10*attrs.get('dr', None)
+    kr = int(10*attrs.get('kr', None))
+    dr = int(10*attrs.get('dr', None))
+    scale = attrs.get('wavelength', None)
     
     
     out_dir = Path(path)
     out_dir.mkdir(parents=True, exist_ok=True)
-    h5_path = out_dir / f"bundle_{conve_mod}_{freq}_{kr}_{dr}.h5"
+    h5_path = out_dir / f"data_{conve_mod}_{freq}_{kr}_{dr}.h5"
 
     with h5py.File(h5_path, "w") as h5:
         # File-level metadata (optional but handy)
@@ -74,8 +75,9 @@ def save_data_to_hdf5(data, path, attrs):
         h5.attrs["freq"] = str(freq)
         h5.attrs["kr"] = str(kr)
         h5.attrs["dr"] = str(dr)
+        h5.attrs["wavelength"] = str(scale)
 
-        def write_dataset(name, arr, columns=None):
+        def write_dataset(name, arr, dimensions=None, vectors=None):
             arr = np.asarray(arr)
             dset = h5.create_dataset(
                 name,
@@ -85,14 +87,18 @@ def save_data_to_hdf5(data, path, attrs):
                 shuffle=True,              # better compression
                 fletcher32=True            # integrity check
             )
-            if columns is not None:
+            if dimensions is not None:
                 # store column names like your CSV headers
-                dset.attrs["columns"] = np.array(columns, dtype="S")
+                dset.attrs["dimensions"] = np.array(dimensions, dtype="S")
+            if vectors is not None:
+                for i, ax in enumerate(vectors):
+                    dset.attrs[f"axis_{i}"] = ax
 
         for item, entry in data.items():
             arr    = entry.arr
             header = entry.header
-            write_dataset(item, arr, columns=header)
+            axis   = entry.axis
+            write_dataset(item, arr, dimensions=header, vectors=axis)
 
         # Example usage:
 
