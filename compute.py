@@ -377,9 +377,9 @@ class Compute:
 
         self.MT = inc_ref2(p1,v1,p2,v2)
 
-    def propagate_incref(self,side):
+    def propagate_incref(self,side: bool):
 
-        if ~side:
+        if not side:
             self.MT = np.identity(2*self.nS) - self.MT
             return
 
@@ -390,17 +390,35 @@ class Compute:
 
         self.MT = inc_ref2(p1,v1,p2,v2)
 
+    def propagate_incref2(self,side: bool, MT: np.ndarray):
+
+        if not side:
+            return np.identity(2*self.nS, dtype=np.complex128) - MT
+            
+
+        p1 = self.B['lower'][:,:self.nS]
+        v1 = self.B['lower'][:,self.nS:]
+        p2 = -self.B['upper'][:,:self.nS]
+        v2 = -self.B['upper'][:,self.nS:]
+
+        return inc_ref2(p1,v1,p2,v2)        
+
     def propagate_transfer(self):
         
-        self.propagate_upper_incref()
+        #self.propagate_upper_incref()
         # TODO 
         # Propagate once
-        #self.propagate_incref(1)
-        self.MUT = transfer(self.MT,self.B['emitter'])
-        self.propagate_lower_incref()
+        MT = np.zeros((2*self.nS,2*self.nS), dtype=np.complex128) 
+        MT = self.propagate_incref2(True,MT)
+        #self.propagate_incref(True)
+        self.MUT = transfer(MT,self.B['emitter'])
+        #self.MUT = transfer(self.MT,self.B['emitter'])
+        #self.propagate_lower_incref()
         # Then take the identity
-        #self.propagate_incref(0)
-        self.MLT = transfer(self.MT,self.B['emitter'])
+        MT = self.propagate_incref2(False,MT)
+        #MT = self.propagate_incref(False)
+        #self.MLT = transfer(self.MT,self.B['emitter'])
+        self.MLT = transfer(MT,self.B['emitter'])
 
     def propagate_scatter(self):
         
