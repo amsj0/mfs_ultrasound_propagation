@@ -426,3 +426,18 @@ class Compute:
 
     def null(self):
         return 0
+
+    def release(self):
+        """Release OpenCL resources."""
+        if hasattr(self, 'queue'):
+            self.queue.finish()
+        if hasattr(self, 'pgr'):
+            del self.pgr
+        if hasattr(self, 'queue'):
+            del self.queue
+        if hasattr(self, 'ctx'):
+            del self.ctx
+
+    def close(self):
+        """Alias for release()."""
+        self.release()

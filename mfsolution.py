@@ -25,6 +25,7 @@ from util.h5py_util import save_dict_to_hdf5
 
 # Import config helpers explicitly (no star import)
 from config import parse_config, create_configfile
+import psutil
 
 # ------------------------------- Setup ---------------------------------------
 
@@ -36,7 +37,7 @@ class structtype:
 def _cleanup_cp(cp: Compute) -> None:
     """Best-effort cleanup of Compute / GPU resources."""
     try:
-        for meth in ("release", "close", "free", "shutdown"):
+        for meth in (["release"]):
             if hasattr(cp, meth):
                 getattr(cp, meth)()
     finally:
