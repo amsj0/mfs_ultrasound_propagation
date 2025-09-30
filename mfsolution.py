@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import sys
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Tuple, Dict, Any
+import concurrent.futures as cf
+#from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Tuple, Dict, Any, Callable, Iterable
 import numpy as np
 import gc, weakref
 
@@ -36,7 +37,7 @@ class structtype:
 def _cleanup_cp(cp: Compute) -> None:
     """Best-effort cleanup of Compute / GPU resources."""
     try:
-        for meth in ("release", "close", "free", "shutdown"):
+        for meth in ("release",):
             if hasattr(cp, meth):
                 getattr(cp, meth)()
     finally:
@@ -129,6 +130,38 @@ def _scatter_and_save(cp_inst: Compute, datafile: str, g, outpath: str, task_nam
 
 
 # ----------------------------- Main pipeline ---------------------------------
+def bounded_submit(
+    jobs: Iterable[tuple],
+    worker: Callable[[tuple], Any],
+    max_in_flight: int = 1
+):
+    """
+    Keep at most `max_in_flight` futures running. Yields (job_tuple, result, exc)
+    as each future completes. With max_in_flight=1, you guarantee only one
+    _compute_full (and thus one cl.Context) at a time.
+    """
+    it = iter(jobs)
+    with cf.ThreadPoolExecutor(max_workers=max_in_flight, thread_name_prefix="gpu") as ex:
+        pending: Dict[cf.Future, tuple] = {}
+
+        # prime one job
+        first = next(it, None)
+        if first is not None:
+            pending[ex.submit(worker, *first[:-1])] = first
+
+        while pending:
+            done, _ = cf.wait(pending, return_when=cf.FIRST_COMPLETED)
+            for fut in done:
+                job_done = pending.pop(fut)
+                res = fut.result()
+
+                # *** PREFETCH NEXT BEFORE YIELD ***
+                nxt = next(it, None)
+                if nxt is not None:
+                    pending[ex.submit(worker, *nxt[:-1])] = nxt
+
+                yield {job_done[-1]: res}
+
 
 def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
     """
@@ -164,10 +197,10 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
     ST = Store('', dataroot, g)
 
     # 4) Thread pools
-    compute_executor = ThreadPoolExecutor(max_workers=1)
-    save_executor = ThreadPoolExecutor(max_workers=1)
+    #compute_executor = cf.ThreadPoolExecutor(max_workers=1)
+    save_executor = cf.ThreadPoolExecutor(max_workers=1, thread_name_prefix="saver")
 
-    futures = {}
+    jobs = []
     try:
         for ii in range(g.ifu - 1, g.ffu):
             k_cur = k0[ii] * lambda0 / RD
@@ -179,26 +212,25 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
                     kc_cur = g.keq(kr[jj], dr[pp])[ii]
                     p_cur = [kc_cur, dc_cur]
                     datafile = f"{dataroot}_{ii+1}_{int(g.skr[jj])}_{int(g.sdr[pp])}"
-                    fut = compute_executor.submit(_compute_full, P_map, T_map, S_map, p_out, p_cur)
-                    futures[fut] = (datafile, g, task_name, output_path)
+                    jobs.append((P_map, T_map, S_map, p_out, p_cur,datafile))
 
         print("Waiting for computations to complete...")
-        for comp_future in as_completed(futures):
-            cp_inst = comp_future.result()
-            datafile, g, task_name, outpath = futures.pop(comp_future)
-            del comp_future
+        for item in bounded_submit(jobs, _compute_full, max_in_flight=1):
+            
+
+            (job_id, compute), = item.items()
 
             # Transfer
-            cp_inst.propagate_transfer()
+            compute.propagate_transfer()
 
             # Scatter + save
             save_future = save_executor.submit(
-                _scatter_and_save, cp_inst, datafile, g, outpath, task_name, ST
+                _scatter_and_save, compute, job_id, g, output_path, task_name, ST
             )
-            save_future.add_done_callback(lambda fut, df=datafile: print(f"Datafile {df} saved"))
+            save_future.add_done_callback(lambda fut, df=job_id: print(f"Datafile {df} saved"))
 
             # Cleanup after save completes
-            cp_ref = weakref.ref(cp_inst)
+            cp_ref = weakref.ref(compute)
             def _after_save(_fut, _r=cp_ref):
                 cp = _r()
                 if cp is not None:
@@ -206,10 +238,11 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
             save_future.add_done_callback(_after_save)
 
             # Drop strong ref here (the save task keeps it alive until done)
-            cp_inst = None
+            compute = None
+            job_id = None
 
     finally:
-        compute_executor.shutdown(wait=True)
+        #compute_executor.shutdown(wait=True)
         save_executor.shutdown(wait=True)
 
     return ST
