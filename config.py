@@ -136,7 +136,7 @@ def create_configfile(fn,filename, output_path):
         R = fn_discretize_geometry_circular(g.piston__catch, [piston_centre[1], piston_centre[0]], 0,Neltoverlambda / (100), 0,  fn_rotation(), g.tank_rad)
     else:
         S = fn_discretize_geometry_plane(2 * piston_centre[0], interf_centre, - np.pi / 2 ,Neltoverlambda / 100, 0, list(reversed(fn_rotation())))
-        T = fn_discretize_geometry_plane(g.piston__pitch, mirror_centre,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
+        T = fn_discretize_geometry_plane(g.piston__pitch,[0,piston_centre[1]], 0 ,Neltoverlambda / (100), piston_angle )
         R = fn_discretize_geometry_plane(g.piston__catch,piston_centre, np.pi,Neltoverlambda / (100), 0 )
                
     S.c = S.x + 1j * S.z
