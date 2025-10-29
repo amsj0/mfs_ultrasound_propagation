@@ -22,7 +22,7 @@ import gc, weakref
 from util.store import Store
 from compute import Compute
 from util.heuristic import heuristic
-from util.h5py_util import save_dict_to_hdf5
+from util.h5py_util import save_dict_to_hdf5, load_hdf5_to_array, save_dict_to_hdf5_toeplitz
 
 # Import config helpers explicitly (no star import)
 from config import parse_config, create_configfile
@@ -120,6 +120,12 @@ def _compute_full(P_map, T_map, S_map, p_out, p_cur) -> Compute:
     cp.compute_upper_side(p_cur, p_out)
     return cp
 
+def _load_propagate_matrix_from_datafile(cp_inst: Compute, datafile: str, outpath: str) -> None:
+    MT = load_hdf5_to_array(datafile, outpath, 'MT')
+    cp_inst.set_transfer(MT)
+
+def _save_propagate_matrix_to_datafile(cp_inst: Compute, datafile: dict, outpath: str) -> None:
+    save_dict_to_hdf5_toeplitz({'MT': cp_inst.MT}, outpath, datafile)
 
 def _scatter_and_save(cp_inst: Compute, datafile: str, g, outpath: str, task_name: str, ST: Store) -> None:
     M = cp_inst.propagate_scatter()
@@ -147,7 +153,7 @@ def bounded_submit(
         # prime one job
         first = next(it, None)
         if first is not None:
-            pending[ex.submit(worker, *first[:-1])] = first
+            pending[ex.submit(worker, *first[:-2])] = first
 
         while pending:
             done, _ = cf.wait(pending, return_when=cf.FIRST_COMPLETED)
@@ -158,9 +164,10 @@ def bounded_submit(
                 # *** PREFETCH NEXT BEFORE YIELD ***
                 nxt = next(it, None)
                 if nxt is not None:
-                    pending[ex.submit(worker, *nxt[:-1])] = nxt
+                    pending[ex.submit(worker, *nxt[:-2])] = nxt
 
-                yield {job_done[-1]: res}
+                yield {job_done[-1]: res,
+                       "payload": job_done[-2],}
 
 
 def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
@@ -196,7 +203,7 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
     
     dataroot = f"{g.nff}_{int(g.iff*2*g.model_scale*100)}_{int(g.fff*2*g.model_scale*100)}"
     datamod = f"{g.convergemod}_{dataroot}"
-    ST = Store('', dataroot, g)
+    ST = Store('', datamod, g)
 
     # 4) Thread pools
     #compute_executor = cf.ThreadPoolExecutor(max_workers=1)
@@ -213,17 +220,30 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
                     dc_cur = g.rjR(kr[jj], dr[pp])[ii]
                     kc_cur = g.keq(kr[jj], dr[pp])[ii]
                     p_cur = [kc_cur, dc_cur]
-                    datafile = f"{dataroot}_{ii+1}_{int(g.skr[jj])}_{int(g.sdr[pp])}"
-                    jobs.append((P_map, T_map, S_map, p_out, p_cur,datafile))
+                    map = f"{ii+1}_{int(g.skr[jj])}_{int(g.sdr[pp])}"
+                    root_map = f"{dataroot}_{map}"
+                    mod_map = f"{datamod}_{map}"
+                    jobs.append((P_map, T_map, S_map, p_out, p_cur,root_map,mod_map))
 
         print("Waiting for computations to complete...")
         for item in bounded_submit(jobs, _compute_full, max_in_flight=1):
             
 
-            (job_id, compute), = item.items()
+            [(job_id, compute),job_payload] = item.items()
+
+            # Attempt to load propagate matrix
+            try:
+                _load_propagate_matrix_from_datafile(compute, job_payload[-1], output_path)
+            except Exception as e:
+                logging.warning(f"Failed to load propagate matrix for {job_payload}: {e}")
 
             # Transfer
-            compute.propagate_transfer()
+            if compute.MT_is_not_set:
+                print(f"Transfer matrix loaded for {job_payload}, proceeding to transfer.")
+                compute.propagate()
+                _save_propagate_matrix_to_datafile(compute, job_payload[-1], output_path)
+
+            compute.transfer()
 
             # Scatter + save
             save_future = save_executor.submit(
