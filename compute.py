@@ -67,6 +67,8 @@ class Compute:
         self.nS = nS
         self.nD = nD
 
+        self.MT_is_not_set = True
+
     def InitCL(self, DEVICE="CPU", prefer_fp64=False, enable_profiling=True):
         """
         DEVICE:
@@ -403,6 +405,18 @@ class Compute:
 
         return inc_ref2(p1,v1,p2,v2)           
 
+    def propagate(self):
+        
+        MT = np.zeros((2*self.nS,2*self.nS), dtype=np.complex128) 
+        self.MT = self.propagate_incref2(True,MT)
+
+    def transfer(self):
+
+        self.MUT = transfer(self.MT,self.B['emitter'])
+        self.MT = self.propagate_incref2(False,self.MT)
+        self.MLT = transfer(self.MT,self.B['emitter'])
+
+
     def propagate_transfer(self):
         
         #self.propagate_upper_incref()
@@ -419,6 +433,10 @@ class Compute:
         #MT = self.propagate_incref(False)
         #self.MLT = transfer(self.MT,self.B['emitter'])
         self.MLT = transfer(MT,self.B['emitter'])
+
+    def set_transfer(self, MT: np.ndarray):
+        self.MT = MT
+        self.MT_is_not_set = False
 
     def propagate_scatter(self):
         

@@ -74,7 +74,7 @@ def load_config_or_store(store: Store, input_file: str, output_path: str):
     if '' in store.Solution:
         # Running from HDF5
         T, M, S, D, R, Neltoverlambda, nRD, g = cfg_tuple
-        dataroot = f"{g.convergemod}_{g.nff}_{int(g.iff*g.model_scale*100)}_{int(g.fff*g.model_scale*100)}"
+        dataroot = f"{g.convergemod}_{g.nff}_{int(g.iff*2*g.model_scale*100)}_{int(g.fff*2*g.model_scale*100)}"
     else:
         # Running from in-memory store
         config = store.Configuration
