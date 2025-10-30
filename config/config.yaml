@@ -21,3 +21,4 @@ dtsr: 0 # 0 if not to display
 offset: 0 # 0 if not to offset
 
 CONVE_MOD: 'Pr5'
+INPUT_MOD: 'synthetic_cosine'

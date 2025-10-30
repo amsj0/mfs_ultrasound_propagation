@@ -1,8 +1,7 @@
 #from attr import define
 import numpy as np
-import pyopencl as cl
 
-from util.propagator import inc_ref2,inc_ref2,transfer
+from util.propagator import inc_ref2,transfer
 
 import os
 
@@ -11,7 +10,8 @@ MSIDE = 0
 '''
 '''
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
-os.environ['PYOPENCL_self.ctx'] = '0'
+os.environ['PYOPENCL_CTX'] = '0'
+import pyopencl as cl
 
 def _has_fp64(dev: cl.Device) -> bool:
     try:
@@ -401,7 +401,7 @@ class Compute:
         p2 = -self.B['upper'][:,:self.nS]
         v2 = -self.B['upper'][:,self.nS:]
 
-        return inc_ref2(p1,v1,p2,v2)        
+        return inc_ref2(p1,v1,p2,v2)           
 
     def propagate_transfer(self):
         
