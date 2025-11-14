@@ -275,7 +275,7 @@ def create_configfile(fn,filename, output_path):
     values = [T,M,S,D,R,Neltoverlambda,nRD,g]
     dict = {key: value for key, value in zip(keys, values)}
 
-    configfile = 'P' + g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*2*g.model_scale*100)) + '_' + str(int(g.fff*2*g.model_scale*100))
+    configfile = 'P' + g.convergemod + '_' + str(g.nff) + '_' + str(int(g.iff*g.model_scale*10000)) + '_' + str(int(g.fff*g.model_scale*10000))
     save_dict_to_hdf5(dict, output_path, configfile)
 
     return T,M,S,D,R,Neltoverlambda,nRD,g

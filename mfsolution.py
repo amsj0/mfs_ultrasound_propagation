@@ -207,7 +207,7 @@ def mfsolution(config_file: str, output_path: str, task_name: str) -> Store:
     # 3) Precompute heuristics and naming
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
     
-    dataroot = f"{g.nff}_{int(g.iff*2*g.model_scale*100)}_{int(g.fff*2*g.model_scale*100)}"
+    dataroot = f"{g.nff}_{int(g.iff*g.model_scale*10000)}_{int(g.fff*g.model_scale*10000)}"
     datamod = f"{g.convergemod}_{dataroot}"
     ST = Store('', datamod, g)
 

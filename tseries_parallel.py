@@ -127,9 +127,9 @@ def pre_config(task_name, store, config_file,output_path):
     cosine_filter =  ((0.5 - 0.5 * np.cos(2.0 * np.pi * x_dom / echo_size)) * (x_dom<echo_size)*(x_dom>0))[...,np.newaxis]
 
     filter = cosine_filter
-    f_dom = np.linspace(1/x_size,1,x_size) - 0.5
+    f_dom = np.linspace(1/x_size,1,x_size) + 0.5
 
-    central_range = ref_freq*(1*f_dom + final_freq/(100*2))
+    central_range = ref_freq*f_dom
 
     input = np.empty((x_size,1),dtype='complex')
     if input_mod == 'experiment':
@@ -206,7 +206,7 @@ def run_per_j_processes(lim,vlimmax,SP,
                         max_workers=None, chunksize=4):
     resp = np.asarray(data_set["resp"])  # expected shape (..., data_y_size, data_x_size)
     den = resp[..., 0, 0][..., np.newaxis, np.newaxis]
-    np.divide(resp, den, out=resp, where=den != 0)
+    #np.divide(resp, den, out=resp, where=den != 0)
     
     #data_y_size = resp.shape[-2]
     data_x_size = resp.shape[-1]
