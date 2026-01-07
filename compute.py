@@ -331,16 +331,19 @@ class Compute:
 
     def compute_field_upper_boundary(self,S,T,side,p_cur,p_out):
         
-        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_out)
+        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],),side,p_cur,p_out)
+        #self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_out)
     
     def compute_field_lower_boundary(self,S,T,side,p_cur):
         
-        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_cur)
+        self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],),side,p_cur,p_cur)
+        #self.B['emitter'][:self.nS,T['emitter'].m[side]],self.B['emitter'][self.nS:,T['emitter'].m[side]] = self.field_boundary(S['collo'],(T['emitter'],T['mirror']),side,p_cur,p_cur)
 
     def compute_reference(self,P,probe,T,side,p_cur):
         
         #self.F[probe][side[probe][...,np.newaxis]*side['emitter']] = self.reference(P,side[probe],T,side['emitter'],k_cur).reshape(-1)
-        self.F[probe][P.m[side][...,np.newaxis]*T['emitter'].m[side]] = self.reference(P,(T['emitter'],T['mirror']),side,p_cur).reshape(-1)
+        self.F[probe][P.m[side][...,np.newaxis]*T['emitter'].m[side]] = self.reference(P,(T['emitter'],),side,p_cur).reshape(-1)
+        #self.F[probe][P.m[side][...,np.newaxis]*T['emitter'].m[side]] = self.reference(P,(T['emitter'],T['mirror']),side,p_cur).reshape(-1)
 
     def compute_lower_side(self,p_cur):
         
