@@ -136,27 +136,25 @@ class Compute:
         h0 = np.empty((host.size), dtype=np.complex128)
         h1 = np.empty((host.size), dtype=np.complex128)
 
-        buff  = cl.Buffer(self.ctx, self.mf.READ_ONLY | self.mf.COPY_HOST_PTR, hostbuf=host.astype(np.complex128))
+        if host.size != 0:
+            buff  = cl.Buffer(self.ctx, self.mf.READ_ONLY | self.mf.COPY_HOST_PTR, hostbuf=host.astype(np.complex128))
 
-        h0_buff = cl.Buffer(self.ctx, self.mf.WRITE_ONLY, h0.nbytes)
-        h1_buff = cl.Buffer(self.ctx, self.mf.WRITE_ONLY, h1.nbytes)
+            h0_buff = cl.Buffer(self.ctx, self.mf.WRITE_ONLY, h0.nbytes)
+            h1_buff = cl.Buffer(self.ctx, self.mf.WRITE_ONLY, h1.nbytes)
+            
+            completeEvent = self.pgr.hankel_01_complex(self.queue, host.shape, None, buff, h0_buff, h1_buff, np.int32(1))
+            
+            events = [completeEvent]
+            
+            cl.enqueue_copy(self.queue, h0, h0_buff, wait_for=events)
+            cl.enqueue_copy(self.queue, h1, h1_buff, wait_for=events)
+            
+            h0.shape = host.shape
+            h1.shape = host.shape
+            
+            del h0_buff,h1_buff       
         
-        completeEvent = self.pgr.hankel_01_complex(self.queue, host.shape, None, buff, h0_buff, h1_buff, np.int32(1))
-        
-        events = [completeEvent]
-        
-        cl.enqueue_copy(self.queue, h0, h0_buff, wait_for=events)
-        cl.enqueue_copy(self.queue, h1, h1_buff, wait_for=events)
-        
-        h0.shape = host.shape
-        h1.shape = host.shape
-        
-        bh0 = h0      
-        bh1 = h1
-        
-        del h0_buff,h1_buff
-        
-        return bh0, bh1
+        return h0, h1
 
     def propagator_side(self, R, side, C, p_cur, p_out ):
 
@@ -179,6 +177,9 @@ class Compute:
         dP = np.zeros((np.sum(R.m[0+side]),C.c.shape[0]), dtype=np.complex128)
         dV = np.zeros((np.sum(R.m[0+side]),C.c.shape[0]), dtype=np.complex128)
 
+        if not np.any(maskR):
+            return dP, dV
+        
         Ma = R.c[maskR,np.newaxis] - C.c
 
         #midsize = Ma.shape[1]
