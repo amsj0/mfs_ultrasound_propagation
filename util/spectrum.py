@@ -144,7 +144,8 @@ class Spectrum:
 
 
         #osc = self.input[input_index,:][:,np.newaxis]
-        osc = self.input[input_index,np.newaxis].T
+        #osc = self.input[input_index,np.newaxis].T
+        osc = self.input[:,input_index,np.newaxis]
         spec = np.fft.fft(osc,n=self.spec_size*2,axis=0)
         freq = np.fft.fftfreq(self.spec_size*2)
 

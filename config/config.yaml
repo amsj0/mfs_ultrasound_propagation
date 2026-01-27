@@ -7,14 +7,17 @@ final_freq: 200
 parti_freq: 100
 
 #speed ratio
-skr: 993
+skr:
+ - 993.5
 #density ratio
 sdr: 800
 
+tranx_num: 8 # number of transducers in x direction
 spec_band: 0.2
 spec_size: 2500
 ref_freq: 1000000
-    
+echo_size: 3
+
 # Display_time_step_ratio 
 dtsr: 0 # 0 if not to display
 # Offset data matrix

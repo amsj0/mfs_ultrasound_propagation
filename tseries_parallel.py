@@ -77,8 +77,8 @@ def pre_config(task_name, store, config_file,output_path):
             numbr_freq = cfg['numbr_freq']
             conve_mod = cfg['CONVE_MOD']
 
-            sdr = [cfg['sdr']]
-            skr = [cfg['skr']]
+            sdr = np.array(cfg['sdr'])
+            skr = np.array(cfg['skr'])
     else:
 
         dataroot = list(store.Configuration)[-1]
@@ -105,22 +105,21 @@ def pre_config(task_name, store, config_file,output_path):
         spec_band = cfg['spec_band']
         spec_size = cfg['spec_size']
         ref_freq = cfg['ref_freq']
+        echo_size = cfg['echo_size']
         input_mod = cfg['INPUT_MOD']
             
               
     mu, sigma = 0, 0.055 # .125 # 0.055 # -.25 .07 (1 MHz), 0 .13 (1.5 MHz)
     
-    freq_scale = int(spec_size/(numbr_freq/spec_band))
-    sampling_freq = freq_scale*10*ref_freq
+    freq_scale = int(spec_size*10/(numbr_freq/spec_band))
+    sampling_freq = freq_scale*ref_freq
     
-    x = np.linspace(1/sampling_freq,freq_scale*numbr_freq/sampling_freq,freq_scale*numbr_freq)[...,np.newaxis]
+    x = np.linspace(1/sampling_freq,numbr_freq/10/(ref_freq),int(spec_size*spec_band))[...,np.newaxis]
     x_size = np.size(x,axis=0)
     
     x_spec_full = np.linspace(1/sampling_freq,spec_size/sampling_freq,spec_size)[...,np.newaxis]
 
-    echo_size = 4*ref_freq/sampling_freq
-
-    x_dom = np.linspace(1/x_size,1/freq_scale,x_size)
+    x_dom = np.linspace(10/x_size,10,x_size)
 
     gauss_filter = 1/(sigma * np.sqrt(2.0 * np.pi)) * np.exp( - (x_dom - mu)**2 / (2 * sigma**2) )[...,np.newaxis]    
     
@@ -137,7 +136,7 @@ def pre_config(task_name, store, config_file,output_path):
     elif input_mod == 'synthetic_gauss':
         input = np.sin(2 * np.pi * central_range * x_dom) * gauss_filter
     elif input_mod == 'synthetic_cosine':
-        input = np.exp(1j * 2 * np.pi * (central_range * x - 1 / 5)) * cosine_filter.T
+        input = np.exp(1j * 2 * np.pi * (central_range * x - 0 / 5)) * cosine_filter
         #np.sin(2 * np.pi * central_range * x_dom) * filter
     else:
         raise ValueError("Invalid INPUT_MOD. Choose 'experiment' or 'synthetic' or 'synthetic_cosine'.")
