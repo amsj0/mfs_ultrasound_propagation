@@ -164,7 +164,7 @@ def _worker_j(args):
     mlim_updates = {}  # (mx,my) -> vec_ts (last one wins within this j)
 
     matrix_x_ndx = j % matrix_x_strafe
-    on_x_stride = (matrix_x_ndx == 0)
+    on_x_stride = (matrix_x_ndx == int(matrix_x_strafe / 2))
 
     for k in range(data_y_size):
 
