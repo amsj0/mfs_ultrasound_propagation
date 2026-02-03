@@ -146,7 +146,7 @@ def analyse_concurrent(store: Store, input_file: str, output_path: str, task_nam
 
     # 2) Heuristics and shapes
     k0, kr, kr_length, dr, dr_length, sfr, RD, lambda0, d_cur = heuristic(nRD, g)
-    ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100)))
+    ppt_per_surface = 1 + int(np.floor(g.piston_radius * (Neltoverlambda / 100))/2)*2
 
     rshape = (R.c.size - ppt_per_surface + 1, T.c.size - ppt_per_surface + 1)
     dshape = (D.c.size,                      T.c.size - ppt_per_surface + 1)

@@ -163,13 +163,16 @@ def _worker_j(args):
 
     mlim_updates = {}  # (mx,my) -> vec_ts (last one wins within this j)
 
-    matrix_x_ndx = j % matrix_x_strafe
-    on_x_stride = (matrix_x_ndx == int(matrix_x_strafe / 2))
+    shift_x_strafe = int(data_y_size/2) % matrix_y_strafe 
+    shift_y_strafe = int(data_y_size/2) % matrix_x_strafe
+
+    matrix_x_ndx = j % matrix_x_strafe - shift_x_strafe
+    on_x_stride = (matrix_x_ndx == (int(matrix_x_strafe / 2) + 1))
 
     for k in range(data_y_size):
 
-        matrix_y_ndx = k % matrix_y_strafe
-        on_y_stride = (matrix_y_ndx == 0)
+        matrix_y_ndx = k % matrix_y_strafe - shift_y_strafe
+        on_y_stride = (matrix_y_ndx == (int(matrix_y_strafe / 2) + 1))
         # your original extraction
         resptt = resp_j[..., k].T
 
@@ -251,8 +254,8 @@ def create_matrix(SP, x_size, central_range, data_set, x_spec_full, mat_tseries,
     data_x_size = data_set['resp'].shape[-1]
     data_y_size = data_set['resp'].shape[-2]
 
-    matrix_x_strafe = (data_x_size-1)/(mlim.shape[0])
-    matrix_y_strafe = (data_y_size-1)/(mlim.shape[1])
+    matrix_x_strafe = 1 + 2*(np.floor((data_y_size/mlim.shape[0])/2))
+    matrix_y_strafe = 1 + 2*(np.floor((data_y_size/mlim.shape[1])/2))
 
     i = x_size // 2 - 1
     central_freq = central_range[i]
