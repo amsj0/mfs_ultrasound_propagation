@@ -2,6 +2,12 @@
 
 This repository solves 2D ultrasound field modelling (Helmholtz PDE) using meshless/boundary-collocation ideas inspired by the **Method of Fundamental Solutions (MFS)**. The propagating, reflecting and transmitting fields are assembled from real (Huygens) and virtual (MFS) sources and validated over an **infinite plane fluid–fluid interface** (current scope).
 
+## Reference
+
+If you use this code, please cite:
+
+> Silva Jr AM, Tanabi N, Pereira LOV, Matuda MY, Buiochi F, Perez N, Tsuzuki MSG. 2026 Through-transmission ultrasound detection across liquid–liquid interfaces.Proc. R. Soc. A 20250756. https://doi.org/10.1098/rspa.2025.0756
+
 ---
 
 ## What’s here
