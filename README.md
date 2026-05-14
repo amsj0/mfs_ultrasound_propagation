@@ -8,6 +8,10 @@ If you use this code, please cite:
 
 > Silva Jr AM, Tanabi N, Pereira LOV, Matuda MY, Buiochi F, Perez N, Tsuzuki MSG. 2026 Through-transmission ultrasound detection across liquid–liquid interfaces.Proc. R. Soc. A 20250756. https://doi.org/10.1098/rspa.2025.0756
 
+The following open-access dataset features paired experiment–simulation records for through-transmission ultrasound at extended liquid–liquid interfaces.
+
+> Silva Jr AM 2026 Through-transmission ultrasound detection across liquid–liquid interfaces https://doi.org/10.5281/zenodo.17155945
+
 ---
 
 ## What’s here
