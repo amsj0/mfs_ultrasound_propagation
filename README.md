@@ -6,7 +6,7 @@ This repository solves 2D ultrasound field modelling (Helmholtz PDE) using meshl
 
 If you use this code, please cite:
 
-> Silva Jr AM, Tanabi N, Pereira LOV, Matuda MY, Buiochi F, Perez N, Tsuzuki MSG. 2026 Through-transmission ultrasound detection across liquid–liquid interfaces.Proc. R. Soc. A 20250756. https://doi.org/10.1098/rspa.2025.0756
+> Agesinaldo M. Silva, Naser Tanabi, Luiz Octavio V. Pereira, Marcelo Y. Matuda, Flávio Buiochi, Nicolas Perez, Marcos S. G. Tsuzuki; Through-transmission ultrasound detection across liquid–liquid interfaces. Proc. A 1 June 2026; 482 (2340): 20250756. https://doi.org/10.1098/rspa.2025.0756
 
 The following open-access dataset features paired experiment–simulation records for through-transmission ultrasound at extended liquid–liquid interfaces.
 
